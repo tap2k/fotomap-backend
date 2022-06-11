@@ -10,6 +10,11 @@ module.exports = {
           auth: false,
         },
       },
+      {
+        method: "GET",
+        path: "/getMyChannels",
+        handler: "channel.getMyChannels",
+      },
       { 
         method: 'POST',
         path: '/createChannel', 

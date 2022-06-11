@@ -9,12 +9,19 @@ const { createCoreController } = require('@strapi/strapi').factories;
 //module.exports = createCoreController('api::channel.channel');
 
 module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  ({
+    async getMyChannels(ctx) {
+        const channels = await strapi.db.query('api::channel.channel').findMany({
+            select: ['uniqueID', 'name'],
+            where: { owner: ctx.state.user.id },
+        });
+        return channels;
+    },
     async getPublicChannels(ctx) {
-        const publicChannels = await strapi.db.query('api::channel.channel').findMany({
+        const channels = await strapi.db.query('api::channel.channel').findMany({
             select: ['uniqueID', 'name'],
             where: { public: 'true' },
           });
-        return publicChannels;
+        return channels;
     },
     async createChannel(ctx) {
         const uuid = require('uuid');
@@ -24,13 +31,24 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                 uniqueID: myuuid,
                 name: ctx.request.body.name,
                 public: ctx.request.body.public,
-                owner: ctx.state.id,
+                owner: ctx.state.user.id,
               },
             });
         return channel;
     },
     async deleteChannel(ctx) {
-        console.log("Unique ID = " + ctx.request.body.uniqueID);
+        const channel = await strapi.db.query('api::channel.channel').findOne({
+            select: ['uniqueID'],
+            where: { 
+                owner: ctx.state.user.id,
+                uniqueID: ctx.request.body.uniqueID
+             },
+        });
+        if (channel == undefined)
+        {
+            return ctx.badRequest('No such channel or you are not the owner: ' + ctx.request.body.uniqueID);
+        }
+
         var contentItems = await strapi.query("api::content.content").findMany(
             { 
                 where: { channel: { uniqueID: ctx.request.body.uniqueID } },
@@ -42,7 +60,6 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                 await strapi.query('plugin::upload.file').delete({ where: {id: content.mediafile.id} });
             await strapi.query("api::content.content").delete({ where: { id: content.id } });
           }
-        console.log("Deleting Channel ID = " + ctx.request.body.uniqueID);
         return await strapi.query("api::channel.channel").delete({ where: { uniqueID: ctx.request.body.uniqueID } });
     }
 }));
