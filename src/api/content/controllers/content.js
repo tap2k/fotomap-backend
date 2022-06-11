@@ -48,10 +48,19 @@ module.exports = createCoreController('api::content.content', ({ strapi }) =>  (
         if (!ctx.request.body.ext_url && !ctx.request.files.mediafile) 
         { return ctx.badRequest('No content specified'); };
 
+        var order = ctx.request.body.order;
+        var numItems = -1;
+        if (!order)
+        {
+            var numItems = await strapi.query('api::content.content').count({ where: { channel: channel.id }});
+            console.log ("Num Items = " + numItems);
+            order = numItems + 1;
+        }
+
         const content = await strapi.db.query('api::content.content').create({
             data: {
                 channel: channel.id,
-                order: ctx.request.body.order,
+                order: order,
                 ext_url: ctx.request.body.ext_url
             }
         });
@@ -79,29 +88,30 @@ module.exports = createCoreController('api::content.content', ({ strapi }) =>  (
             });
         }
 
-        const contentItems = await strapi.db.query('api::content.content').findMany({
-            where: {
-                $and: [
-                {channel: channel.id },
-                {order: { $gte: ctx.request.body.order}}
-                ]
-            },
-            select: ['id', 'order'],
-            orderBy: { order: 'asc' },
-        });
-        
-        var currentOrder = content.order;
-        for (const updateContent of contentItems) {
-            if (updateContent.id != content.id) {
-            currentOrder++;
-            console.log("Updating Content ID = " + updateContent.id + "Order = " + currentOrder);
-            await strapi.query("api::content.content").update({ 
-                where: { id: updateContent.id },
-                data: { order: currentOrder },
-             });
+        if (numItems == -1)
+        {
+            const contentItems = await strapi.db.query('api::content.content').findMany({
+                where: {
+                    $and: [
+                    {channel: channel.id },
+                    {order: { $gte: order}}
+                    ]
+                },
+                select: ['id'],
+                orderBy: { order: 'asc' },
+            });
+    
+            var currentOrder = order;
+            for (const updateContent of contentItems) {
+                if (updateContent.id != content.id) {
+                currentOrder++;
+                console.log("Updating Content ID = " + updateContent.id + "Order = " + currentOrder);
+                await strapi.query("api::content.content").update({ 
+                    where: { id: updateContent.id },
+                    data: { order: currentOrder },
+                });}   
             }
         };
-
         return "ok";
     },
 }));
