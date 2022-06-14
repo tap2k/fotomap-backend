@@ -10,7 +10,7 @@ const { createCoreController } = require('@strapi/strapi').factories;
 
 module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
     async getAssetsForChannel(ctx) {
-        const myAssets = await strapi.db.query('api::content.content').findMany({
+        const myAssets = await strapi.db.query('api::asset.asset').findMany({
             where: {
                 channel: {
                   uniqueID: {
@@ -21,7 +21,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
             select: ['id', 'name'],
             populate: {
                 bundle: {
-                    select: ['id', 'url', 'platform'],
+                    select: ['id', 'url'],
                     },
                 },
           });
@@ -37,7 +37,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
         if (ctx.state.id != channel.owner) { return ctx.badRequest('You do not own this channel'); };
 
         if (!ctx.request.files.bundle) 
-        { return ctx.badRequest('No content specified'); };
+        { return ctx.badRequest('No asset bundle specified'); };
 
         const asset = await strapi.db.query('api::asset.asset').create({
             data: {
