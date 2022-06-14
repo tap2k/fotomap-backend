@@ -1,0 +1,17 @@
+module.exports = {
+    routes: [
+      {
+        method: "GET",
+        path: "/getAssetsForChannel",
+        handler: "asset.getAssetsForChannel",
+        config: {
+          auth: false,
+        },
+      },
+      {
+        method: "POST",
+        path: "/uploadAssetToChannel",
+        handler: "asset.uploadAssetToChannel",
+      },
+    ],
+  }

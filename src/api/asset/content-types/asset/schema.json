@@ -1,0 +1,41 @@
+{
+  "kind": "collectionType",
+  "collectionName": "assets",
+  "info": {
+    "singularName": "asset",
+    "pluralName": "assets",
+    "displayName": "Asset",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "channel": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::channel.channel"
+    },
+    "name": {
+      "type": "string"
+    },
+    "platform": {
+      "type": "enumeration",
+      "enum": [
+        "PC",
+        "Android"
+      ],
+      "default": "PC",
+      "required": true
+    },
+    "bundle": {
+      "allowedTypes": [
+        "files"
+      ],
+      "type": "media",
+      "multiple": false,
+      "required": true
+    }
+  }
+}
