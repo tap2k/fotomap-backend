@@ -6,8 +6,7 @@
 
 const fs = require('fs');
 const mime = require('mime'); //used to detect file's mime type
-const formData = require('form-data');
-const { createGzip } = require('zlib');
+const formData = require('form-data');;
 const { createCoreController } = require('@strapi/strapi').factories;
 
 //module.exports = createCoreController('api::content.content');
