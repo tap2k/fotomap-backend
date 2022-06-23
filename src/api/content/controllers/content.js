@@ -6,7 +6,7 @@
 
 const fs = require('fs');
 const mime = require('mime'); //used to detect file's mime type
-const formData = require('form-data');;
+
 const { createCoreController } = require('@strapi/strapi').factories;
 
 //module.exports = createCoreController('api::content.content');
@@ -33,10 +33,13 @@ module.exports = createCoreController('api::content.content', ({ strapi }) =>  (
         const channel = await strapi.db.query('api::channel.channel').findOne({
             where: {
                 uniqueID: { $eq: ctx.request.body.uniqueID},
-            },});
+            },
+            populate: ['owner']
+        });
         
         if (!channel) { return ctx.badRequest('No such channel: ' + ctx.request.uniqueID); };
-        if (ctx.state.id != channel.owner) { return ctx.badRequest('You do not own this channel'); };
+        
+        if (ctx.state.user.id != channel.owner.id) { return ctx.badRequest('You do not own this channel'); };
 
         if (!ctx.request.body.ext_url && !ctx.request.files.mediafile) 
         { return ctx.badRequest('No content specified'); };

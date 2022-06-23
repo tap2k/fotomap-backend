@@ -3,63 +3,49 @@
 const fs = require('fs');
 
 /**
- *  asset controller
+ *  avatar controller
  */
 
 const { createCoreController } = require('@strapi/strapi').factories;
 
-//module.exports = createCoreController('api::asset.asset');
+//module.exports = createCoreController('api::avatar.avatar');
 
 module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
-    async getAssetsForChannel(ctx) {
-        const myAssets = await strapi.db.query('api::asset.asset').findMany({
+    async getAvatar(ctx) {
+        const myAvatar = await strapi.db.query('api::avatar.avatar').findOne({
             where: {
-                channel: {
-                  uniqueID: {
-                    $eq: ctx.query.uniqueID
-                  }},
+                owner: ctx.state.user.id,
                 platform: ctx.query.platform
             },
-            select: ['id', 'name'],
+            select: ['id'],
             populate: {
                 bundle: {
                     select: ['id', 'url'],
                     },
                 },
           });
-        return myAssets;
+        return myAvatar;
     },
-    async uploadAssetToChannel(ctx) {
-        const channel = await strapi.db.query('api::channel.channel').findOne({
-            where: {
-                uniqueID: { $eq: ctx.request.body.uniqueID},
-            },});
-        
-
-        if (!channel) { return ctx.badRequest('No such channel: ' + ctx.request.uniqueID); };
-
-        if (ctx.state.user.id != channel.owner) { return ctx.badRequest('You do not own this channel'); };
-
+    async uploadAvatar(ctx) {
         if (!ctx.request.files.bundle) 
         { return ctx.badRequest('No asset bundle specified'); };
 
-        const asset = await strapi.db.query('api::asset.asset').create({
+        const avatar = await strapi.db.query('api::avatar.avatar').create({
             data: {
-                channel: channel.id,
-                name: ctx.request.body.name,
+                owner: ctx.state.user.id,
                 platform: ctx.request.body.platform,
             },
         });
 
-        if (!asset) { return ctx.badRequest('Could not create asset') };
+        if (!avatar) { return ctx.badRequest('Could not create asset') };
 
         const stats = fs.statSync(ctx.request.files.bundle.path);
         //const mimetype = mime.getType(ctx.request.files.bundle.name);
 
         await strapi.plugins.upload.services.upload.upload({
             data: {
-                refId: asset.id,
-                ref: 'api::asset.asset',
+                refId: avatar.id,
+                ref: 'api::avatar.avatar',
                 field: 'bundle',
             }, 
             files: {
