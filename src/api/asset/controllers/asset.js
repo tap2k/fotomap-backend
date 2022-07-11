@@ -1,5 +1,6 @@
 'use strict';
 
+const { debug } = require('console');
 const fs = require('fs');
 
 /**
@@ -33,16 +34,14 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
         const channel = await strapi.db.query('api::channel.channel').findOne({
             where: {
                 uniqueID: { $eq: ctx.request.body.uniqueID},
-            },});
-        
+            },
+            populate: ['owner']
+        });
 
         if (!channel) { return ctx.badRequest('No such channel: ' + ctx.request.uniqueID); };
-
-        if (ctx.state.user.id != channel.owner) { return ctx.badRequest('You do not own this channel'); };
-
+        if (ctx.state.user.id != channel.owner.id) { return ctx.badRequest('You do not own this channel'); };
         if (!ctx.request.files.bundle) 
         { return ctx.badRequest('No asset bundle specified'); };
-
         const asset = await strapi.db.query('api::asset.asset').create({
             data: {
                 channel: channel.id,
