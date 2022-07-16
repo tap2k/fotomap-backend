@@ -20,7 +20,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) =>  (
                     $eq: ctx.query.uniqueID
                   },}},
             orderBy: { order: 'asc' },
-            select: ['id', 'ext_url'],
+            select: ['id', 'ext_url', 'is_360_video'],
             populate: {
                 mediafile: {
                     select: ['id', 'url'],

@@ -33,6 +33,11 @@
     },
     "ext_url": {
       "type": "string"
+    },
+    "Is360video": {
+      "type": "boolean",
+      "default": false,
+      "required": true
     }
   }
 }
