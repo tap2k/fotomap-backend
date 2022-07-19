@@ -34,10 +34,31 @@
     "ext_url": {
       "type": "string"
     },
-    "Is360video": {
+    "is360": {
       "type": "boolean",
       "default": false,
       "required": true
+    },
+    "mapping": {
+      "type": "enumeration",
+      "enum": [
+        "normal",
+        "equirect180",
+        "equirect360",
+        "cubemap",
+        "unknown"
+      ],
+      "default": "unknown"
+    },
+    "packing": {
+      "type": "enumeration",
+      "enum": [
+        "topbottom",
+        "leftright",
+        "custom",
+        "unknown"
+      ],
+      "default": "unknown"
     }
   }
 }

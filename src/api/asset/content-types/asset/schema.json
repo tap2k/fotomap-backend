@@ -30,12 +30,12 @@
       "required": true
     },
     "bundle": {
-      "allowedTypes": [
-        "files"
-      ],
       "type": "media",
       "multiple": false,
-      "required": true
+      "required": true,
+      "allowedTypes": [
+        "files"
+      ]
     }
   }
 }
