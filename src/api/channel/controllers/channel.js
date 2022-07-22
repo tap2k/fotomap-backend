@@ -11,14 +11,21 @@ const { createCoreController } = require('@strapi/strapi').factories;
 module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  ({
     async getMyChannels(ctx) {
         const channels = await strapi.db.query('api::channel.channel').findMany({
-            select: ['uniqueID', 'name'],
+            select: ['uniqueID', 'name', 'xCoord', 'yCoord', 'isLatLong'],
             where: { owner: ctx.state.user.id },
         });
         return channels;
     },
+    async getChannelsForProject(ctx) {
+        const channels = await strapi.db.query('api::channel.channel').findMany({
+            select: ['uniqueID', 'name', 'xCoord', 'yCoord', 'isLatLong'],
+            where: { project: { uniqueID: ctx.request.body.uniqueID }  },
+        });
+        return channels;
+    },    
     async getPublicChannels(ctx) {
         const channels = await strapi.db.query('api::channel.channel').findMany({
-            select: ['uniqueID', 'name'],
+            select: ['uniqueID', 'name', 'xCoord', 'yCoord', 'isLatLong'],
             where: { public: 'true' },
           });
         return channels;
@@ -49,17 +56,6 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             return ctx.badRequest('No such channel or you are not the owner: ' + ctx.request.body.uniqueID);
         }
 
-        var contentItems = await strapi.query("api::content.content").findMany(
-            { 
-                where: { channel: { uniqueID: ctx.request.body.uniqueID } },
-                populate: {mediafile: {select: ['id', 'url'] } },
-            }
-            );
-        for (const content of contentItems) {
-            if (content.mediafile)
-                await strapi.query('plugin::upload.file').delete({ where: {id: content.mediafile.id} });
-            await strapi.query("api::content.content").delete({ where: { id: content.id } });
-          }
-        return await strapi.query("api::channel.channel").delete({ where: { uniqueID: ctx.request.body.uniqueID } });
+        return await strapi.service('api::channel.channel').deleteChannel(ctx, ctx.request.body.uniqueID);
     }
 }));

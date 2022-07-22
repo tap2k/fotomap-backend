@@ -12,6 +12,14 @@ module.exports = {
       },
       {
         method: "GET",
+        path: "/getChannelsForProject",
+        handler: "channel.getChannelsForProject",
+        config: {
+          auth: false,
+        },
+      },
+      {
+        method: "GET",
         path: "/getMyChannels",
         handler: "channel.getMyChannels",
       },
