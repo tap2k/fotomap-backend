@@ -19,7 +19,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
     async getChannelsForProject(ctx) {
         const channels = await strapi.db.query('api::channel.channel').findMany({
             select: ['uniqueID', 'name', 'xCoord', 'yCoord', 'isLatLong'],
-            where: { project: { uniqueID: ctx.request.body.uniqueID }  },
+            where: { project: { uniqueID: ctx.query.uniqueID }  },
         });
         return channels;
     },    
