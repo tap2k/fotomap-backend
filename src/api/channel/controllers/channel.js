@@ -11,21 +11,21 @@ const { createCoreController } = require('@strapi/strapi').factories;
 module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  ({
     async getMyChannels(ctx) {
         const channels = await strapi.db.query('api::channel.channel').findMany({
-            select: ['uniqueID', 'name', 'xCoord', 'yCoord', 'isLatLong'],
+            select: ['uniqueID', 'name', 'lat', 'long'],
             where: { owner: ctx.state.user.id },
         });
         return channels;
     },
     async getChannelsForProject(ctx) {
         const channels = await strapi.db.query('api::channel.channel').findMany({
-            select: ['uniqueID', 'name', 'xCoord', 'yCoord', 'isLatLong'],
+            select: ['uniqueID', 'name', 'lat', 'long'],
             where: { project: { uniqueID: ctx.query.uniqueID }  },
         });
         return channels;
     },    
     async getPublicChannels(ctx) {
         const channels = await strapi.db.query('api::channel.channel').findMany({
-            select: ['uniqueID', 'name', 'xCoord', 'yCoord', 'isLatLong'],
+            select: ['uniqueID', 'name', 'lat', 'long'],
             where: { public: 'true' },
           });
         return channels;

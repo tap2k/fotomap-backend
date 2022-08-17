@@ -15,6 +15,14 @@ module.exports = {
         path: "/getMyProjects",
         handler: "project.getMyProjects",
       },
+      {
+        method: "GET",
+        path: "/getProject",
+        handler: "project.getProject",
+        config: {
+          auth: false,
+        },
+      },
       { 
         method: 'POST',
         path: '/createProject', 

@@ -23,6 +23,13 @@ module.exports = createCoreController('api::project.project', ({ strapi }) =>  (
           });
         return projects;
     },
+    async getProject(ctx) {
+        const project = await strapi.query('api::project.project').findOne({
+            select: ['uniqueID', 'name', 'lat', 'long', 'zoom'],
+            where: { uniqueID: ctx.query.uniqueID },
+          });
+        return project;
+    },
     async createProject(ctx) {
         const uuid = require('uuid');
         var myuuid = uuid.v4().substring(0,8);
@@ -32,6 +39,9 @@ module.exports = createCoreController('api::project.project', ({ strapi }) =>  (
                 name: ctx.request.body.name,
                 public: ctx.request.body.public,
                 owner: ctx.state.user.id,
+                lat: ctx.request.body.lat,
+                long: ctx.request.body.long,
+                zoom: ctx.request.body.zoom,
               },
             });
         return project;

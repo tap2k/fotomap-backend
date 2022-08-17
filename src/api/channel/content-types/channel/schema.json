@@ -34,16 +34,11 @@
       "relation": "oneToOne",
       "target": "api::project.project"
     },
-    "xCoord": {
+    "lat": {
       "type": "float"
     },
-    "yCoord": {
+    "long": {
       "type": "float"
-    },
-    "isLatLong": {
-      "type": "boolean",
-      "default": false,
-      "required": true
     }
   }
 }
