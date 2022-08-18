@@ -59,6 +59,12 @@
         "unknown"
       ],
       "default": "unknown"
+    },
+    "lat": {
+      "type": "float"
+    },
+    "long": {
+      "type": "float"
     }
   }
 }

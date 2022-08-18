@@ -9,23 +9,23 @@ const { createCoreController } = require('@strapi/strapi').factories;
 //module.exports = createCoreController('api::channel.channel');
 
 module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  ({
+    async getChannel(ctx) {
+        const channel = await strapi.query('api::channel.channel').findOne({
+            select: ['uniqueID', 'name', 'lat', 'long', 'zoom'],
+            where: { uniqueID: ctx.query.uniqueID },
+          });
+        return channel;
+    },
     async getMyChannels(ctx) {
         const channels = await strapi.db.query('api::channel.channel').findMany({
-            select: ['uniqueID', 'name', 'lat', 'long'],
+            select: ['uniqueID', 'name', 'lat', 'long', 'zoom'],
             where: { owner: ctx.state.user.id },
         });
         return channels;
     },
-    async getChannelsForProject(ctx) {
-        const channels = await strapi.db.query('api::channel.channel').findMany({
-            select: ['uniqueID', 'name', 'lat', 'long'],
-            where: { project: { uniqueID: ctx.query.uniqueID }  },
-        });
-        return channels;
-    },    
     async getPublicChannels(ctx) {
         const channels = await strapi.db.query('api::channel.channel').findMany({
-            select: ['uniqueID', 'name', 'lat', 'long'],
+            select: ['uniqueID', 'name', 'lat', 'long', 'zoom'],
             where: { public: 'true' },
           });
         return channels;
