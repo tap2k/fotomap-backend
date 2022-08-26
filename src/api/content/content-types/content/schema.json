@@ -53,9 +53,11 @@
     "packing": {
       "type": "enumeration",
       "enum": [
+        "none",
         "topbottom",
         "leftright",
         "custom",
+        "twotextures",
         "unknown"
       ],
       "default": "unknown"
