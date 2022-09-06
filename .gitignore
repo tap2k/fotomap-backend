@@ -92,7 +92,6 @@ pids
 logs
 results
 node_modules
-.next
 .node_history
 .env
 .env.local
@@ -115,3 +114,9 @@ build
 .strapi-updater.json
 public/uploads/*
 !public/uploads/.gitkeep
+
+############################
+# Next
+############################
+.next
+next.config.js
