@@ -18,7 +18,7 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
                   uniqueID: {
                     $eq: ctx.query.uniqueID
                   },}},
-            select: ['id'],
+            select: ['id', 'lat', 'long'],
             populate: {
                 mediafile: {
                     select: ['id', 'url'],
@@ -42,6 +42,8 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
         const submission = await strapi.db.query('api::submission.submission').create({
             data: {
                 channel: channel.id,
+                lat: ctx.request.body.lat,
+                long: ctx.request.body.long,
             }
         });
 

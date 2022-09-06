@@ -4,7 +4,8 @@
   "info": {
     "singularName": "submission",
     "pluralName": "submissions",
-    "displayName": "Submission"
+    "displayName": "Submission",
+    "description": ""
   },
   "options": {
     "draftAndPublish": false
@@ -17,15 +18,21 @@
       "target": "api::channel.channel"
     },
     "mediafile": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
       "allowedTypes": [
         "images",
         "files",
         "videos",
         "audios"
-      ],
-      "type": "media",
-      "multiple": false,
-      "required": true
+      ]
+    },
+    "lat": {
+      "type": "float"
+    },
+    "long": {
+      "type": "float"
     }
   }
 }
