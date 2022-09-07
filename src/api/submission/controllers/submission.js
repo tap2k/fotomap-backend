@@ -14,6 +14,7 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
     async getSubmissionsForChannel(ctx) {
         const mySubmissions = await strapi.db.query('api::submission.submission').findMany({
             where: {
+                publishedAt: { $not: null },
                 channel: {
                   uniqueID: {
                     $eq: ctx.query.uniqueID
