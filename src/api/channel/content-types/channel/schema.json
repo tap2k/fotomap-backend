@@ -37,6 +37,11 @@
     },
     "zoom": {
       "type": "float"
+    },
+    "parent": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::channel.channel"
     }
   }
 }

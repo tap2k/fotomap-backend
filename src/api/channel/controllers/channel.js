@@ -30,6 +30,17 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
           });
         return channels;
     },
+    async getChildChannels(ctx) {
+        const channels = await strapi.db.query('api::channel.channel').findMany({
+            select: ['uniqueID', 'name', 'lat', 'long', 'zoom'],
+            where: {
+                parent: {
+                  uniqueID: {
+                    $eq: ctx.query.uniqueID
+                  },}},
+          });
+        return channels;
+    },
     async createChannel(ctx) {
         const uuid = require('uuid');
         var myuuid = uuid.v4().substring(0,8);

@@ -17,6 +17,14 @@ module.exports = {
       },
       {
         method: "GET",
+        path: "/getChildChannels",
+        handler: "channel.getChildChannels",
+        config: {
+          auth: false,
+        },
+      },
+      {
+        method: "GET",
         path: "/getChannel",
         handler: "channel.getChannel",
         config: {
