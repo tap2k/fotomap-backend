@@ -6,9 +6,32 @@ const { debug } = require('console');
  */
 
 const fs = require('fs');
-const mime = require('mime'); //used to detect file's mime type
+const mime = require('mime');
+const ffmpeg = require('fluent-ffmpeg');
  
 const { createCoreController } = require('@strapi/strapi').factories;
+
+function processVideoSync(inputFilename, outputFilename){
+    console.log("got here");
+    return new Promise((resolve,reject)=>{
+        console.log("got here 2");
+        var readStream = fs.createReadStream(inputFilename);
+        //var writeStream = fs.createWriteStream(outputFilename);
+        console.log("got here 3");
+        ffmpeg(readStream)
+        .addOutputOptions('-movflags +frag_keyframe+separate_moof+omit_tfhd_offset+empty_moov')
+        .format('mp4')
+        .save(outputFilename)
+        .on('end', ()=>{
+            console.log("got here 4");
+            resolve()
+        })
+        .on('err',(err)=>{
+            console.log("got here 5");
+            return reject(err)
+        })
+    })
+}
 
 module.exports = createCoreController('api::submission.submission', ({ strapi }) =>  ({
     async getSubmissionsForChannel(ctx) {
@@ -29,6 +52,7 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
         return mySubmissions;
     },
     async uploadSubmissionToChannel(ctx) {
+
         const channel = await strapi.db.query('api::channel.channel').findOne({
             where: {
                 uniqueID: { $eq: ctx.request.body.uniqueID},
@@ -52,8 +76,15 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
 
         if (ctx.request.files.mediafile)
         {   
-            const stats = fs.statSync(ctx.request.files.mediafile.path);
-            const mimetype = mime.getType(ctx.request.files.mediafile.name);
+            const outputFilename = ctx.request.files.mediafile.path + '.mp4';
+            console.log("oldfilename = " + ctx.request.files.mediafile.path);
+            console.log("newfilename = " + outputFilename);
+            const returnVal = await processVideoSync(ctx.request.files.mediafile.path, outputFilename)
+            console.log(returnVal);
+            const stats = fs.statSync(outputFilename);
+            console.log("stats = " + stats.size);
+            const mimetype = mime.getType(outputFilename);
+            console.log("mimetype = " + mimetype);
 
             await strapi.plugins.upload.services.upload.upload({
                 data: {
@@ -62,8 +93,8 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
                     field: 'mediafile',
                 }, 
                 files: {
-                    path: ctx.request.files.mediafile.path,
-                    name: ctx.request.files.mediafile.name,
+                    path: outputFilename,
+                    name: "upload.mp4",
                     type: mimetype,
                     size: stats.size
                 }
