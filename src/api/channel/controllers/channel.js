@@ -4,6 +4,8 @@
  *  channel controller
  */
 
+const uuid = require('uuid');
+
 const { createCoreController } = require('@strapi/strapi').factories;
 
 //module.exports = createCoreController('api::channel.channel');
@@ -42,7 +44,6 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         return channels;
     },
     async createChannel(ctx) {
-        const uuid = require('uuid');
         var myuuid = uuid.v4().substring(0,8);
         const channel = await strapi.db.query('api::channel.channel').create({
             data: {

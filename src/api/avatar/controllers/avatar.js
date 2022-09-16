@@ -1,10 +1,10 @@
 'use strict';
 
-const fs = require('fs');
-
 /**
  *  avatar controller
  */
+
+const fs = require('fs');
 
 const { createCoreController } = require('@strapi/strapi').factories;
 
