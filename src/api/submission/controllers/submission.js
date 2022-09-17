@@ -10,7 +10,7 @@ const ffmpeg = require('fluent-ffmpeg');
  
 const { createCoreController } = require('@strapi/strapi').factories;
 
-function processVideoSync(inputFilename, outputFilename){
+function processAudioSync(inputFilename, outputFilename){
     return new Promise((resolve,reject)=>{
         var readStream = fs.createReadStream(inputFilename);
         //var writeStream = fs.createWriteStream(outputFilename);
@@ -70,10 +70,18 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
 
         if (ctx.request.files.mediafile)
         {   
-            const outputFilename = ctx.request.files.mediafile.path + '.mp4';
-            await processVideoSync(ctx.request.files.mediafile.path, outputFilename)
-            const stats = fs.statSync(outputFilename);
-            const mimetype = mime.getType(outputFilename);
+            let path = ctx.request.files.mediafile.path;
+            let filename = ctx.request.files.mediafile.name;
+
+            if (filename.endsWith("webm"))
+            {
+                path = path + '.mp4';
+                filename = "upload.mp4";
+                await processAudioSync(ctx.request.files.mediafile.path, path)
+            }
+            
+            const mimetype = mime.getType(filename);
+            const stats = fs.statSync(path);
 
             await strapi.plugins.upload.services.upload.upload({
                 data: {
@@ -82,7 +90,7 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
                     field: 'mediafile',
                 }, 
                 files: {
-                    path: outputFilename,
+                    path: path,
                     name: "upload.mp4",
                     type: mimetype,
                     size: stats.size
