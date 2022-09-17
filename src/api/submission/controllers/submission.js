@@ -91,7 +91,7 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
                 }, 
                 files: {
                     path: path,
-                    name: "upload.mp4",
+                    name: filename,
                     type: mimetype,
                     size: stats.size
                 }
