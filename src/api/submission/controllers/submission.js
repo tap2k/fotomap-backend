@@ -53,14 +53,18 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
             }
         });
 
-        if (!channel) { return ctx.badRequest('No such channel: ' + ctx.request.uniqueID); };
+        //if (!channel) { return ctx.badRequest('No such channel: ' + ctx.request.uniqueID); };
         
         if (!ctx.request.files.mediafile) 
         { return ctx.badRequest('No submission specified'); };
 
+        let channelID = null;
+        if (channel)
+            channelID = channel.id;
+
         const submission = await strapi.db.query('api::submission.submission').create({
             data: {
-                channel: channel.id,
+                channel: channelID,
                 lat: ctx.request.body.lat,
                 long: ctx.request.body.long,
             }
