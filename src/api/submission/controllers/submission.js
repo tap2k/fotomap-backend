@@ -16,7 +16,7 @@ function processAudioSync(inputFilename, outputFilename){
         //var writeStream = fs.createWriteStream(outputFilename);
         ffmpeg(readStream)
         .addOutputOptions('-movflags +frag_keyframe+separate_moof+omit_tfhd_offset+empty_moov')
-        .format('mp4')
+        .format('mp3')
         .save(outputFilename)
         .on('end', ()=>{
             return resolve()
@@ -74,7 +74,7 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
 
         if (ctx.request.files.mediafile)
         {   
-            let path = ctx.request.files.mediafile.path;
+            /*let path = ctx.request.files.mediafile.path;
             let filename = ctx.request.files.mediafile.name;
 
             if (filename.endsWith("webm"))
@@ -82,8 +82,12 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
                 path = path + '.mp4';
                 filename = "upload.mp4";
                 await processAudioSync(ctx.request.files.mediafile.path, path)
-            }
+            }*/
             
+            const path = ctx.request.files.mediafile.path + '.mp3';
+            const filename = 'upload.mp3';
+            await processAudioSync(ctx.request.files.mediafile.path, path);
+
             const mimetype = mime.getType(filename);
             const stats = fs.statSync(path);
 
