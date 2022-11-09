@@ -65,7 +65,6 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         return channel;
     },
 
-    // TODO: delete content and mediafiles also
     async deleteChannel(ctx) {
         const channel = await strapi.db.query('api::channel.channel').findOne({
             select: ['uniqueID'],
@@ -74,10 +73,9 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                 uniqueID: ctx.request.body.uniqueID
              },
         });
-        if (channel == undefined)
-        {
+        if (!channel)
             return ctx.badRequest('No such channel or you are not the owner: ' + ctx.request.body.uniqueID);
-        }
+
         return await strapi.service('api::channel.channel').deleteChannel(ctx, ctx.request.body.uniqueID);
     }
 }));
