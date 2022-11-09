@@ -74,19 +74,15 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
 
         if (ctx.request.files.mediafile)
         {   
-            /*let path = ctx.request.files.mediafile.path;
+            let path = ctx.request.files.mediafile.path;
             let filename = ctx.request.files.mediafile.name;
-
+            
             if (filename.endsWith("webm"))
             {
-                path = path + '.mp4';
-                filename = "upload.mp4";
-                await processAudioSync(ctx.request.files.mediafile.path, path)
-            }*/
-            
-            const path = ctx.request.files.mediafile.path + '.mp3';
-            const filename = 'upload.mp3';
-            await processAudioSync(ctx.request.files.mediafile.path, path);
+                path = ctx.request.files.mediafile.path + '.mp3'
+                filename = 'audio.mp3';
+                await processAudioSync(ctx.request.files.mediafile.path, path);
+            }
 
             const mimetype = mime.getType(filename);
             const stats = fs.statSync(path);
