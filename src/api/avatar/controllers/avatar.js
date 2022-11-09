@@ -11,6 +11,7 @@ const { createCoreController } = require('@strapi/strapi').factories;
 //module.exports = createCoreController('api::avatar.avatar');
 
 module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
+
     async getAvatar(ctx) {
         const myAvatar = await strapi.db.query('api::avatar.avatar').findOne({
             where: {
@@ -21,14 +22,15 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
             populate: {
                 bundle: {
                     select: ['id', 'url'],
-                    },
                 },
+            },
           });
         return myAvatar;
     },
+    
     async uploadAvatar(ctx) {
         if (!ctx.request.files.bundle) 
-        { return ctx.badRequest('No asset bundle specified'); };
+            return ctx.badRequest('No asset bundle specified'); 
 
         const avatar = await strapi.db.query('api::avatar.avatar').create({
             data: {
@@ -37,7 +39,8 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
             },
         });
 
-        if (!avatar) { return ctx.badRequest('Could not create asset') };
+        if (!avatar)
+            return ctx.badRequest('Could not create asset');
 
         const stats = fs.statSync(ctx.request.files.bundle.path);
         //const mimetype = mime.getType(ctx.request.files.bundle.name);
@@ -55,6 +58,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                 size: stats.size
             }
         });
+
         return "ok";
     }
 }));

@@ -11,6 +11,7 @@ const { createCoreController } = require('@strapi/strapi').factories;
 //module.exports = createCoreController('api::asset.asset');
 
 module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
+
     async getAssetsForChannel(ctx) {
         const myAssets = await strapi.db.query('api::asset.asset').findMany({
             where: {
@@ -24,11 +25,12 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
             populate: {
                 bundle: {
                     select: ['id', 'url'],
-                    },
                 },
+            },
           });
         return myAssets;
     },
+    
     async uploadAssetToChannel(ctx) {
         const channel = await strapi.db.query('api::channel.channel').findOne({
             where: {
@@ -40,7 +42,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
         if (!channel) { return ctx.badRequest('No such channel: ' + ctx.request.uniqueID); };
         if (ctx.state.user.id != channel.owner.id) { return ctx.badRequest('You do not own this channel'); };
         if (!ctx.request.files.bundle) 
-        { return ctx.badRequest('No asset bundle specified'); };
+            return ctx.badRequest('No asset bundle specified'); 
         const asset = await strapi.db.query('api::asset.asset').create({
             data: {
                 channel: channel.id,
@@ -49,7 +51,8 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
             },
         });
 
-        if (!asset) { return ctx.badRequest('Could not create asset') };
+        if (!asset) 
+            return ctx.badRequest('Could not create asset');
 
         const stats = fs.statSync(ctx.request.files.bundle.path);
         //const mimetype = mime.getType(ctx.request.files.bundle.name);
@@ -67,6 +70,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                 size: stats.size
             }
         });
+        
         return "ok";
     }
 }));

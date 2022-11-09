@@ -12,13 +12,16 @@ const { createCoreController } = require('@strapi/strapi').factories;
 //module.exports = createCoreController('api::content.content');
 
 module.exports = createCoreController('api::content.content', ({ strapi }) =>  ({
+
     async getContentForChannel(ctx) {
         const myContents = await strapi.db.query('api::content.content').findMany({
             where: {
                 channel: {
                   uniqueID: {
                     $eq: ctx.query.uniqueID
-                  },}},
+                  },
+                }
+            },
             orderBy: { order: 'asc' },
             select: ['id', 'ext_url', 'is360', 'lat', 'long', 'mapping', 'packing'],
             populate: {
@@ -29,11 +32,13 @@ module.exports = createCoreController('api::content.content', ({ strapi }) =>  (
           });
         return myContents;
     },
+
     async uploadContentToChannel(ctx) {
+        if (!ctx.request.body.ext_url && !ctx.request.files.mediafile) 
+            return ctx.badRequest('No content specified'); 
+
         const channel = await strapi.db.query('api::channel.channel').findOne({
-            where: {
-                uniqueID: { $eq: ctx.request.body.uniqueID},
-            },
+            where: { uniqueID: { $eq: ctx.request.body.uniqueID}, },
             populate: ['owner']
         });
         
@@ -41,14 +46,11 @@ module.exports = createCoreController('api::content.content', ({ strapi }) =>  (
         
         if (ctx.state.user.id != channel.owner.id) { return ctx.badRequest('You do not own this channel'); };
 
-        if (!ctx.request.body.ext_url && !ctx.request.files.mediafile) 
-        { return ctx.badRequest('No content specified'); };
-
         var order = ctx.request.body.order;
         var numItems = -1;
         if (!order)
         {
-            var numItems = await strapi.query('api::content.content').count({ where: { channel: channel.id }});
+            numItems = await strapi.query('api::content.content').count({ where: { channel: channel.id }});
             order = numItems + 1;
         }
 
@@ -60,7 +62,8 @@ module.exports = createCoreController('api::content.content', ({ strapi }) =>  (
             }
         });
 
-        if (!content) { return ctx.badRequest('Could not create content') };
+        if (!content) 
+            return ctx.badRequest('Could not create content');
 
         if (ctx.request.files.mediafile)
         {
@@ -98,13 +101,15 @@ module.exports = createCoreController('api::content.content', ({ strapi }) =>  (
             var currentOrder = order;
             for (const updateContent of contentItems) {
                 if (updateContent.id != content.id) {
-                currentOrder++;
-                await strapi.query("api::content.content").update({ 
-                    where: { id: updateContent.id },
-                    data: { order: currentOrder },
-                });}   
+                    currentOrder++;
+                    await strapi.query("api::content.content").update({ 
+                        where: { id: updateContent.id },
+                        data: { order: currentOrder },
+                    });
+                }   
             }
         };
+        
         return "ok";
     },
 }));
