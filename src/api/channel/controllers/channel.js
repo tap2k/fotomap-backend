@@ -16,6 +16,11 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         const channel = await strapi.query('api::channel.channel').findOne({
             select: ['uniqueID', 'name', 'lat', 'long', 'zoom'],
             where: { uniqueID: ctx.query.uniqueID },
+            populate: {
+                parent: {
+                    select: ['uniqueID'],
+                    },
+                },
           });
         return channel;
     },
