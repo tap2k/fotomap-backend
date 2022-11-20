@@ -46,6 +46,7 @@
         "equirect180",
         "equirect360",
         "cubemap",
+        "eac",
         "unknown"
       ],
       "default": "unknown"
@@ -56,6 +57,7 @@
         "none",
         "topbottom",
         "leftright",
+        "eac3d",
         "custom",
         "twotextures",
         "unknown"
