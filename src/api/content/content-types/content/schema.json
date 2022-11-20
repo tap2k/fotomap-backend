@@ -57,9 +57,9 @@
         "none",
         "topbottom",
         "leftright",
+        "twotextures",
         "eac3d",
         "custom",
-        "twotextures",
         "unknown"
       ],
       "default": "unknown"
