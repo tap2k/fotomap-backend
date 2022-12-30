@@ -21,8 +21,8 @@
     },
     "public": {
       "type": "boolean",
-      "default": true,
-      "required": true
+      "default": false,
+      "required": false
     },
     "owner": {
       "type": "relation",

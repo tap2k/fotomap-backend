@@ -37,7 +37,7 @@
     "is360": {
       "type": "boolean",
       "default": false,
-      "required": true
+      "required": false
     },
     "mapping": {
       "type": "enumeration",
