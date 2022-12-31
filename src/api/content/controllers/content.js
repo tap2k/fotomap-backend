@@ -39,13 +39,14 @@ module.exports = createCoreController('api::content.content', ({ strapi }) =>  (
 
         const channel = await strapi.db.query('api::channel.channel').findOne({
             where: { uniqueID: { $eq: ctx.request.body.uniqueID}, },
-            populate: ['owner']
+            populate: ['owner', 'public']
         });
         
         if (!channel) { return ctx.badRequest('No such channel: ' + ctx.request.uniqueID); };
         
         // TODO: Fix this! Or rely on moderation?
-        // if (ctx.state.user.id != channel.owner.id) { return ctx.badRequest('You do not own this channel'); };
+        if (ctx.state.user.id != channel.owner.id && channel.public != 'true') 
+            return ctx.badRequest('You do not own this channel');
 
         var order = ctx.request.body.order;
         var numItems = -1;
