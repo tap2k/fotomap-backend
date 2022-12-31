@@ -7,6 +7,7 @@
 const fs = require('fs');
 const mime = require('mime');
 const ffmpeg = require('fluent-ffmpeg');
+//const tsebml = require('ts-ebml');
  
 function processAudioSync(inputFilename, outputFilename){
     return new Promise((resolve,reject)=>{
@@ -88,6 +89,15 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
                 filename = 'audio.mp3';
                 await processAudioSync(ctx.request.files.mediafile.path, path);
             }
+
+            /*if (filename.endsWith("mp4"))
+            {
+                const decoder = new tsebml.Decoder();
+                var readStream = fs.createReadStream(ctx.request.files.mediafile.path).on('data', (buf)=>{
+                    const ebmlElms = decoder.decode(buf);
+                    console.log(ebmlElms);
+                });
+            }*/
 
             const mimetype = mime.getType(filename);
             const stats = fs.statSync(path);
