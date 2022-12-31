@@ -44,8 +44,9 @@ module.exports = createCoreController('api::content.content', ({ strapi }) =>  (
         
         if (!channel) { return ctx.badRequest('No such channel: ' + ctx.request.uniqueID); };
         
-        // TODO: Fix this! Or rely on moderation?
-        if (ctx.state.user.id != channel.owner.id && channel.public != 'true') 
+        //TODO: Fix this! Or rely on moderation?
+        //if (!channel.public && ctx.state.user.id != channel.owner.id)
+        if (ctx.state.user.id != channel.owner.id) 
             return ctx.badRequest('You do not own this channel');
 
         var order = ctx.request.body.order;
