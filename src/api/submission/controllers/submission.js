@@ -6,7 +6,7 @@
 
 const fs = require('fs');
 const mime = require('mime');
-const ffmpeg = require('fluent-ffmpeg');
+//const ffmpeg = require('fluent-ffmpeg');
 //const tsebml = require('ts-ebml');
  
 function processAudioSync(inputFilename, outputFilename){
@@ -83,14 +83,14 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
             let path = ctx.request.files.mediafile.path;
             let filename = ctx.request.files.mediafile.name;
             
-            if (filename.endsWith("webm"))
+            /*if (filename.endsWith(".wav"))
             {
                 path = ctx.request.files.mediafile.path + '.mp3'
                 filename = 'audio.mp3';
                 await processAudioSync(ctx.request.files.mediafile.path, path);
-            }
+            }*/
 
-            /*if (filename.endsWith("mp4"))
+            /*if (filename.endsWith(".mp4"))
             {
                 const decoder = new tsebml.Decoder();
                 var readStream = fs.createReadStream(ctx.request.files.mediafile.path).on('data', (buf)=>{
