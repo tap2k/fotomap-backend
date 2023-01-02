@@ -6,10 +6,11 @@
 
 const fs = require('fs');
 const mime = require('mime');
+
 //const ffmpeg = require('fluent-ffmpeg');
 //const tsebml = require('ts-ebml');
  
-function processAudioSync(inputFilename, outputFilename){
+/*function processAudioSync(inputFilename, outputFilename){
     return new Promise((resolve,reject)=>{
         var readStream = fs.createReadStream(inputFilename);
         //var writeStream = fs.createWriteStream(outputFilename);
@@ -24,7 +25,7 @@ function processAudioSync(inputFilename, outputFilename){
             return reject(err)
         })
     })
-}
+}*/
 
 const { createCoreController } = require('@strapi/strapi').factories;
 
