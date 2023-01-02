@@ -1,5 +1,6 @@
 'use strict';
 
+const { channel } = require('diagnostics_channel');
 /**
  *  submission controller
  */
@@ -32,12 +33,16 @@ const { createCoreController } = require('@strapi/strapi').factories;
 module.exports = createCoreController('api::submission.submission', ({ strapi }) =>  ({
 
     async getSubmissionsForChannel(ctx) {
+        //TODO: Is this OK?
+        var channelid = ctx.query.uniqueID;
+        if (ctx.query.uniqueID == 'undefined')
+            channelid = null;
         const mySubmissions = await strapi.db.query('api::submission.submission').findMany({
             where: {
                 publishedAt: { $not: null },
                 channel: {
                   uniqueID: {
-                    $eq: ctx.query.uniqueID
+                    $eq: channelid
                   },
                 }
             },
