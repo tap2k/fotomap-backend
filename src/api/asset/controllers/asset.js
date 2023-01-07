@@ -18,13 +18,14 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                 channel: {
                   uniqueID: {
                     $eq: ctx.query.uniqueID
-                  }},
+                  }},            
+                orderBy: { order: 'asc' },
                 platform: ctx.query.platform
             },
             select: ['id', 'name'],
             populate: {
                 bundle: {
-                    select: ['id', 'url'],
+                    select: ['id', 'name', 'url'],
                 },
             },
           });
@@ -43,11 +44,20 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
         if (ctx.state.user.id != channel.owner.id) { return ctx.badRequest('You do not own this channel'); };
         if (!ctx.request.files.bundle) 
             return ctx.badRequest('No asset bundle specified'); 
+
+        var order = ctx.request.body.order;
+        var numItems = -1;
+        if (!order)
+        {
+            numItems = await strapi.query('api::asset.asset').count({ where: { channel: channel.id }});
+            order = numItems + 1;
+        }
         const asset = await strapi.db.query('api::asset.asset').create({
             data: {
                 channel: channel.id,
                 name: ctx.request.body.name,
                 platform: ctx.request.body.platform,
+                order: order,
             },
         });
 

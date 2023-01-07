@@ -36,6 +36,9 @@
       "allowedTypes": [
         "files"
       ]
+    },
+    "order": {
+      "type": "integer"
     }
   }
 }
