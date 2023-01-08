@@ -19,9 +19,9 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                   uniqueID: {
                     $eq: ctx.query.uniqueID
                   }},            
-                orderBy: { order: 'asc' },
                 platform: ctx.query.platform
             },
+            orderBy: { order: 'asc' },
             select: ['id', 'name'],
             populate: {
                 bundle: {
