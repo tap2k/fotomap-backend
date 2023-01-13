@@ -31,13 +31,14 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
     },
     
     async uploadAssetToChannel(ctx) {
+
         if (!ctx.request.files.bundle) 
             return ctx.badRequest('No asset bundle specified'); 
 
         const channelid = await strapi.config.functions.getChannelID(ctx.state.user.id, ctx.request.body.uniqueID);
         if (!channelid) 
             return ctx.badRequest('No such channel or you do not own this channel');
-
+            
         const oldAsset = await strapi.db.query('api::asset.asset').findOne({
             where: {
                 channel: {
@@ -45,7 +46,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                     $eq: ctx.request.body.uniqueID
                     }},            
                 platform: ctx.request.body.platform,
-                name: ctx.request.body.name,
+                name: ctx.request.body.name
             },
             select: ['id'],
             populate: {
@@ -62,6 +63,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
             await strapi.service('api::asset.asset').delete(oldAsset.id);
 
         var order = ctx.request.body.order;
+
         var numItems = -1;
         if (!order)
         {
@@ -70,7 +72,8 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                     channel: {
                         uniqueID: {
                         $eq: ctx.request.body.uniqueID
-                    }}
+                    }},
+                    platform: ctx.request.body.platform
                 }
             });
             order = numItems + 1;
@@ -105,6 +108,33 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                 size: stats.size
             }
         });
+
+        if (numItems == -1)
+        {
+            const assetItems = await strapi.db.query('api::asset.asset').findMany({
+                where: {
+                    $and: [
+                    {channel: channelid},
+                    {platform: ctx.request.body.platform},
+                    {order: {$gte: order}}
+                    ]
+                },
+                select: ['id'],
+                orderBy: { order: 'asc' },
+            });
+    
+            var currentOrder = order;
+            for (const updateAsset of assetItems) {
+                if (updateAsset.id != asset.id) {
+                    currentOrder++;
+                    await strapi.query("api::asset.asset").update({ 
+                        where: { id: updateAsset.id },
+                        data: { order: currentOrder },
+                    });
+                }   
+            }
+        };
+
         return "ok";
     },
 
