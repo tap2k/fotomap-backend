@@ -4,8 +4,6 @@
  *  channel controller
  */
 
-const uuid = require('uuid');
-
 const { createCoreController } = require('@strapi/strapi').factories;
 
 //module.exports = createCoreController('api::channel.channel');
@@ -58,7 +56,10 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
     async createChannel(ctx) {
         let channelid = ctx.request.channelid;
         if (!uniqueid)
+        {
+            const uuid = require('uuid');
             channelid = uuid.v4().substring(0,8);
+        }
         const channel = await strapi.db.query('api::channel.channel').create({
             data: {
                 uniqueID: channelid,
@@ -71,16 +72,11 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
     },
 
     async deleteChannel(ctx) {
-        const channel = await strapi.db.query('api::channel.channel').findOne({
-            select: ['uniqueID'],
-            where: { 
-                owner: ctx.state.user.id,
-                uniqueID: ctx.request.body.uniqueID
-             },
-        });
-        if (!channel)
+        const channelid = await strapi.config.functions.isMyChannel(ctx.state.user.id, ctx.request.body.uniqueID);
+        if (!channelid)
             return ctx.badRequest('No such channel or you are not the owner: ' + ctx.request.body.uniqueID);
 
-        return await strapi.service('api::channel.channel').deleteChannel(ctx, ctx.request.body.uniqueID);
+        await strapi.service('api::channel.channel').deleteChannel(ctx, ctx.request.body.uniqueID);
+        return "ok";
     }
 }));

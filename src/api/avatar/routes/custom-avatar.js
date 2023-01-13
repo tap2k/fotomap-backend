@@ -10,5 +10,10 @@ module.exports = {
         path: "/uploadAvatar",
         handler: "avatar.uploadAvatar",
       },
+      {
+        method: "POST",
+        path: "/deleteAvatar",
+        handler: "avatar.deleteAvatar",
+      },
     ],
   }

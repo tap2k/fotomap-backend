@@ -15,6 +15,11 @@ module.exports = {
         path: "/uploadContentToChannel",
         handler: "content.uploadContentToChannel",
       },
+      {
+        method: "POST",
+        path: "/deleteContent",
+        handler: "content.deleteContent",
+      },
     ],
   }
   

@@ -4,8 +4,9 @@
  *  content controller
  */
 
-const fs = require('fs');
-const mime = require('mime'); //used to detect file's mime type
+//const fs = require('fs');
+//const mime = require('mime'); 
+//const { createGzip } = require('zlib');
 
 const { createCoreController } = require('@strapi/strapi').factories;
 
@@ -34,20 +35,19 @@ module.exports = createCoreController('api::content.content', ({ strapi }) =>  (
     },
 
     async uploadContentToChannel(ctx) {
+        const fs = require('fs');
+        const mime = require('mime');
+
         if (!ctx.request.body.ext_url && !ctx.request.files.mediafile) 
             return ctx.badRequest('No content specified'); 
 
-        const channel = await strapi.db.query('api::channel.channel').findOne({
-            where: { uniqueID: { $eq: ctx.request.body.uniqueID}, },
-            populate: ['owner', 'public']
-        });
+        const isMyChannel = await strapi.config.functions.isMyChannel(ctx.state.user.id, ctx.request.body.uniqueID);
         
-        if (!channel) { return ctx.badRequest('No such channel: ' + ctx.request.uniqueID); };
+        if (!isMyChannel) 
+            return ctx.badRequest('No such channel or you are not the owner ' + ctx.request.body.uniqueID);
         
         //TODO: Fix this! Or rely on moderation?
-        //if (!channel.public && ctx.state.user.id != channel.owner.id)
-        if (ctx.state.user.id != channel.owner.id) 
-            return ctx.badRequest('You do not own this channel');
+        //if (!channel.public && ctx.state.user.id != channel.owner.id);
 
         var order = ctx.request.body.order;
         var numItems = -1;
@@ -112,7 +112,46 @@ module.exports = createCoreController('api::content.content', ({ strapi }) =>  (
                 }   
             }
         };
-        
         return "ok";
     },
+
+    async deleteContent(ctx) {
+        const content = await strapi.db.query('api::content.content').findOne({
+            where: { 
+                id: ctx.request.body.id,
+             },
+             populate: {
+                mediafile: {
+                    select: ['id'],
+                    },
+                channel: {
+                    select: ['id', 'uniqueID'],
+                    },
+                },
+        });
+
+        if (!content)
+            return ctx.badRequest('No such content: ' + ctx.request.body.id);
+
+        const channelid = await strapi.config.functions.getChannelID(ctx.state.user.id, content.channel.uniqueID);
+
+        /*const channel = await strapi.db.query('api::channel.channel').findOne({
+            select: ['uniqueID'],
+            where: { 
+                owner: ctx.state.user.id,
+                uniqueID: content.channel.uniqueID
+             },
+        });
+        if (!channel)
+            return ctx.badRequest('No such channel or you are not the owner: ' + ctx.request.body.uniqueID);*/
+        
+        if (!channelid)
+            return ctx.badRequest('No such channel or you are not the owner: ' + content.channel.uniqueID);
+
+        if (content.mediafile)
+            await strapi.plugins.upload.services.upload.remove(content.mediafile);
+
+        await strapi.service('api::content.content').delete(content.id);
+        return "ok";
+    }
 }));

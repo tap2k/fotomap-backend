@@ -1,17 +1,14 @@
 'use strict';
 
-const { channel } = require('diagnostics_channel');
 /**
  *  submission controller
  */
-
-const fs = require('fs');
-const mime = require('mime');
-
-//const ffmpeg = require('fluent-ffmpeg');
-//const tsebml = require('ts-ebml');
  
+//const { channel } = require('diagnostics_channel');
+
 /*function processAudioSync(inputFilename, outputFilename){
+    const ffmpeg = require('fluent-ffmpeg');
+    //const tsebml = require('ts-ebml');
     return new Promise((resolve,reject)=>{
         var readStream = fs.createReadStream(inputFilename);
         //var writeStream = fs.createWriteStream(outputFilename);
@@ -34,6 +31,7 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
 
     async getSubmissionsForChannel(ctx) {
         //TODO: Is this OK?
+        //TODO: Verify user owns channel?
         var channelid = ctx.query.uniqueID;
         if (ctx.query.uniqueID == 'undefined')
             channelid = null;
@@ -105,6 +103,8 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
                 });
             }*/
 
+            const fs = require('fs');
+            const mime = require('mime');
             const mimetype = mime.getType(filename);
             const stats = fs.statSync(path);
 
@@ -122,7 +122,6 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
                 }
             });
         }
-        
         return "ok";
     },
 }));
