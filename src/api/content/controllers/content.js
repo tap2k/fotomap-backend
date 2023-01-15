@@ -151,7 +151,6 @@ module.exports = createCoreController('api::content.content', ({ strapi }) =>  (
         if (content.mediafile)
             await strapi.plugins.upload.services.upload.remove(content.mediafile);
 
-        await strapi.service('api::content.content').delete(content.id);
-        return "ok";
+        return await strapi.service('api::content.content').delete(content.id);
     }
 }));

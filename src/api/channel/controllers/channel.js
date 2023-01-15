@@ -72,11 +72,30 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
     },
 
     async deleteChannel(ctx) {
-        const channelid = await strapi.config.functions.isMyChannel(ctx.state.user.id, ctx.request.body.uniqueID);
+        const channelid = await strapi.config.functions.getChannelID(ctx.state.user.id, ctx.request.body.uniqueID);
         if (!channelid)
             return ctx.badRequest('No such channel or you are not the owner: ' + ctx.request.body.uniqueID);
 
-        await strapi.service('api::channel.channel').deleteChannel(ctx, ctx.request.body.uniqueID);
-        return "ok";
+        const myContents = await strapi.db.query('api::content.content').findMany({
+            where: { channel: channelid },
+            select: ['id'],
+            populate: {
+                mediafile: {
+                    select: ['id'],
+                    },
+                },
+              });
+
+        //ctx.query.uniqueID = ctx.request.body.uniqueID;
+        //const myContents = strapi.controller('api::content.content').getContentForChannel(ctx);
+
+        for (const content of myContents)
+        {
+            if (content.mediafile)
+                await strapi.plugins.upload.services.upload.remove(content.mediafile);
+            await strapi.service('api::content.content').delete(content.id);
+        }
+
+        return await strapi.service('api::channel.channel').deleteChannel(ctx, ctx.request.body.uniqueID);
     }
 }));
