@@ -4,7 +4,8 @@
   "info": {
     "singularName": "avatar",
     "pluralName": "avatars",
-    "displayName": "Avatar"
+    "displayName": "Avatar",
+    "description": ""
   },
   "options": {
     "draftAndPublish": false
@@ -20,18 +21,19 @@
       "type": "enumeration",
       "enum": [
         "Android",
-        "PC"
+        "PC",
+        "WebGL"
       ],
       "required": true,
       "default": "Android"
     },
     "bundle": {
-      "allowedTypes": [
-        "files"
-      ],
       "type": "media",
       "multiple": false,
-      "required": true
+      "required": true,
+      "allowedTypes": [
+        "files"
+      ]
     }
   }
 }
