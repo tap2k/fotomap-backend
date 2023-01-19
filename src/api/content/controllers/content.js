@@ -97,17 +97,15 @@ module.exports = createCoreController('api::content.content', ({ strapi }) =>  (
                     {order: { $gte: order}}
                     ]
                 },
-                select: ['id'],
+                select: ['id', 'order'],
                 orderBy: { order: 'asc' },
             });
     
-            var currentOrder = order;
             for (const updateContent of contentItems) {
                 if (updateContent.id != content.id) {
-                    currentOrder++;
                     await strapi.query("api::content.content").update({ 
                         where: { id: updateContent.id },
-                        data: { order: currentOrder },
+                        data: { order: updateContent.order + 1 },
                     });
                 }   
             }

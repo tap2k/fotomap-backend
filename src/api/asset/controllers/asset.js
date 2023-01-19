@@ -119,17 +119,15 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                     {order: {$gte: order}}
                     ]
                 },
-                select: ['id'],
+                select: ['id', 'order'],
                 orderBy: { order: 'asc' },
             });
     
-            var currentOrder = order;
             for (const updateAsset of assetItems) {
                 if (updateAsset.id != asset.id) {
-                    currentOrder++;
                     await strapi.query("api::asset.asset").update({ 
                         where: { id: updateAsset.id },
-                        data: { order: currentOrder },
+                        data: { order: updateAsset.order + 1 },
                     });
                 }   
             }
