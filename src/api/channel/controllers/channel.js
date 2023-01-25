@@ -55,16 +55,19 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
     async createChannel(ctx) {
         let channelid = ctx.request.channelid;
-        if (!uniqueid)
+        let isPublic = ctx.request.public;
+        if (!channelid)
         {
             const uuid = require('uuid');
             channelid = uuid.v4().substring(0,8);
         }
+        if (!isPublic)
+            isPublic = false;
         const channel = await strapi.db.query('api::channel.channel').create({
             data: {
                 uniqueID: channelid,
                 name: ctx.request.body.name,
-                public: ctx.request.body.public,
+                public: isPublic,
                 owner: ctx.state.user.id,
               },
             });
