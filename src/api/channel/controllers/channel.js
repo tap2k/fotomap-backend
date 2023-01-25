@@ -54,8 +54,8 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
     },
 
     async createChannel(ctx) {
-        let channelid = ctx.request.channelid;
-        let isPublic = ctx.request.public;
+        let channelid = ctx.request.uniqueID;
+        let isPublic = ctx.request.ispublic;
         if (!channelid)
         {
             const uuid = require('uuid');
