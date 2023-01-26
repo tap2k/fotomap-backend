@@ -63,15 +63,19 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         }
         if (!ispublic)
             ispublic = false;
-        const channel = await strapi.db.query('api::channel.channel').create({
-            data: {
-                uniqueID: channelid,
-                name: ctx.request.body.name,
-                public: ispublic,
-                owner: ctx.state.user.id,
-              },
+        try {
+            const channel = await strapi.db.query('api::channel.channel').create({
+                data: {
+                    uniqueID: channelid,
+                    name: ctx.request.body.name,
+                    public: ispublic,
+                    owner: ctx.state.user.id,
+                },
             });
-        return channel;
+            return channel;
+        } catch (err) {
+            return ctx.badRequest(err);
+        }    
     },
 
     async deleteChannel(ctx) {
