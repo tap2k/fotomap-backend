@@ -22,7 +22,9 @@
       "enum": [
         "Android",
         "PC",
-        "WebGL"
+        "WebGL",
+        "Mac",
+        "All"
       ],
       "required": true,
       "default": "Android"
@@ -34,6 +36,46 @@
       "allowedTypes": [
         "files"
       ]
+    },
+    "pcbundle": {
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ],
+      "type": "media",
+      "multiple": false
+    },
+    "androidbundle": {
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ],
+      "type": "media",
+      "multiple": false
+    },
+    "webglbundle": {
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ],
+      "type": "media",
+      "multiple": false
+    },
+    "macbundle": {
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ],
+      "type": "media",
+      "multiple": false
     }
   }
 }

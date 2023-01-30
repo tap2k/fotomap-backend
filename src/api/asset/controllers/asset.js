@@ -204,6 +204,9 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                 macbundle: {
                     select: ['id', 'name', 'url'],
                 },
+                bundle: {
+                    select: ['id', 'name', 'url'],
+                },
                 channel: {
                     select: ['id', 'uniqueID'],
                     },
@@ -230,6 +233,9 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
         if (asset.macbundle)
             await strapi.plugins.upload.services.upload.remove(asset.macbundle);
 
+        if (asset.bundle)
+            await strapi.plugins.upload.services.upload.remove(asset.bundle);
+
         await strapi.service('api::asset.asset').delete(asset.id);
         return "ok";
     },
@@ -250,10 +256,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                 {
                     const currentAsset = await strapi.db.query('api::asset.asset').findOne({
                         where: {
-                            channel: {
-                                uniqueID: {
-                                $eq: channel.uniqueID
-                                }},            
+                            channel: channel.id,            
                             platform: "All",
                             name: asset.name
                         },
