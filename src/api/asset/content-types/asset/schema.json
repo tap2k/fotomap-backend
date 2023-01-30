@@ -26,7 +26,8 @@
         "PC",
         "Android",
         "WebGL",
-        "Mac"
+        "Mac",
+        "All"
       ],
       "default": "PC",
       "required": true

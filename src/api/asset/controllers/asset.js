@@ -11,7 +11,7 @@ const { createCoreController } = require('@strapi/strapi').factories;
 module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
 
     async getAssetsForChannel(ctx) {
-        var platform = "Done";
+        var platform = "All";
         if (ctx.query.platform)
             platform = ctx.query.platform;
         const myAssets = await strapi.db.query('api::asset.asset').findMany({
@@ -62,7 +62,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                     uniqueID: {
                     $eq: ctx.request.body.uniqueID
                     }},            
-                platform: "Done",
+                platform: "All",
                 name: ctx.request.body.name
             },
             select: ['id'],
@@ -92,7 +92,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                         uniqueID: {
                         $eq: ctx.request.body.uniqueID
                     }},
-                    platform: "Done"
+                    platform: "All"
                 }
             });
             order = numItems + 1;
@@ -132,7 +132,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                 data: {
                     channel: channelid,
                     name: ctx.request.body.name,
-                    platform: "Done",
+                    platform: "All",
                     order: order,
                 }
             });
@@ -165,7 +165,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                 where: {
                     $and: [
                     {channel: channelid},
-                    {platform: "Done"},
+                    {platform: "All"},
                     {order: {$gte: order}}
                     ]
                 },
@@ -254,7 +254,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                                 uniqueID: {
                                 $eq: channel.uniqueID
                                 }},            
-                            platform: "Done",
+                            platform: "All",
                             name: asset.name
                         },
                         select: ['id', 'name'],
@@ -268,7 +268,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                     var data = {
                         channel: channel.id,
                         name: asset.name,
-                        platform: "Done",
+                        platform: "All",
                         order: asset.order};
                     if (platform == "PC")
                         data.pcbundle = asset.bundle.id;
