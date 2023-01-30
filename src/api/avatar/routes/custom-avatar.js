@@ -15,10 +15,10 @@ module.exports = {
         path: "/deleteAvatar",
         handler: "avatar.deleteAvatar",
       },
-      {
+      /*{
         method: "GET",
         path: "/convertAvatars",
         handler: "avatar.convertAvatars",
-      }
+      }*/
     ],
   }

@@ -17,26 +17,6 @@
       "relation": "oneToOne",
       "target": "plugin::users-permissions.user"
     },
-    "platform": {
-      "type": "enumeration",
-      "enum": [
-        "Android",
-        "PC",
-        "WebGL",
-        "Mac",
-        "All"
-      ],
-      "required": true,
-      "default": "Android"
-    },
-    "bundle": {
-      "type": "media",
-      "multiple": false,
-      "required": false,
-      "allowedTypes": [
-        "files"
-      ]
-    },
     "pcbundle": {
       "type": "media",
       "multiple": false,

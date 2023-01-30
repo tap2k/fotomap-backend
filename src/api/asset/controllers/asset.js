@@ -11,19 +11,19 @@ const { createCoreController } = require('@strapi/strapi').factories;
 module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
 
     async getAssetsForChannel(ctx) {
-        var platform = "All";
+        /*var platform = "All";
         if (ctx.query.platform)
-            platform = ctx.query.platform;
+            platform = ctx.query.platform;*/
         const myAssets = await strapi.db.query('api::asset.asset').findMany({
             where: {
                 channel: {
                   uniqueID: {
                     $eq: ctx.query.uniqueID
                   }},            
-                platform: platform
+                //platform: platform
             },
             orderBy: { order: 'asc' },
-            select: ['id', 'name', 'platform'],
+            select: ['id', 'name'],
             populate: {
                 pcbundle: {
                     select: ['id', 'name', 'url'],
@@ -37,9 +37,9 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                 macbundle: {
                     select: ['id', 'name', 'url'],
                 },
-                bundle: {
+                /*bundle: {
                     select: ['id', 'name', 'url'],
-                },
+                },*/
             },
           });
         return myAssets;
@@ -62,7 +62,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                     uniqueID: {
                     $eq: ctx.request.body.uniqueID
                     }},            
-                platform: "All",
+                //platform: "All",
                 name: ctx.request.body.name
             },
             select: ['id'],
@@ -92,7 +92,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                         uniqueID: {
                         $eq: ctx.request.body.uniqueID
                     }},
-                    platform: "All"
+                    //platform: "All"
                 }
             });
             order = numItems + 1;
@@ -132,7 +132,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                 data: {
                     channel: channelid,
                     name: ctx.request.body.name,
-                    platform: "All",
+                    //platform: "All",
                     order: order,
                 }
             });
@@ -165,7 +165,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                 where: {
                     $and: [
                     {channel: channelid},
-                    {platform: "All"},
+                    //{platform: "All"},
                     {order: {$gte: order}}
                     ]
                 },
@@ -240,7 +240,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
         return "ok";
     },
 
-    async convertAssets(ctx) {
+    /*async convertAssets(ctx) {
         const channels = await strapi.db.query('api::channel.channel').findMany({
             select: ['id', 'uniqueID']
           });
@@ -295,6 +295,6 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
             }
         }
         return "ok";
-    }
+    }*/
 
 }));

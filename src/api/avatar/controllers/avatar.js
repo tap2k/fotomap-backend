@@ -11,13 +11,13 @@ const { createCoreController } = require('@strapi/strapi').factories;
 module.exports = createCoreController('api::avatar.avatar', ({ strapi }) =>  ({
 
     async getAvatar(ctx) {
-        var platform = "All";
+        /*var platform = "All";
         if (ctx.query.platform)
-            platform = ctx.query.platform;
+            platform = ctx.query.platform;*/
         const myAvatar = await strapi.db.query('api::avatar.avatar').findOne({
             where: {
                 owner: ctx.state.user.id,
-                platform: platform
+                //platform: platform
             },
             select: ['id'],
             populate: {
@@ -51,7 +51,7 @@ module.exports = createCoreController('api::avatar.avatar', ({ strapi }) =>  ({
         var currentAvatar = await strapi.db.query('api::avatar.avatar').findOne({
             where: {
                 owner: ctx.state.user.id,      
-                platform: "All"
+                //platform: "All"
             },
             select: ['id'],
             populate: {
@@ -101,7 +101,7 @@ module.exports = createCoreController('api::avatar.avatar', ({ strapi }) =>  ({
             currentAvatar = await strapi.db.query('api::avatar.avatar').create({
                 data: {
                     owner: ctx.state.user.id,
-                    platform: "All",
+                    //platform: "All",
                 },
             });
 
@@ -174,7 +174,7 @@ module.exports = createCoreController('api::avatar.avatar', ({ strapi }) =>  ({
         return "ok";
     },
 
-    async convertAvatars(ctx) {
+    /*async convertAvatars(ctx) {
         const users = await strapi.db.query('plugin::users-permissions.user').findMany({
             select: ['id', 'username']
           });
@@ -231,5 +231,5 @@ module.exports = createCoreController('api::avatar.avatar', ({ strapi }) =>  ({
             }
         }
         return "ok";
-    }
+    }*/
 }));

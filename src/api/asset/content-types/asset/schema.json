@@ -20,18 +20,6 @@
     "name": {
       "type": "string"
     },
-    "platform": {
-      "type": "enumeration",
-      "enum": [
-        "PC",
-        "Android",
-        "WebGL",
-        "Mac",
-        "All"
-      ],
-      "default": "PC",
-      "required": true
-    },
     "pcbundle": {
       "type": "media",
       "multiple": false,
@@ -66,17 +54,6 @@
       ]
     },
     "macbundle": {
-      "type": "media",
-      "multiple": false,
-      "required": false,
-      "allowedTypes": [
-        "images",
-        "files",
-        "videos",
-        "audios"
-      ]
-    },
-    "bundle": {
       "type": "media",
       "multiple": false,
       "required": false,
