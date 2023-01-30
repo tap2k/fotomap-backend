@@ -11,16 +11,19 @@ const { createCoreController } = require('@strapi/strapi').factories;
 module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
 
     async getAssetsForChannel(ctx) {
+        var platform = "Done";
+        if (ctx.query.platform)
+            platform = ctx.query.platform;
         const myAssets = await strapi.db.query('api::asset.asset').findMany({
             where: {
                 channel: {
                   uniqueID: {
                     $eq: ctx.query.uniqueID
                   }},            
-                platform: "Done"
+                platform: platform
             },
             orderBy: { order: 'asc' },
-            select: ['id', 'name'],
+            select: ['id', 'name', 'platform'],
             populate: {
                 pcbundle: {
                     select: ['id', 'name', 'url'],
@@ -32,6 +35,9 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                     select: ['id', 'name', 'url'],
                 },
                 macbundle: {
+                    select: ['id', 'name', 'url'],
+                },
+                bundle: {
                     select: ['id', 'name', 'url'],
                 },
             },
@@ -49,7 +55,6 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
             return ctx.badRequest('No such channel or you do not own this channel');
 
         const platform = ctx.request.body.platform;
-        console.log("HI " + platform);
             
         var currentAsset = await strapi.db.query('api::asset.asset').findOne({
             where: {
@@ -87,7 +92,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                         uniqueID: {
                         $eq: ctx.request.body.uniqueID
                     }},
-                    platform: ctx.request.body.platform
+                    platform: "Done"
                 }
             });
             order = numItems + 1;
@@ -169,7 +174,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
             });
     
             for (const updateAsset of assetItems) {
-                if (updateAsset.id != asset.id) {
+                if (updateAsset.id != currentAsset.id) {
                     await strapi.query("api::asset.asset").update({ 
                         where: { id: updateAsset.id },
                         data: { order: updateAsset.order + 1 },
@@ -275,12 +280,10 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                         data.macbundle = asset.bundle.id;
                     if (currentAsset)
                     {
-                        console.log("current asset");
-                        const newasset = await strapi.query("api::asset.asset").update({ 
+                        await strapi.query("api::asset.asset").update({ 
                             where: { id: currentAsset.id },
                             data: data,
                         });
-                        console.log(newasset);
                     }
                     else
                         await strapi.db.query('api::asset.asset').create({data: data});
