@@ -249,6 +249,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
         {
           for (const platform of platforms)
             {
+                console.log ("Converting asset " + channel.uniqueID + " " + platform);
                 ctx.query.uniqueID = channel.uniqueID;
                 ctx.query.platform = platform;
                 const assets = await strapi.controller('api::asset.asset').getAssetsForChannel(ctx);

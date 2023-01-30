@@ -38,6 +38,7 @@ module.exports = createCoreController('api::avatar.avatar', ({ strapi }) =>  ({
                 },
             },
           });
+        console.log(myAvatar);
         return myAvatar;
     },
     
