@@ -82,46 +82,43 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
         if (!submission) 
             return ctx.badRequest('Could not create submission');
 
-        if (ctx.request.files.mediafile)
-        {   
-            let path = ctx.request.files.mediafile.path;
-            let filename = ctx.request.files.mediafile.name;
-            
-            /*if (filename.endsWith(".wav"))
-            {
-                path = ctx.request.files.mediafile.path + '.mp3'
-                filename = 'audio.mp3';
-                await processAudioSync(ctx.request.files.mediafile.path, path);
-            }*/
+        let path = ctx.request.files.mediafile.path;
+        let filename = ctx.request.files.mediafile.name;
+        
+        /*if (filename.endsWith(".wav"))
+        {
+            path = ctx.request.files.mediafile.path + '.mp3'
+            filename = 'audio.mp3';
+            await processAudioSync(ctx.request.files.mediafile.path, path);
+        }*/
 
-            /*if (filename.endsWith(".mp4"))
-            {
-                const decoder = new tsebml.Decoder();
-                var readStream = fs.createReadStream(ctx.request.files.mediafile.path).on('data', (buf)=>{
-                    const ebmlElms = decoder.decode(buf);
-                    console.log(ebmlElms);
-                });
-            }*/
-
-            const fs = require('fs');
-            const mime = require('mime');
-            const mimetype = mime.getType(filename);
-            const stats = fs.statSync(path);
-
-            await strapi.plugins.upload.services.upload.upload({
-                data: {
-                    refId: submission.id,
-                    ref: 'api::submission.submission',
-                    field: 'mediafile',
-                }, 
-                files: {
-                    path: path,
-                    name: filename,
-                    type: mimetype,
-                    size: stats.size
-                }
+        /*if (filename.endsWith(".mp4"))
+        {
+            const decoder = new tsebml.Decoder();
+            var readStream = fs.createReadStream(ctx.request.files.mediafile.path).on('data', (buf)=>{
+                const ebmlElms = decoder.decode(buf);
+                console.log(ebmlElms);
             });
-        }
+        }*/
+
+        const fs = require('fs');
+        const mime = require('mime');
+        const mimetype = mime.getType(filename);
+        const stats = fs.statSync(path);
+
+        await strapi.plugins.upload.services.upload.upload({
+            data: {
+                refId: submission.id,
+                ref: 'api::submission.submission',
+                field: 'mediafile',
+            }, 
+            files: {
+                path: path,
+                name: filename,
+                type: mimetype,
+                size: stats.size
+            }
+        });
         return "ok";
     },
 }));
