@@ -18,5 +18,10 @@ module.exports = {
         path: "/deleteAsset",
         handler: "asset.deleteAsset",
       },
+      {
+        method: "GET",
+        path: "/convertAssets",
+        handler: "asset.convertAssets",
+      }
     ],
   }

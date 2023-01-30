@@ -17,12 +17,21 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                   uniqueID: {
                     $eq: ctx.query.uniqueID
                   }},            
-                platform: ctx.query.platform
+                platform: "Done"
             },
             orderBy: { order: 'asc' },
             select: ['id', 'name'],
             populate: {
-                bundle: {
+                pcbundle: {
+                    select: ['id', 'name', 'url'],
+                },
+                androidbundle: {
+                    select: ['id', 'name', 'url'],
+                },
+                webglbundle: {
+                    select: ['id', 'name', 'url'],
+                },
+                macbundle: {
                     select: ['id', 'name', 'url'],
                 },
             },
@@ -33,37 +42,42 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
     async uploadAssetToChannel(ctx) {
 
         if (!ctx.request.files.bundle) 
-            return ctx.badRequest('No asset bundle specified'); 
-
+            return ctx.badRequest('No asset bundle specified');
+        
         const channelid = await strapi.config.functions.getChannelID(ctx.state.user.id, ctx.request.body.uniqueID);
         if (!channelid) 
             return ctx.badRequest('No such channel or you do not own this channel');
+
+        const platform = ctx.request.body.platform;
+        console.log("HI " + platform);
             
-        const oldAsset = await strapi.db.query('api::asset.asset').findOne({
+        var currentAsset = await strapi.db.query('api::asset.asset').findOne({
             where: {
                 channel: {
                     uniqueID: {
                     $eq: ctx.request.body.uniqueID
                     }},            
-                platform: ctx.request.body.platform,
+                platform: "Done",
                 name: ctx.request.body.name
             },
             select: ['id'],
             populate: {
-                bundle: {
-                    select: ['id'],
+                pcbundle: {
+                    select: ['id', 'name', 'url'],
+                },
+                androidbundle: {
+                    select: ['id', 'name', 'url'],
+                },
+                webglbundle: {
+                    select: ['id', 'name', 'url'],
+                },
+                macbundle: {
+                    select: ['id', 'name', 'url'],
                 },
             },
         });
 
-        if (oldAsset && oldAsset.bundle)
-            await strapi.plugins.upload.services.upload.remove(oldAsset.bundle);
-
-        if (oldAsset)
-            await strapi.service('api::asset.asset').delete(oldAsset.id);
-
         var order = ctx.request.body.order;
-
         var numItems = -1;
         if (!order)
         {
@@ -78,17 +92,48 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
             });
             order = numItems + 1;
         }
-        const asset = await strapi.db.query('api::asset.asset').create({
-            data: {
-                channel: channelid,
-                name: ctx.request.body.name,
-                platform: ctx.request.body.platform,
-                order: order,
-            },
-        });
 
-        if (!asset) 
-            return ctx.badRequest('Could not create asset');
+        var field = null;
+        if (platform == "PC")
+        {
+            field = "pcbundle";
+            if (currentAsset && currentAsset.pcbundle)
+                await strapi.plugins.upload.services.upload.remove(currentAsset.pcbundle);
+        }
+        if (platform == "Android")
+        {
+            field = "androidbundle";
+            if (currentAsset && currentAsset.androidbundle)
+                await strapi.plugins.upload.services.upload.remove(currentAsset.androidbundle);
+        }
+        if (platform == "WebGL")
+        {
+            field = "webglbundle";
+            if (currentAsset && currentAsset.webglbundle)
+                await strapi.plugins.upload.services.upload.remove(currentAsset.webglbundle);
+        }
+        if (platform == "Mac")
+        {
+            field = "macbundle";
+            if (currentAsset && currentAsset.macbundle)
+                await strapi.plugins.upload.services.upload.remove(currentAsset.macbundle);
+        }
+
+        //if (oldAsset)
+        //    await strapi.service('api::asset.asset').delete(oldAsset.id);
+
+        if (!currentAsset)
+            currentAsset = await strapi.db.query('api::asset.asset').create({
+                data: {
+                    channel: channelid,
+                    name: ctx.request.body.name,
+                    platform: "Done",
+                    order: order,
+                }
+            });
+
+        if (!currentAsset || !field) 
+            return ctx.badRequest('Could not create or update asset');
 
         const fs = require('fs');
         const stats = fs.statSync(ctx.request.files.bundle.path);
@@ -97,9 +142,9 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
 
         await strapi.plugins.upload.services.upload.upload({
             data: {
-                refId: asset.id,
+                refId: currentAsset.id,
                 ref: 'api::asset.asset',
-                field: 'bundle',
+                field: field,
             }, 
             files: {
                 path: ctx.request.files.bundle.path,
@@ -115,7 +160,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                 where: {
                     $and: [
                     {channel: channelid},
-                    {platform: ctx.request.body.platform},
+                    {platform: "Done"},
                     {order: {$gte: order}}
                     ]
                 },
@@ -142,9 +187,18 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                 id: ctx.request.body.id,
              },
              populate: {
-                bundle: {
-                    select: ['id'],
-                    },
+                pcbundle: {
+                    select: ['id', 'name', 'url'],
+                },
+                androidbundle: {
+                    select: ['id', 'name', 'url'],
+                },
+                webglbundle: {
+                    select: ['id', 'name', 'url'],
+                },
+                macbundle: {
+                    select: ['id', 'name', 'url'],
+                },
                 channel: {
                     select: ['id', 'uniqueID'],
                     },
@@ -153,16 +207,87 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
 
         if (!asset)
             return ctx.badRequest('No such asset: ' + ctx.request.body.id);
-
-        const channelid = await strapi.config.functions.getChannelID(ctx.state.user.id, content.channel.uniqueID);
+        
+        const channelid = await strapi.config.functions.getChannelID(ctx.state.user.id, asset.channel.uniqueID);
 
         if (!channelid)
             return ctx.badRequest('No such channel or you are not the owner: ' + content.channel.uniqueID);
-        
-        if (asset.bundle)
-            await strapi.plugins.upload.services.upload.remove(asset.bundle);
+
+        if (asset.pcbundle)
+            await strapi.plugins.upload.services.upload.remove(asset.pcbundle);
+
+        if (asset.androidbundle)
+            await strapi.plugins.upload.services.upload.remove(asset.androidbundle);
+
+        if (asset.webglbundle)
+            await strapi.plugins.upload.services.upload.remove(asset.webglbundle);
+
+        if (asset.macbundle)
+            await strapi.plugins.upload.services.upload.remove(asset.macbundle);
 
         await strapi.service('api::asset.asset').delete(asset.id);
         return "ok";
+    },
+
+    async convertAssets(ctx) {
+        const channels = await strapi.db.query('api::channel.channel').findMany({
+            select: ['id', 'uniqueID']
+          });
+        const platforms = ["PC", "Mac", "WebGL", "Android"];
+        for (const channel of channels)
+        {
+          for (const platform of platforms)
+            {
+                ctx.query.uniqueID = channel.uniqueID;
+                ctx.query.platform = platform;
+                const assets = await strapi.controller('api::asset.asset').getAssetsForChannel(ctx);
+                for (const asset of assets)
+                {
+                    const currentAsset = await strapi.db.query('api::asset.asset').findOne({
+                        where: {
+                            channel: {
+                                uniqueID: {
+                                $eq: channel.uniqueID
+                                }},            
+                            platform: "Done",
+                            name: asset.name
+                        },
+                        select: ['id', 'name'],
+                        populate: {                    
+                            bundle: {
+                                select: ['id'],
+                            },
+                        },
+                    });
+
+                    var data = {
+                        channel: channel.id,
+                        name: asset.name,
+                        platform: "Done",
+                        order: asset.order};
+                    if (platform == "PC")
+                        data.pcbundle = asset.bundle.id;
+                    if (platform == "Android")
+                        data.androidbundle = asset.bundle.id;
+                    if (platform == "WebGL")
+                        data.webglbundle = asset.bundle.id;
+                    if (platform == "Mac")
+                        data.macbundle = asset.bundle.id;
+                    if (currentAsset)
+                    {
+                        console.log("current asset");
+                        const newasset = await strapi.query("api::asset.asset").update({ 
+                            where: { id: currentAsset.id },
+                            data: data,
+                        });
+                        console.log(newasset);
+                    }
+                    else
+                        await strapi.db.query('api::asset.asset').create({data: data});
+                }
+            }
+        }
+        return "ok";
     }
+
 }));
