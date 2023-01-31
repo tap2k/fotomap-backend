@@ -219,7 +219,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
         const channelid = await strapi.config.functions.getChannelID(ctx.state.user.id, asset.channel.uniqueID);
 
         if (!channelid)
-            return ctx.badRequest('No such channel or you are not the owner: ' + content.channel.uniqueID);
+            return ctx.badRequest('No such asset or you are not the owner');
 
         if (asset.pcbundle)
             await strapi.plugins.upload.services.upload.remove(asset.pcbundle);

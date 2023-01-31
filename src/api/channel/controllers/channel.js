@@ -18,6 +18,9 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                 parent: {
                     select: ['uniqueID'],
                     },
+                owner: {
+                    select: ['id'],
+                    },
                 },
           });
         return channel;
@@ -81,7 +84,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
     async deleteChannel(ctx) {
         const channelid = await strapi.config.functions.getChannelID(ctx.state.user.id, ctx.request.body.uniqueID);
         if (!channelid)
-            return ctx.badRequest('No such channel or you are not the owner: ' + ctx.request.body.uniqueID);
+            return ctx.badRequest('No such channel or you are not the owner');
 
         const myContents = await strapi.db.query('api::content.content').findMany({
             where: { channel: channelid },
