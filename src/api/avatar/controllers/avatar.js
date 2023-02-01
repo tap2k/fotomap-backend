@@ -75,25 +75,25 @@ module.exports = createCoreController('api::avatar.avatar', ({ strapi }) =>  ({
         {
             field = "pcbundle";
             if (currentAvatar && currentAvatar.pcbundle)
-                await strapi.plugins.upload.services.upload.remove(currentAvatar.pcbundle);
+                await strapi.config.functions.deleteMediafile(currentAvatar.pcbundle.id)
         }
         if (platform == "Android")
         {
             field = "androidbundle";
             if (currentAvatar && currentAvatar.androidbundle)
-                await strapi.plugins.upload.services.upload.remove(currentAvatar.androidbundle);
+                await strapi.config.functions.deleteMediafile(currentAvatar.androidbundle.id);
         }
         if (platform == "WebGL")
         {
             field = "webglbundle";
             if (currentAvatar && currentAvatar.webglbundle)
-                await strapi.plugins.upload.services.upload.remove(currentAvatar.webglbundle);
+                await strapi.config.functions.deleteMediafile(currentAvatar.webglbundle.id);
         }
         if (platform == "Mac")
         {
             field = "macbundle";
             if (currentAvatar && currentAvatar.macbundle)
-                await strapi.plugins.upload.services.upload.remove(currentAvatar.macbundle);
+                await strapi.config.functions.deleteMediafile(currentAvatar.macbundle.id);
         }
 
 
@@ -146,30 +146,13 @@ module.exports = createCoreController('api::avatar.avatar', ({ strapi }) =>  ({
                 macbundle: {
                     select: ['id', 'name', 'url'],
                 },
-                bundle: {
-                    select: ['id', 'name', 'url'],
-                },
             },
         });
 
         if (!avatar)
             return ctx.badRequest('No such avatar: ' + ctx.request.body.id);
         
-        if (avatar.pcbundle)
-            await strapi.plugins.upload.services.upload.remove(avatar.pcbundle);
-
-        if (avatar.androidbundle)
-            await strapi.plugins.upload.services.upload.remove(avatar.androidbundle);
-
-        if (avatar.webglbundle)
-            await strapi.plugins.upload.services.upload.remove(avatar.webglbundle);
-
-        if (avatar.macbundle)
-            await strapi.plugins.upload.services.upload.remove(avatar.macbundle);
-
-        if (avatar.bundle)
-            await strapi.plugins.upload.services.upload.remove(avatar.bundle);
-
+        await strapi.config.functions.deleteBundles(avatar);
         await strapi.service('api::avatar.avatar').delete(avatar.id);
         return "ok";
     },

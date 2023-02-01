@@ -147,7 +147,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) =>  (
             return ctx.badRequest('No such channel or you are not the owner: ' + content.channel.uniqueID);
 
         if (content.mediafile)
-            await strapi.plugins.upload.services.upload.remove(content.mediafile);
+            await strapi.config.functions.deleteMediafile(content.mediafile.id);
 
         return await strapi.service('api::content.content').delete(content.id);
     }

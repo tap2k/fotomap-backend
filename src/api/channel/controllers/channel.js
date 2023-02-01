@@ -102,8 +102,36 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         for (const content of myContents)
         {
             if (content.mediafile)
-                await strapi.plugins.upload.services.upload.remove(content.mediafile);
+                await strapi.config.functions.deleteMediafile(content.mediafile.id);
             await strapi.service('api::content.content').delete(content.id);
+        }
+
+        const myAssets = await strapi.db.query('api::asset.asset').findMany({
+            where: { channel: channelid },
+            select: ['id'],
+            populate: {
+                pcbundle: {
+                    select: ['id'],
+                    },
+                androidbundle: {
+                    select: ['id'],
+                    },
+                webglbundle: {
+                    select: ['id'],
+                    },
+                macbundle: {
+                    select: ['id'],
+                    },
+                },
+              });
+
+        //ctx.query.uniqueID = ctx.request.body.uniqueID;
+        //const myContents = strapi.controller('api::content.content').getContentForChannel(ctx);
+
+        for (const asset of myAssets)
+        {
+            await strapi.config.functions.deleteBundles(asset);
+            await strapi.service('api::asset.asset').delete(asset.id);
         }
 
         return await strapi.service('api::channel.channel').deleteChannel(ctx, ctx.request.body.uniqueID);

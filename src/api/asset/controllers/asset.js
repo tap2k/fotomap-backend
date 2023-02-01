@@ -11,16 +11,12 @@ const { createCoreController } = require('@strapi/strapi').factories;
 module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
 
     async getAssetsForChannel(ctx) {
-        /*var platform = "All";
-        if (ctx.query.platform)
-            platform = ctx.query.platform;*/
         const myAssets = await strapi.db.query('api::asset.asset').findMany({
             where: {
                 channel: {
                   uniqueID: {
                     $eq: ctx.query.uniqueID
                   }},            
-                //platform: platform
             },
             orderBy: { order: 'asc' },
             select: ['id', 'name'],
@@ -36,10 +32,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                 },
                 macbundle: {
                     select: ['id', 'name', 'url'],
-                },
-                /*bundle: {
-                    select: ['id', 'name', 'url'],
-                },*/
+                }
             },
           });
         return myAssets;
@@ -62,7 +55,6 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                     uniqueID: {
                     $eq: ctx.request.body.uniqueID
                     }},            
-                //platform: "All",
                 name: ctx.request.body.name
             },
             select: ['id'],
@@ -103,25 +95,25 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
         {
             field = "pcbundle";
             if (currentAsset && currentAsset.pcbundle)
-                await strapi.plugins.upload.services.upload.remove(currentAsset.pcbundle);
+                await strapi.config.functions.deleteMediafile(currentAsset.pcbundle.id);
         }
         if (platform == "Android")
         {
             field = "androidbundle";
             if (currentAsset && currentAsset.androidbundle)
-                await strapi.plugins.upload.services.upload.remove(currentAsset.androidbundle);
+                await strapi.config.functions.deleteMediafile(currentAsset.androidbundle.id);
         }
         if (platform == "WebGL")
         {
             field = "webglbundle";
             if (currentAsset && currentAsset.webglbundle)
-                await strapi.plugins.upload.services.upload.remove(currentAsset.webglbundle);
+                await strapi.config.functions.deleteMediafile(currentAsset.webglbundle.id);
         }
         if (platform == "Mac")
         {
             field = "macbundle";
             if (currentAsset && currentAsset.macbundle)
-                await strapi.plugins.upload.services.upload.remove(currentAsset.macbundle);
+                await strapi.config.functions.deleteMediafile(currentAsset.macbundle.id);
         }
 
         //if (oldAsset)
@@ -204,9 +196,6 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                 macbundle: {
                     select: ['id', 'name', 'url'],
                 },
-                bundle: {
-                    select: ['id', 'name', 'url'],
-                },
                 channel: {
                     select: ['id', 'uniqueID'],
                     },
@@ -221,21 +210,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
         if (!channelid)
             return ctx.badRequest('No such asset or you are not the owner');
 
-        if (asset.pcbundle)
-            await strapi.plugins.upload.services.upload.remove(asset.pcbundle);
-
-        if (asset.androidbundle)
-            await strapi.plugins.upload.services.upload.remove(asset.androidbundle);
-
-        if (asset.webglbundle)
-            await strapi.plugins.upload.services.upload.remove(asset.webglbundle);
-
-        if (asset.macbundle)
-            await strapi.plugins.upload.services.upload.remove(asset.macbundle);
-
-        if (asset.bundle)
-            await strapi.plugins.upload.services.upload.remove(asset.bundle);
-
+        await strapi.config.functions.deleteBundles(asset);
         await strapi.service('api::asset.asset').delete(asset.id);
         return "ok";
     },
