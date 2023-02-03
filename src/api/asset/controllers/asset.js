@@ -22,16 +22,16 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
             select: ['id', 'name'],
             populate: {
                 pcbundle: {
-                    select: ['id', 'name', 'url'],
+                    select: ['id', 'name', 'url', 'size'],
                 },
                 androidbundle: {
-                    select: ['id', 'name', 'url'],
+                    select: ['id', 'name', 'url', 'size'],
                 },
                 webglbundle: {
-                    select: ['id', 'name', 'url'],
+                    select: ['id', 'name', 'url', 'size'],
                 },
                 macbundle: {
-                    select: ['id', 'name', 'url'],
+                    select: ['id', 'name', 'url', 'size'],
                 }
             },
           });
