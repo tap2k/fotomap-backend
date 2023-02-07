@@ -21,7 +21,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                 owner: {
                     select: ['id'],
                     },
-                },
+            },
           });
         return channel;
     },
@@ -38,6 +38,11 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         const channels = await strapi.db.query('api::channel.channel').findMany({
             select: ['uniqueID', 'name', 'lat', 'long', 'zoom'],
             where: { public: 'true' },
+            populate: {
+                owner: {
+                    select: ['id', 'username', 'email'],
+                    },
+            },
           });
         return channels;
     },
