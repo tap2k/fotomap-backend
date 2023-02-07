@@ -4,6 +4,14 @@ module.exports = {
     routes: [
       {
         method: "GET",
+        path: "/getSubmissions",
+        handler: "submission.getSubmissions",
+        config: {
+          auth: false,
+        },
+      },
+      {
+        method: "GET",
         path: "/getSubmissionsForChannel",
         handler: "submission.getSubmissionsForChannel",
         config: {

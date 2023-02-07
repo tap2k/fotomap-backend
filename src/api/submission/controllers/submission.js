@@ -29,12 +29,35 @@ const { createCoreController } = require('@strapi/strapi').factories;
 
 module.exports = createCoreController('api::submission.submission', ({ strapi }) =>  ({
 
+    async getSubmissions(ctx) {
+        //TODO: Verify super user?
+        const mySubmissions = await strapi.db.query('api::submission.submission').findMany({
+            where: {
+                publishedAt: { $not: null },
+            },
+            select: ['id', 'lat', 'long', 'createdAt'],
+            orderBy: { createdAt: 'desc' },
+            populate: {
+                mediafile: {
+                    select: ['id', 'name', 'url'],
+                },
+                tags: {
+                    select: ['id', 'tag'],
+                },
+            },
+        });
+        return mySubmissions;
+    },
+    
     async getSubmissionsForChannel(ctx) {
-        //TODO: Is this OK?
+        if (!ctx.query.uniqueID || ctx.query.uniqueID == 'undefined')
+        {
+            console.log("getting them");
+            return await strapi.controller('api::submission.submission').getSubmissions(ctx);
+        }
         //TODO: Verify user owns channel?
         var channelid = ctx.query.uniqueID;
-        if (ctx.query.uniqueID == 'undefined')
-            channelid = null;
+
         const mySubmissions = await strapi.db.query('api::submission.submission').findMany({
             where: {
                 publishedAt: { $not: null },
@@ -49,11 +72,14 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
                 mediafile: {
                     select: ['id', 'name', 'url'],
                 },
+                tags: {
+                    select: ['id', 'tag'],
+                },
             },
         });
         return mySubmissions;
     },
-
+    
     async uploadSubmissionToChannel(ctx) {
         if (!ctx.request.files.mediafile) 
             return ctx.badRequest('No submission specified');
