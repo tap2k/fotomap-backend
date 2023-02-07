@@ -50,11 +50,9 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
     },
     
     async getSubmissionsForChannel(ctx) {
-        if (!ctx.query.uniqueID || ctx.query.uniqueID == 'undefined')
-        {
-            console.log("getting them");
-            return await strapi.controller('api::submission.submission').getSubmissions(ctx);
-        }
+        /*if (!ctx.query.uniqueID || ctx.query.uniqueID == 'undefined')
+            return await strapi.controller('api::submission.submission').getSubmissions(ctx);*/
+        
         //TODO: Verify user owns channel?
         var channelid = ctx.query.uniqueID;
 
