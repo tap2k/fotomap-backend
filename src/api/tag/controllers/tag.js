@@ -28,7 +28,6 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
     },
 
     async addTag(ctx) {
-        
         let tag = await strapi.db.query('api::tag.tag').findOne({
             select: ['id', 'tag'],
             where: {
@@ -70,7 +69,6 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
     },
 
     async deleteTag(ctx) {
-  
         let tag = await strapi.db.query('api::tag.tag').findOne({
             select: ['id', 'tag'],
             where: {
@@ -104,4 +102,31 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
         return entry;
     },
 
+    async getSubmissionsForTag(ctx) {        
+        //TODO: Verify user owns channel?
+        let tag = await strapi.db.query('api::tag.tag').findOne({
+            select: ['id', 'tag'],
+            where: {
+                tag: {
+                    $eq: ctx.query.tag
+                },
+            },
+            populate: {
+                submissions: {
+                    select: ['id', 'lat', 'long', 'createdAt'],
+                    populate: {
+                        mediafile: {
+                            select: ['id', 'name', 'url'],
+                        },
+                        tags: {
+                            select: ['id', 'tag'],
+                        },
+                    }
+                },            
+            }
+        });
+        if (!tag)
+            return [];
+        return tag.submissions;
+    },
 }));

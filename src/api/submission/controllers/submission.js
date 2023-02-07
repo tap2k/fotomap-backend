@@ -65,7 +65,7 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
                   },
                 }
             },
-            select: ['id', 'lat', 'long'],
+            select: ['id', 'lat', 'long', 'createdAt'],
             populate: {
                 mediafile: {
                     select: ['id', 'name', 'url'],
