@@ -25,6 +25,64 @@
     })
 }*/
 
+async function createSubmission(file, channel, lat, long)
+{
+    let channelID = null;
+    if (channel)
+        channelID = channel.id;
+
+    const submission = await strapi.db.query('api::submission.submission').create({
+        data: {
+            channel: channelID,
+            lat: lat,
+            long: long,
+        }
+    });
+
+    if (!submission) 
+        return null;
+
+    let path = file.path;
+    let filename = file.name;
+    
+    /*if (filename.endsWith(".wav"))
+    {
+        path = ctx.request.files.mediafile.path + '.mp3'
+        filename = 'audio.mp3';
+        await processAudioSync(ctx.request.files.mediafile.path, path);
+    }*/
+
+    /*if (filename.endsWith(".mp4"))
+    {
+        const decoder = new tsebml.Decoder();
+        var readStream = fs.createReadStream(ctx.request.files.mediafile.path).on('data', (buf)=>{
+            const ebmlElms = decoder.decode(buf);
+            console.log(ebmlElms);
+        });
+    }*/
+
+    const fs = require('fs');
+    const mime = require('mime');
+    const mimetype = mime.getType(filename);
+    const stats = fs.statSync(path);
+
+    await strapi.plugins.upload.services.upload.upload({
+        data: {
+            refId: submission.id,
+            ref: 'api::submission.submission',
+            field: 'mediafile',
+        }, 
+        files: {
+            path: path,
+            name: filename,
+            type: mimetype,
+            size: stats.size
+        }
+    });
+
+    return submission;
+}
+
 const { createCoreController } = require('@strapi/strapi').factories;
 
 module.exports = createCoreController('api::submission.submission', ({ strapi }) =>  ({
@@ -79,7 +137,8 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
     },
     
     async uploadSubmissionToChannel(ctx) {
-        if (!ctx.request.files.mediafile) 
+
+        if (!ctx.request.files)  
             return ctx.badRequest('No submission specified');
 
         const channel = await strapi.db.query('api::channel.channel').findOne({
@@ -90,59 +149,18 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
 
         // TODO: Need channel?
         // if (!channel) return ctx.badRequest('No such channel: ' + ctx.request.uniqueID);
+        var files = ctx.request.files;
         
-        let channelID = null;
-        if (channel)
-            channelID = channel.id;
-
-        const submission = await strapi.db.query('api::submission.submission').create({
-            data: {
-                channel: channelID,
-                lat: ctx.request.body.lat,
-                long: ctx.request.body.long,
+        Object.keys(files).forEach(key => {
+            try { 
+                var submission = createSubmission(files[key], channel, ctx.request.body.lat, ctx.request.body.long);
+                if (!submission) return ctx.badRequest('Could not create submission');
+            }
+            catch (error) {
+                return ctx.badRequest(error);
             }
         });
 
-        if (!submission) 
-            return ctx.badRequest('Could not create submission');
-
-        let path = ctx.request.files.mediafile.path;
-        let filename = ctx.request.files.mediafile.name;
-        
-        /*if (filename.endsWith(".wav"))
-        {
-            path = ctx.request.files.mediafile.path + '.mp3'
-            filename = 'audio.mp3';
-            await processAudioSync(ctx.request.files.mediafile.path, path);
-        }*/
-
-        /*if (filename.endsWith(".mp4"))
-        {
-            const decoder = new tsebml.Decoder();
-            var readStream = fs.createReadStream(ctx.request.files.mediafile.path).on('data', (buf)=>{
-                const ebmlElms = decoder.decode(buf);
-                console.log(ebmlElms);
-            });
-        }*/
-
-        const fs = require('fs');
-        const mime = require('mime');
-        const mimetype = mime.getType(filename);
-        const stats = fs.statSync(path);
-
-        await strapi.plugins.upload.services.upload.upload({
-            data: {
-                refId: submission.id,
-                ref: 'api::submission.submission',
-                field: 'mediafile',
-            }, 
-            files: {
-                path: path,
-                name: filename,
-                type: mimetype,
-                size: stats.size
-            }
-        });
         return "ok";
     },
 }));
