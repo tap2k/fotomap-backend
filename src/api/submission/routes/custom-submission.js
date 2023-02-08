@@ -26,6 +26,14 @@ module.exports = {
           auth: false,
         },
       },
+      {
+        method: "POST",
+        path: "/addCaption",
+        handler: "submission.addCaption",
+        config: {
+          auth: false,
+        },
+      },
     ],
   }
   

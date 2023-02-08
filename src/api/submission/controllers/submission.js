@@ -97,7 +97,7 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
             orderBy: { createdAt: 'desc' },
             populate: {
                 mediafile: {
-                    select: ['id', 'name', 'url'],
+                    select: ['id', 'name', 'url', 'caption'],
                 },
                 tags: {
                     select: ['id', 'tag'],
@@ -126,7 +126,7 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
             select: ['id', 'lat', 'long', 'createdAt'],
             populate: {
                 mediafile: {
-                    select: ['id', 'name', 'url'],
+                    select: ['id', 'name', 'url', 'caption'],
                 },
                 tags: {
                     select: ['id', 'tag'],
@@ -163,5 +163,34 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
 
         return "ok";
     },
+
+    async addCaption(ctx) {
+
+        if (!ctx.request.body.caption || !ctx.request.body.submission)  
+            return ctx.badRequest('No caption or submission specified');
+
+        const submission = await strapi.db.query('api::submission.submission').findOne({ 
+            where: { id: ctx.request.body.submission },
+            populate: {
+                mediafile : {
+                    select: ['id', 'name', 'url', 'caption'],
+                }
+            }
+        });
+
+        if (!submission)
+            return ctx.badRequest('No submission specified');
+        
+        if (submission.mediafile?.id)
+        {
+            console.log("mediafile = " + submission.mediafile.id);
+            await strapi.plugins.upload.services.upload.update(submission.mediafile.id, 
+            { caption: ctx.request.body.caption });
+        }
+
+        return "ok";
+    },
+
+    
 }));
 
