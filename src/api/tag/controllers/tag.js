@@ -116,7 +116,7 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
                     select: ['id', 'lat', 'long', 'createdAt'],
                     populate: {
                         mediafile: {
-                            select: ['id', 'name', 'url'],
+                            select: ['id', 'name', 'url', 'caption'],
                         },
                         tags: {
                             select: ['id', 'tag'],

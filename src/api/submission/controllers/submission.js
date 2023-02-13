@@ -85,6 +85,8 @@ async function createSubmission(file, channel, lat, long)
 
 const { createCoreController } = require('@strapi/strapi').factories;
 
+//module.exports = createCoreController('api::submission.submission');
+
 module.exports = createCoreController('api::submission.submission', ({ strapi }) =>  ({
 
     async getSubmissions(ctx) {
