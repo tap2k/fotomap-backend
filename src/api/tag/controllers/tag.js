@@ -18,6 +18,7 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
                     $not: null
                 },
             },
+            orderBy: { tag: 'asc' },
             /*populate: {
                 submissions: {
                     select: ['id'],
