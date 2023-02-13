@@ -183,14 +183,11 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
         
         if (submission.mediafile?.id)
         {
-            console.log("mediafile = " + submission.mediafile.id);
             await strapi.plugins.upload.services.upload.update(submission.mediafile.id, 
             { caption: ctx.request.body.caption });
         }
 
         return "ok";
-    },
-
-    
+    },    
 }));
 
