@@ -18,8 +18,24 @@ module.exports = {
       },
       {
         method: "POST",
-        path: "/deleteTag",
-        handler: "tag.deleteTag",
+        path: "/removeTag",
+        handler: "tag.removeTag",
+        config: {
+            auth: false,
+          },
+      },
+      {
+        method: "POST",
+        path: "/combineTags",
+        handler: "tag.combineTags",
+        config: {
+            auth: false,
+          },
+      },
+      {
+        method: "POST",
+        path: "/purgeTags",
+        handler: "tag.purgeTags",
         config: {
             auth: false,
           },

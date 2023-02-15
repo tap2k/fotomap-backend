@@ -37,6 +37,7 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
                 },
             },
         });
+
         if (!tag)
         {
             tag = await strapi.db.query('api::tag.tag').create({
@@ -45,14 +46,16 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
                 }
             });
         }
+        
         if (!tag)
-            return null;
+            return ctx.badRequest('Couldnt create tag');
+
 
         let submission = await strapi.db.query('api::submission.submission').findOne({
                 where: { id: ctx.request.body.submission },
         });
         if (!submission)
-            return null;
+            return ctx.badRequest('No submission provided');
 
         const entry = await strapi.db.query('api::tag.tag').update({
             where: { id: tag.id },
@@ -69,7 +72,7 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
         return entry;
     },
 
-    async deleteTag(ctx) {
+    async removeTag(ctx) {
         let tag = await strapi.db.query('api::tag.tag').findOne({
             select: ['id', 'tag'],
             where: {
@@ -78,29 +81,98 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
                 },
             },
         });
+
         if (!tag)
-            return null;
+            return ctx.badRequest('No tag provided');
 
         let submission = await strapi.db.query('api::submission.submission').findOne({
                 where: { id: ctx.request.body.submission },
         });
+
         if (!submission)
-            return null;
+            return ctx.badRequest('No submission provided');
 
         const entry = await strapi.db.query('api::tag.tag').update({
             populate: true,
             where: { id: tag.id },
             data: {
               submissions: {
-                disconnect: [
-                  {
+                disconnect: 
+                [{
                     id: ctx.request.body.submission
-                  }
-                ],
+                }],
               },
             },
           });
         return entry;
+    },
+
+    async combineTags(ctx) {
+        let tagsource = await strapi.db.query('api::tag.tag').findOne({
+            select: ['id'],
+            where: {
+                tag: {
+                    $eq: ctx.request.body.tagsource
+                },
+            },
+            populate: {
+                submissions: {
+                    select: ['id'],
+                    },
+            },
+        });
+
+        let tagdest = await strapi.db.query('api::tag.tag').findOne({
+            select: ['id'],
+            where: {
+                tag: {
+                    $eq: ctx.request.body.tagdest
+                },
+            },
+        });
+
+        if (!tagsource || !tagdest)
+            return ctx.badRequest('Source or dest tag not provided');
+
+        for (const submission of tagsource.submissions) {
+            const entry1 = await strapi.db.query('api::tag.tag').update({
+                where: { id: tagsource.id },
+                data: {
+                    submissions: {
+                        disconnect: 
+                        [{
+                            id: submission.id
+                        }],
+                    },
+                },
+            });
+            const entry2 = await strapi.db.query('api::tag.tag').update({
+                where: { id: tagdest.id },
+                data: {
+                    submissions: {
+                        connect: 
+                        [{
+                            id: submission.id
+                        }],
+                    },
+                },
+            });
+        }
+
+        return await strapi.service('api::tag.tag').delete(tagsource.id);
+    },
+
+    async purgeTags(ctx) {
+        let tags = await strapi.db.query('api::tag.tag').findMany({
+            select: ['id'],
+            where: {
+                submissions: null
+            }
+        });
+        for (const tag of tags) {
+            strapi.service('api::tag.tag').delete(tag.id);
+        }
+        return "ok";
     },
 
     async getSubmissionsForTag(ctx) {        
