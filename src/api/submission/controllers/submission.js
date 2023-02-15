@@ -91,10 +91,21 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
 
     async getSubmissions(ctx) {
         //TODO: Verify super user?
+
+        /*if (!ctx.query.uniqueID || ctx.query.uniqueID == 'undefined')
+            return await strapi.controller('api::submission.submission').getSubmissions(ctx);*/
+
+        if (ctx.query.tag)
+            return await strapi.controller('api::submission.submission').getSubmissionsForTag(ctx);
+        
+        //TODO: Verify user owns channel?
+        var channelid = ctx.query.uniqueID;
+        var whereclause = {publishedAt: {$not: null}};
+        if (ctx.query.uniqueID)
+            whereclause["channel"] = {uniqueID: {$eq: channelid}};
+
         const mySubmissions = await strapi.db.query('api::submission.submission').findMany({
-            where: {
-                publishedAt: { $not: null },
-            },
+            where: whereclause,
             select: ['id', 'lat', 'long', 'createdAt'],
             orderBy: { createdAt: 'desc' },
             populate: {
@@ -108,34 +119,37 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
         });
         return mySubmissions;
     },
-    
-    async getSubmissionsForChannel(ctx) {
-        /*if (!ctx.query.uniqueID || ctx.query.uniqueID == 'undefined')
-            return await strapi.controller('api::submission.submission').getSubmissions(ctx);*/
-        
-        //TODO: Verify user owns channel?
-        var channelid = ctx.query.uniqueID;
 
-        const mySubmissions = await strapi.db.query('api::submission.submission').findMany({
+    async getSubmissionsForTag(ctx) { 
+        //var whereclause = {channel: {uniqueID: {$eq: "tap2k"}}};       
+        var whereclause = {publishedAt: {$not: null}};
+        if (ctx.query.uniqueID)
+            whereclause = {$and: [whereclause, {channel: {uniqueID: {$eq: ctx.query.uniqueID}}}]};
+        let tag = await strapi.db.query('api::tag.tag').findOne({
+            select: ['id', 'tag'],
             where: {
-                publishedAt: { $not: null },
-                channel: {
-                  uniqueID: {
-                    $eq: channelid
-                  },
-                }
+                tag: {
+                    $eq: ctx.query.tag
+                },
             },
-            select: ['id', 'lat', 'long', 'createdAt'],
             populate: {
-                mediafile: {
-                    select: ['id', 'name', 'url', 'caption'],
-                },
-                tags: {
-                    select: ['id', 'tag'],
-                },
-            },
+                submissions: {
+                    select: ['id', 'lat', 'long', 'createdAt'],
+                    where: whereclause,
+                    populate: {
+                        mediafile: {
+                            select: ['id', 'name', 'url', 'caption'],
+                        },
+                        tags: {
+                            select: ['id', 'tag'],
+                        },
+                    },
+                },            
+            }
         });
-        return mySubmissions;
+        if (!tag)
+            return [];
+        return tag.submissions;
     },
     
     async uploadSubmissionToChannel(ctx) {

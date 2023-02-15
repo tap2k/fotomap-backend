@@ -40,13 +40,5 @@ module.exports = {
             auth: false,
           },
       },
-      {
-        method: "GET",
-        path: "/getSubmissionsForTag",
-        handler: "tag.getSubmissionsForTag",
-        config: {
-            auth: false,
-          },
-      },
     ],
   }

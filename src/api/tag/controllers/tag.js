@@ -174,32 +174,4 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
         }
         return "ok";
     },
-
-    async getSubmissionsForTag(ctx) {        
-        //TODO: Verify user owns channel?
-        let tag = await strapi.db.query('api::tag.tag').findOne({
-            select: ['id', 'tag'],
-            where: {
-                tag: {
-                    $eq: ctx.query.tag
-                },
-            },
-            populate: {
-                submissions: {
-                    select: ['id', 'lat', 'long', 'createdAt'],
-                    populate: {
-                        mediafile: {
-                            select: ['id', 'name', 'url', 'caption'],
-                        },
-                        tags: {
-                            select: ['id', 'tag'],
-                        },
-                    }
-                },            
-            }
-        });
-        if (!tag)
-            return [];
-        return tag.submissions;
-    },
 }));

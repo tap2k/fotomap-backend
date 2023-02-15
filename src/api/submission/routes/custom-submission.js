@@ -12,11 +12,11 @@ module.exports = {
       },
       {
         method: "GET",
-        path: "/getSubmissionsForChannel",
-        handler: "submission.getSubmissionsForChannel",
+        path: "/getSubmissionsForTag",
+        handler: "submission.getSubmissionsForTag",
         config: {
-          auth: false,
-        },
+            auth: false,
+          },
       },
       {
         method: "POST",
