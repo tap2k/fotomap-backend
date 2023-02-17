@@ -156,9 +156,9 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
             const assetItems = await strapi.db.query('api::asset.asset').findMany({
                 where: {
                     $and: [
-                    {channel: channelid},
-                    //{platform: "All"},
-                    {order: {$gte: order}}
+                        {channel: channelid},
+                        //{platform: "All"},
+                        {order: {$gte: order}}
                     ]
                 },
                 select: ['id', 'order'],

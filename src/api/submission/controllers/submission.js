@@ -25,12 +25,8 @@
     })
 }*/
 
-async function createSubmission(file, channel, lat, long)
+async function createSubmission(file, channelID, lat, long)
 {
-    let channelID = null;
-    if (channel)
-        channelID = channel.id;
-
     const submission = await strapi.db.query('api::submission.submission').create({
         data: {
             channel: channelID,
@@ -158,24 +154,30 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
             return ctx.badRequest('No submission specified');
 
         const channel = await strapi.db.query('api::channel.channel').findOne({
+            select: ['id'],
             where: {
                 uniqueID: {$eq: ctx.request.body.uniqueID},
             }
         });
 
+        let channelID = null;
+        if (channel)
+            channelID = channel.id;
+
         // TODO: Need channel?
         // if (!channel) return ctx.badRequest('No such channel: ' + ctx.request.uniqueID);
         var files = ctx.request.files;
         
-        Object.keys(files).forEach(key => {
+        //Object.keys(files).forEach(async key => {
+        for (const key of Object.keys(files)) {
             try { 
-                var submission = createSubmission(files[key], channel, ctx.request.body.lat, ctx.request.body.long);
+                var submission = await createSubmission(files[key], channelID, ctx.request.body.lat, ctx.request.body.long);
                 if (!submission) return ctx.badRequest('Could not create submission');
             }
             catch (error) {
                 return ctx.badRequest(error);
             }
-        });
+        };
 
         return "ok";
     },
