@@ -70,6 +70,17 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             const uuid = require('uuid');
             channelid = uuid.v4().substring(0,8);
         }
+        const channel = await strapi.query('api::channel.channel').findOne({
+            select: ['id', 'uniqueID'],
+            where: { uniqueID: ctx.request.body.uniqueID },
+            populate: {
+                owner: {
+                    select: ['id'],
+                    },
+            },
+          });
+        if (channel)
+            return ctx.badRequest("channel ID already exists: " + channel.uniqueID);
         if (!ispublic)
             ispublic = false;
         try {
