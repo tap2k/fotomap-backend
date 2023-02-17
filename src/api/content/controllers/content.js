@@ -141,28 +141,27 @@ module.exports = createCoreController('api::content.content', ({ strapi }) =>  (
         if (!ctx.request.body.order || !ctx.request.body.contentID) 
             return ctx.badRequest('No order or content specified'); 
 
-        const channelid = await strapi.config.functions.getChannelID(ctx.state.user.id, ctx.request.body.uniqueID);
+        const channelID = await strapi.config.functions.getChannelID(ctx.state.user.id, ctx.request.body.uniqueID);
 
-        if (!channelid) 
+        if (!channelID) 
             return ctx.badRequest('No such channel or you are not the owner ' + ctx.request.body.uniqueID);
         
         const contentItems = await strapi.db.query('api::content.content').findMany({
-            where: { channel: channelid },
+            where: { channel: channelID},
             select: ['id', 'order'],
             orderBy: { order: 'asc' },
         });
-
+        
         for (const updateContent of contentItems) {
             if (updateContent.id == ctx.request.body.contentID)
                 await strapi.query("api::content.content").update({ 
                     where: { id: updateContent.id },
                     data: { order: order },
                 });
-            else if (updateContent.order == order) {
-                order = order + 1;
+            else if (updateContent.order >= order) {
                 await strapi.query("api::content.content").update({ 
                     where: { id: updateContent.id },
-                    data: { order: order },
+                    data: { order: updateContent.order + 1 },
                 });
             }   
         }
@@ -197,7 +196,6 @@ module.exports = createCoreController('api::content.content', ({ strapi }) =>  (
             where: { 
                 $and: [
                     {channel: channelID},
-                    //{platform: "All"},
                     {order: {$gte: content.order}}
                 ]
             },
