@@ -208,7 +208,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) =>  (
         for (const updateContent of contentItems) {
             await strapi.query("api::content.content").update({ 
                 where: { id: updateContent.id },
-                data: { order: content.order - 1},
+                data: { order: updateContent.order - 1},
             });
         }
 
