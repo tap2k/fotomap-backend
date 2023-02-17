@@ -38,28 +38,34 @@ module.exports = createCoreController('api::content.content', ({ strapi }) =>  (
         const fs = require('fs');
         const mime = require('mime');
 
-        if (!ctx.request.body.ext_url && !ctx.request.files.mediafile) 
+        if (!ctx.request.body.ext_url && !ctx.request.files.mediafile && !ctx.request.files) 
             return ctx.badRequest('No content specified'); 
 
-        const isMyChannel = await strapi.config.functions.isMyChannel(ctx.state.user.id, ctx.request.body.uniqueID);
-        
-        if (!isMyChannel) 
+        const channelid = await strapi.config.functions.getChannelID(ctx.state.user.id, ctx.request.body.uniqueID);
+
+        if (!channelid) 
             return ctx.badRequest('No such channel or you are not the owner ' + ctx.request.body.uniqueID);
         
         //TODO: Fix this! Or rely on moderation?
         //if (!channel.public && ctx.state.user.id != channel.owner.id);
 
+        const contentItems = await strapi.db.query('api::content.content').findMany({
+            where: { channel: channelid },
+            select: ['id', 'order'],
+            orderBy: { order: 'asc' },
+        });
+
         var order = ctx.request.body.order;
-        var numItems = -1;
         if (!order)
         {
-            numItems = await strapi.query('api::content.content').count({ where: { channel: channel.id }});
-            order = numItems + 1;
+            if (contentItems.length)
+                order = contentItems[contentItems.length-1].order + 1;
+            else
+                order = 1;
         }
-
         const content = await strapi.db.query('api::content.content').create({
             data: {
-                channel: channel.id,
+                channel: channelid,
                 order: order,
                 ext_url: ctx.request.body.ext_url
             }
@@ -68,10 +74,24 @@ module.exports = createCoreController('api::content.content', ({ strapi }) =>  (
         if (!content) 
             return ctx.badRequest('Could not create content');
 
-        if (ctx.request.files.mediafile)
+        for (const updateContent of contentItems) {
+            if (updateContent.id != content.id && updateContent.order == order) {
+                order = order + 1;
+                await strapi.query("api::content.content").update({ 
+                    where: { id: updateContent.id },
+                    data: { order: order },
+                });
+            }   
+        }
+    
+        let file = ctx.request.files.mediafile;
+        if (!file)
+            file = ctx.request.files[Object.keys(ctx.request.files)[0]];
+
+        if (file)
         {
-            const stats = fs.statSync(ctx.request.files.mediafile.path);
-            const mimetype = mime.getType(ctx.request.files.mediafile.name);
+            const stats = fs.statSync(file.path);
+            const mimetype = mime.getType(file.name);
 
             await strapi.plugins.upload.services.upload.upload({
                 data: {
@@ -80,37 +100,46 @@ module.exports = createCoreController('api::content.content', ({ strapi }) =>  (
                     field: 'mediafile',
                 }, 
                 files: {
-                    path: ctx.request.files.mediafile.path,
-                    name: ctx.request.files.mediafile.name,
+                    path: file.path,
+                    name: file.name,
                     type: mimetype,
                     size: stats.size
                 }
             });
         }
 
-        if (numItems == -1)
-        {
-            const contentItems = await strapi.db.query('api::content.content').findMany({
-                where: {
-                    $and: [
-                    {channel: channel.id },
-                    {order: { $gte: order}}
-                    ]
-                },
-                select: ['id', 'order'],
-                orderBy: { order: 'asc' },
-            });
-    
-            for (const updateContent of contentItems) {
-                if (updateContent.id != content.id) {
-                    await strapi.query("api::content.content").update({ 
-                        where: { id: updateContent.id },
-                        data: { order: updateContent.order + 1 },
-                    });
-                }   
-            }
-        };
         return "ok";
+    },
+
+    async updateOrder(ctx) {
+        if (!ctx.request.body.order || !ctx.request.body.contentID) 
+            return ctx.badRequest('No order or content specified'); 
+
+        const channelid = await strapi.config.functions.getChannelID(ctx.state.user.id, ctx.request.body.uniqueID);
+
+        if (!channelid) 
+            return ctx.badRequest('No such channel or you are not the owner ' + ctx.request.body.uniqueID);
+        
+        const contentItems = await strapi.db.query('api::content.content').findMany({
+            where: { channel: channelid },
+            select: ['id', 'order'],
+            orderBy: { order: 'asc' },
+        });
+
+        for (const updateContent of contentItems) {
+            if (updateContent.id == ctx.request.body.contentID)
+                await strapi.query("api::content.content").update({ 
+                    where: { id: updateContent.id },
+                    data: { order: order },
+                });
+            else if (updateContent.order == order) {
+                order = order + 1;
+                await strapi.query("api::content.content").update({ 
+                    where: { id: updateContent.id },
+                    data: { order: order },
+                });
+            }   
+        }
     },
 
     async deleteContent(ctx) {
