@@ -10,11 +10,11 @@ module.exports = {
           auth: false,
         },
       },
-      {
+      /*{
         method: "POST",
         path: "/getContentItem",
         handler: "content.getContentItem",
-      },
+      },*/
       {
         method: "POST",
         path: "/uploadContentToChannel",

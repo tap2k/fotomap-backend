@@ -86,7 +86,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) =>  (
         return myContents;
     },
 
-    async getContentItem(ctx) {
+    /*async getContentItem(ctx) {
         if (!ctx.request.body.contentID) 
             return ctx.badRequest('No content specified'); 
         
@@ -113,7 +113,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) =>  (
             return ctx.badRequest('No such channel or you are not the owner: ' + content.channel.uniqueID);
         
         return content;
-    },
+    },*/
 
     async uploadContentToChannel(ctx) {
 
