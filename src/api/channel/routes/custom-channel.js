@@ -36,6 +36,11 @@ module.exports = {
         path: '/createChannel', 
         handler: 'channel.createChannel',
       },
+      {
+        method: "POST",
+        path: "/updateChannel",
+        handler: "channel.updateChannel",
+      },
       { 
         method: 'POST',
         path: '/deleteChannel', 

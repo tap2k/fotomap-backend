@@ -12,8 +12,23 @@ module.exports = {
       },
       {
         method: "POST",
+        path: "/getContentItem",
+        handler: "content.getContentItem",
+      },
+      {
+        method: "POST",
         path: "/uploadContentToChannel",
         handler: "content.uploadContentToChannel",
+      },
+      {
+        method: "POST",
+        path: "/updateContent",
+        handler: "content.updateContent",
+      },
+      {
+        method: "POST",
+        path: "/updateOrder",
+        handler: "content.updateOrder",
       },
       {
         method: "POST",

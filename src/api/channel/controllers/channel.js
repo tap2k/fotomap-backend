@@ -90,6 +90,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                     name: ctx.request.body.name,
                     public: ispublic,
                     owner: ctx.state.user.id,
+                    parent: ctx.request.body.parentID
                 },
             });
             return channel;
@@ -97,6 +98,40 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             return ctx.badRequest(err);
         }    
     },
+
+    async updateChannel(ctx) {
+        if (!ctx.request.body.uniqueID) 
+            return ctx.badRequest('No order or content specified'); 
+            
+        const channelID = await strapi.config.functions.getChannelID(ctx.state.user.id, ctx.request.body.uniqueID);
+
+        if (!channelID) 
+            return ctx.badRequest('No such channel or you are not the owner ' + ctx.request.body.uniqueID);
+        
+        let data = {};
+        if (ctx.request.body.name)
+            data["name"] = ctx.request.body.name;
+        if (ctx.request.body.public)
+            data["public"] = ctx.request.body.public;
+        //if (ctx.request.body.owner)
+        //    data["owner"] = ctx.request.body.owner;
+        if (ctx.request.body.lat)
+            data["lat"] = ctx.request.body.lat;
+        if (ctx.request.body.long)
+            data["long"] = ctx.request.body.long;
+        if (ctx.request.body.zoom)
+            data["zoom"] = ctx.request.body.zoom;
+        if (ctx.request.body.parent)
+            data["parent"] = ctx.request.body.parent;
+
+        await strapi.query("api::channel.channel").update({ 
+            where: { id: channelID },
+            data: data,
+        });
+
+        return "ok"
+    },
+
 
     async deleteChannel(ctx) {
         const channelid = await strapi.config.functions.getChannelID(ctx.state.user.id, ctx.request.body.uniqueID);

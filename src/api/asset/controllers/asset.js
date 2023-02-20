@@ -54,7 +54,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                 channel: {
                     uniqueID: {
                     $eq: ctx.request.body.uniqueID
-                    }},            
+                }},            
                 name: ctx.request.body.name
             },
             select: ['id'],
@@ -197,7 +197,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                     select: ['id', 'name', 'url'],
                 },
                 channel: {
-                    select: ['id', 'uniqueID'],
+                    select: ['id', 'uniqueID', 'owner'],
                     },
                 },
         });
@@ -205,9 +205,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
         if (!asset)
             return ctx.badRequest('No such asset: ' + ctx.request.body.id);
         
-        const channelid = await strapi.config.functions.getChannelID(ctx.state.user.id, asset.channel.uniqueID);
-
-        if (!channelid)
+        if (ctx.state.user.id != asset.channel.owner)
             return ctx.badRequest('No such asset or you are not the owner');
 
         await strapi.config.functions.deleteBundles(asset);

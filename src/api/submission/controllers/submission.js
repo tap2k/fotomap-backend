@@ -95,10 +95,13 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
             return await strapi.controller('api::submission.submission').getSubmissionsForTag(ctx);
         
         //TODO: Verify user owns channel?
-        var channelid = ctx.query.uniqueID;
-        var whereclause = {publishedAt: {$not: null}};
+        //var channelID = ctx.query.uniqueID;
+
+        var whereclause = {};
         if (ctx.query.uniqueID)
-            whereclause["channel"] = {uniqueID: {$eq: channelid}};
+            whereclause["channel"] = {uniqueID: {$eq: ctx.query.uniqueID}};
+        else
+            whereclause["channel"] = {uniqueID: {$eq: null}};
 
         const mySubmissions = await strapi.db.query('api::submission.submission').findMany({
             where: whereclause,
@@ -117,10 +120,9 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
     },
 
     async getSubmissionsForTag(ctx) { 
-        //var whereclause = {channel: {uniqueID: {$eq: "tap2k"}}};       
-        var whereclause = {publishedAt: {$not: null}};
+        var whereclause = {};
         if (ctx.query.uniqueID)
-            whereclause = {$and: [whereclause, {channel: {uniqueID: {$eq: ctx.query.uniqueID}}}]};
+            whereclause = {channel: {uniqueID: {$eq: ctx.query.uniqueID}}};
         let tag = await strapi.db.query('api::tag.tag').findOne({
             select: ['id', 'tag'],
             where: {
@@ -191,7 +193,7 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
             where: { id: ctx.request.body.submission },
             populate: {
                 mediafile : {
-                    select: ['id', 'name', 'url', 'caption'],
+                    select: ['id', 'caption'],
                 }
             }
         });
