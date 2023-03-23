@@ -197,15 +197,20 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                     select: ['id', 'name', 'url'],
                 },
                 channel: {
-                    select: ['id', 'uniqueID', 'owner'],
-                    },
-                },
+                    select: ['id', 'uniqueID'],
+                    populate: {
+                        owner: { 
+                            select: ['id'],
+                        }
+                    }
+                 },
+            },
         });
 
         if (!asset)
             return ctx.badRequest('No such asset: ' + ctx.request.body.id);
         
-        if (ctx.state.user.id != asset.channel.owner)
+        if (ctx.state.user.id != asset.channel.owner.id)
             return ctx.badRequest('No such asset or you are not the owner');
 
         await strapi.config.functions.deleteBundles(asset);
