@@ -81,6 +81,7 @@ ssl
 .idea
 nbproject
 *.bak
+.editorconfig
 
 ############################
 # Node.js
