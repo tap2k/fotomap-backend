@@ -29,7 +29,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
     async getMyChannels(ctx) {
         const channels = await strapi.db.query('api::channel.channel').findMany({
             select: ['uniqueID', 'name', 'lat', 'long', 'zoom'],
-            where: { $and: [{ owner: ctx.state.user.id }, { parent: {$neq: null} }] }
+            where: { $and: [{ owner: ctx.state.user.id }, { parent: null }] }
         });
         return channels;
     },
