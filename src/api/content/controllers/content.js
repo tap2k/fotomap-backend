@@ -265,10 +265,19 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         data["packing"] = ctx.request.body.packing;
         data["ext_url"] = ctx.request.ext_url;
 
+        if (ctx.request.body.channelID)
+        {
+            const channelID = await strapi.config.functions.getChannelID(ctx.state.user.id, ctx.request.body.channelID);
+            if (!channelID)
+                return ctx.badRequest('No such channel or you are not the owner ' + ctx.request.body.uniqueID);
+            data["channel"] = {connect: [{id: channelID}]};
+        }
+
         await strapi.query("api::content.content").update({
             where: { id: content.id },
             data: data,
         });
+
 
         if (ctx.request.body.caption)
             await strapi.controller('api::content.content').addCaption(ctx);
