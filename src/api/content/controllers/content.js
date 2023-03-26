@@ -254,16 +254,16 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         let data = {};
         if (ctx.request.body.lat)
             data["lat"] = ctx.request.body.lat;
+        else
+            data["lat"] = null;
         if (ctx.request.body.long)
             data["long"] = ctx.request.body.long;
-        if (ctx.request.body.is360)
-            data["is360"] = ctx.request.body.is360;
-        if (ctx.request.body.mapping)
-            data["mapping"] = ctx.request.body.mapping;
-        if (ctx.request.body.packing)
-            data["packing"] = ctx.request.body.packing;
-        if (ctx.request.body.ext_url)
-            data["ext_url"] = ctx.request.ext_url;
+        else
+            data["long"] = null;
+        data["is360"] = ctx.request.body.is360;
+        data["mapping"] = ctx.request.body.mapping;
+        data["packing"] = ctx.request.body.packing;
+        data["ext_url"] = ctx.request.ext_url;
 
         await strapi.query("api::content.content").update({
             where: { id: content.id },

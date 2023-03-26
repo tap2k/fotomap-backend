@@ -109,20 +109,22 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             return ctx.badRequest('No such channel or you are not the owner ' + ctx.request.body.uniqueID);
         
         let data = {};
-        if (ctx.request.body.name)
-            data["name"] = ctx.request.body.name;
-        if (ctx.request.body.public)
-            data["public"] = ctx.request.body.public;
-        //if (ctx.request.body.owner)
-        //    data["owner"] = ctx.request.body.owner;
         if (ctx.request.body.lat)
             data["lat"] = ctx.request.body.lat;
+        else
+            data["lat"] = null;
         if (ctx.request.body.long)
             data["long"] = ctx.request.body.long;
+        else
+            data["long"] = null;
         if (ctx.request.body.zoom)
             data["zoom"] = ctx.request.body.zoom;
-        if (ctx.request.body.parent)
-            data["parent"] = ctx.request.body.parent;
+        else
+            data["zoom"] = null;
+        data["name"] = ctx.request.body.name;
+        data["public"] = ctx.request.body.public;
+        data["parent"] = ctx.request.body.parent;
+        //data["owner"] = ctx.request.body.owner;
 
         await strapi.query("api::channel.channel").update({ 
             where: { id: channelID },
