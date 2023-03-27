@@ -52,6 +52,34 @@ async function createContent(file, channelID, order, ext_url, lat, long) {
     return content;
 }
 
+async function insertContent(content, order) {
+    var ascending = true;
+    if (content.order < order)
+        ascending = false;
+
+    const contentItems = await strapi.db.query('api::content.content').findMany({
+        where: { channel: content.channel.id },
+        select: ['id', 'order'],
+        orderBy: { order: ascending ? 'asc' : 'desc' },
+    });
+
+    var currOrder = order;
+    for (const updateContent of contentItems) {
+        if (updateContent.id == ctx.request.body.contentID)
+            await strapi.query("api::content.content").update({
+                where: { id: updateContent.id },
+                data: { order: order },
+            });
+        else if (parseInt(updateContent.order) == currOrder) {
+            await strapi.query("api::content.content").update({
+                where: { id: updateContent.id },
+                data: { order: ascending ? currOrder + 1 : currOrder - 1 },
+            });
+            currOrder = ascending ? currOrder + 1 : currOrder = currOrder - 1;
+        }
+    }
+}
+
 const { createCoreController } = require('@strapi/strapi').factories;
 
 //module.exports = createCoreController('api::content.content');
@@ -156,16 +184,6 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         else
             await createContent(null, channelID, order, ctx.request.body.ext_url, ctx.request.body.lat, ctx.request.body.long);
 
-        /*for (const updateContent of contentItems) {
-            if (updateContent.id != content.id && updateContent.order == order) {
-                order = order + 1;
-                await strapi.query("api::content.content").update({ 
-                    where: { id: updateContent.id },
-                    data: { order: order },
-                });
-            }   
-        }*/
-
         return "ok";
     },
 
@@ -197,31 +215,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         if (content.order == ctx.request.body.order)
             return;
 
-        var ascending = true;
-        if (content.order < ctx.request.body.order)
-            ascending = false;
-
-        const contentItems = await strapi.db.query('api::content.content').findMany({
-            where: { channel: content.channel.id },
-            select: ['id', 'order'],
-            orderBy: { order: ascending ? 'asc' : 'desc' },
-        });
-
-        var currOrder = ctx.request.body.order;
-        for (const updateContent of contentItems) {
-            if (updateContent.id == ctx.request.body.contentID)
-                await strapi.query("api::content.content").update({
-                    where: { id: updateContent.id },
-                    data: { order: ctx.request.body.order },
-                });
-            else if (parseInt(updateContent.order) == currOrder) {
-                await strapi.query("api::content.content").update({
-                    where: { id: updateContent.id },
-                    data: { order: ascending ? currOrder + 1 : currOrder - 1 },
-                });
-                currOrder = ascending ? currOrder + 1 : currOrder = currOrder - 1;
-            }
-        }
+        await insertContent(content, ctx.request.body.order);
 
         return "ok";
     },
@@ -278,6 +272,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
             data: data,
         });
 
+        await insertContent(content, ctx.request.body.order ? ctx.request.body.order : 1);
 
         if (ctx.request.body.caption)
             await strapi.controller('api::content.content').addCaption(ctx);
