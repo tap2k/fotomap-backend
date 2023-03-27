@@ -53,6 +53,7 @@ async function createContent(file, channelID, order, ext_url, lat, long) {
 }
 
 async function insertContent(content, order) {
+
     var ascending = true;
     if (content.order < order)
         ascending = false;
@@ -65,11 +66,13 @@ async function insertContent(content, order) {
 
     var currOrder = order;
     for (const updateContent of contentItems) {
-        if (updateContent.id == ctx.request.body.contentID)
+        if (updateContent.id === content.id)
+        {
             await strapi.query("api::content.content").update({
                 where: { id: updateContent.id },
                 data: { order: order },
             });
+        }
         else if (parseInt(updateContent.order) == currOrder) {
             await strapi.query("api::content.content").update({
                 where: { id: updateContent.id },
@@ -226,6 +229,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
 
         const content = await strapi.db.query('api::content.content').findOne({
             where: { id: ctx.request.body.contentID },
+            select: ['id'],
             populate: {
                 mediafile: {
                     select: ['id'],
@@ -267,18 +271,26 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
             data["channel"] = {connect: [{id: channelID}]};
         }
 
-        await strapi.query("api::content.content").update({
+        const newcontent = await strapi.query("api::content.content").update({
             where: { id: content.id },
             data: data,
+            populate: {
+                channel: {
+                    select: ['id', 'uniqueID'],
+                    populate: {
+                        owner: { select: ['id'] },
+                    }
+                }
+            }
         });
 
-        await insertContent(content, ctx.request.body.order ? ctx.request.body.order : 1);
+        await insertContent(newcontent, ctx.request.body.order ? ctx.request.body.order : 1);
 
         if (ctx.request.body.caption)
             await strapi.controller('api::content.content').addCaption(ctx);
 
-        if (ctx.request.body.order && ctx.request.body.order != content.order)
-            await strapi.controller('api::content.content').updateOrder(ctx);
+        //if (ctx.request.body.order && ctx.request.body.order != content.order)
+        //    await strapi.controller('api::content.content').updateOrder(ctx);
 
         if (ctx.request.body.ext_url && content.mediafile)
             await strapi.config.functions.deleteMediafile(content.mediafile.id);
