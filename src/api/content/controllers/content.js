@@ -250,14 +250,8 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
             return ctx.badRequest('No such channel or you are not the owner: ' + content.channel.uniqueID);
 
         let data = {};
-        if (ctx.request.body.lat)
-            data["lat"] = ctx.request.body.lat;
-        else
-            data["lat"] = null;
-        if (ctx.request.body.long)
-            data["long"] = ctx.request.body.long;
-        else
-            data["long"] = null;
+        data["lat"] = ctx.request.body.lat;
+        data["long"] = ctx.request.body.long;
         data["is360"] = ctx.request.body.is360;
         data["mapping"] = ctx.request.body.mapping;
         data["packing"] = ctx.request.body.packing;
@@ -284,7 +278,8 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
             }
         });
 
-        await insertContent(newcontent, ctx.request.body.order ? ctx.request.body.order : 1);
+        if (ctx.request.body.order ||  (ctx.request.body.channelID && (ctx.request.body.channelID != content.channel.id)))
+            await insertContent(newcontent, ctx.request.body.order ? ctx.request.body.order : 1);
 
         if (ctx.request.body.caption)
             await strapi.controller('api::content.content').addCaption(ctx);
