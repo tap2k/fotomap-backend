@@ -109,18 +109,9 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             return ctx.badRequest('No such channel or you are not the owner ' + ctx.request.body.uniqueID);
         
         let data = {};
-        if (ctx.request.body.lat)
-            data["lat"] = ctx.request.body.lat;
-        else
-            data["lat"] = null;
-        if (ctx.request.body.long)
-            data["long"] = ctx.request.body.long;
-        else
-            data["long"] = null;
-        if (ctx.request.body.zoom)
-            data["zoom"] = ctx.request.body.zoom;
-        else
-            data["zoom"] = null;
+        data["lat"] = ctx.request.body.lat;
+        data["long"] = ctx.request.body.long;
+        data["zoom"] = ctx.request.body.zoom;
         data["name"] = ctx.request.body.name;
         data["public"] = ctx.request.body.public;
         data["parent"] = ctx.request.body.parent;
@@ -131,7 +122,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             data: data,
         });
 
-        return "ok"
+        return "ok";
     },
 
 
