@@ -149,16 +149,16 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         if (!ctx.request.body.ext_url && !ctx.request.files)
             return ctx.badRequest('No content specified');
 
-        const channelID = await strapi.config.functions.getChannelID(ctx.state.user.id, ctx.request.body.uniqueID);
+        const channel = await strapi.config.functions.getChannel(ctx.state.user.id, ctx.request.body.uniqueID);
 
-        if (!channelID)
+        if (!channel)
             return ctx.badRequest('No such channel or you are not the owner ' + ctx.request.body.uniqueID);
 
         //TODO: Fix this! Or rely on moderation?
         //if (!channel.public && ctx.state.user.id != channel.owner.id);
 
         const contentItems = await strapi.db.query('api::content.content').findMany({
-            where: { channel: channelID },
+            where: { channel: channel.id },
             select: ['id', 'order'],
             orderBy: { order: 'asc' },
         });
@@ -175,7 +175,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
             //Object.keys(files).forEach(await async key => {
             for (const key of Object.keys(files)) {
                 try {
-                    const content = await createContent(files[key], channelID, order, ctx.request.body.ext_url, ctx.request.body.lat, ctx.request.body.long);
+                    const content = await createContent(files[key], channel.id, order, ctx.request.body.ext_url, ctx.request.body.lat, ctx.request.body.long);
                     if (!content) return ctx.badRequest('Could not create content');
                     order = order + 1;
                     contents.push(content);
@@ -188,7 +188,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         }
         else
         {
-            const content = await createContent(null, channelID, order, ctx.request.body.ext_url, ctx.request.body.lat, ctx.request.body.long);
+            const content = await createContent(null, channel.id, order, ctx.request.body.ext_url, ctx.request.body.lat, ctx.request.body.long);
             if (!content) 
                 return ctx.badRequest("Could not create content");
             else
@@ -265,10 +265,10 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
 
         if (ctx.request.body.channelID)
         {
-            const channelID = await strapi.config.functions.getChannelID(ctx.state.user.id, ctx.request.body.channelID);
-            if (!channelID)
+            const channel = await strapi.config.functions.getChannel(ctx.state.user.id, ctx.request.body.channelID);
+            if (!channel)
                 return ctx.badRequest('No such channel or you are not the owner ' + ctx.request.body.uniqueID);
-            data["channel"] = {connect: [{id: channelID}]};
+            data["channel"] = {connect: [{id: channel.id}]};
         }
 
         const newcontent = await strapi.query("api::content.content").update({
@@ -353,8 +353,8 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         if (!content)
             return ctx.badRequest('No such content: ' + ctx.request.body.id);
 
-        /*const channelID = await strapi.config.functions.getChannelID(ctx.state.user.id, content.channel.uniqueID);
-        if (!channelID)*/
+        /*const channel = await strapi.config.functions.getChannel(ctx.state.user.id, content.channel.uniqueID);
+        if (!channel)*/
         if (content.channel.owner.id != ctx.state.user.id)
             return ctx.badRequest('No such channel or you are not the owner: ' + content.channel.uniqueID);
 

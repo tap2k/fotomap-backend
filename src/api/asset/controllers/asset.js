@@ -43,8 +43,8 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
         if (!ctx.request.files.bundle) 
             return ctx.badRequest('No asset bundle specified');
         
-        const channelid = await strapi.config.functions.getChannelID(ctx.state.user.id, ctx.request.body.uniqueID);
-        if (!channelid) 
+        const channel = await strapi.config.functions.getChannel(ctx.state.user.id, ctx.request.body.uniqueID);
+        if (!channel) 
             return ctx.badRequest('No such channel or you do not own this channel');
 
         const platform = ctx.request.body.platform;
@@ -122,7 +122,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
         if (!currentAsset)
             currentAsset = await strapi.db.query('api::asset.asset').create({
                 data: {
-                    channel: channelid,
+                    channel: channel.id,
                     name: ctx.request.body.name,
                     //platform: "All",
                     order: order,
@@ -156,7 +156,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
             const assetItems = await strapi.db.query('api::asset.asset').findMany({
                 where: {
                     $and: [
-                        {channel: channelid},
+                        {channel: channel.id},
                         //{platform: "All"},
                         {order: {$gte: order}}
                     ]

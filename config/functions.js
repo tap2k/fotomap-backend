@@ -2,7 +2,7 @@
 
 module.exports = {
 
-  async getChannelID(userID, uniqueID) {
+  async getChannel(userID, uniqueID) {
       const channel = await strapi.db.query('api::channel.channel').findOne({
         select: ['id'],
         where: { 
@@ -14,10 +14,8 @@ module.exports = {
               select: ['id'],
               },}*/
       });
-      if (!channel)
-          return 0;
-      else
-          return channel.id;
+
+      return channel;
   },
 
   async deleteMediafile(id) {

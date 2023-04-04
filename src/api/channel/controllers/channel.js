@@ -103,9 +103,9 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         if (!ctx.request.body.uniqueID) 
             return ctx.badRequest('No channel specified'); 
             
-        const channelID = await strapi.config.functions.getChannelID(ctx.state.user.id, ctx.request.body.uniqueID);
+        const channel = await strapi.config.functions.getChannel(ctx.state.user.id, ctx.request.body.uniqueID);
 
-        if (!channelID) 
+        if (!channel) 
             return ctx.badRequest('No such channel or you are not the owner ' + ctx.request.body.uniqueID);
         
         let data = {};
@@ -118,19 +118,19 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         //data["owner"] = ctx.request.body.owner;
 
         return await strapi.query("api::channel.channel").update({ 
-            where: { id: channelID },
+            where: { id: channel.id },
             data: data,
         });
     },
 
 
     async deleteChannel(ctx) {
-        const channelid = await strapi.config.functions.getChannelID(ctx.state.user.id, ctx.request.body.uniqueID);
-        if (!channelid)
+        const channel = await strapi.config.functions.getChannel(ctx.state.user.id, ctx.request.body.uniqueID);
+        if (!channel)
             return ctx.badRequest('No such channel or you are not the owner');
 
         const myContents = await strapi.db.query('api::content.content').findMany({
-            where: { channel: channelid },
+            where: { channel: channel.id },
             select: ['id'],
             populate: {
                 mediafile: {
@@ -150,7 +150,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         }
 
         const myAssets = await strapi.db.query('api::asset.asset').findMany({
-            where: { channel: channelid },
+            where: { channel: channel.id },
             select: ['id'],
             populate: {
                 pcbundle: {
