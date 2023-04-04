@@ -25,11 +25,11 @@ module.exports = {
         path: "/updateContent",
         handler: "content.updateContent",
       },
-      {
+      /*{
         method: "POST",
         path: "/updateOrder",
         handler: "content.updateOrder",
-      },
+      },*/
       {
         method: "POST",
         path: "/deleteContent",

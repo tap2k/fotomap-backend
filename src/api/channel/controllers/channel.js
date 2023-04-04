@@ -101,7 +101,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
     async updateChannel(ctx) {
         if (!ctx.request.body.uniqueID) 
-            return ctx.badRequest('No order or content specified'); 
+            return ctx.badRequest('No channel specified'); 
             
         const channelID = await strapi.config.functions.getChannelID(ctx.state.user.id, ctx.request.body.uniqueID);
 
@@ -117,12 +117,10 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         data["parent"] = ctx.request.body.parent;
         //data["owner"] = ctx.request.body.owner;
 
-        await strapi.query("api::channel.channel").update({ 
+        return await strapi.query("api::channel.channel").update({ 
             where: { id: channelID },
             data: data,
         });
-
-        return "ok";
     },
 
 

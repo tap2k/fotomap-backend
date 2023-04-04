@@ -124,7 +124,8 @@ module.exports = createCoreController('api::avatar.avatar', ({ strapi }) =>  ({
                 size: stats.size
             }
         });
-        return "ok";
+
+        return currentAvatar;
     },
 
     async deleteAvatar(ctx) {
@@ -152,8 +153,7 @@ module.exports = createCoreController('api::avatar.avatar', ({ strapi }) =>  ({
             return ctx.badRequest('No such avatar: ' + ctx.request.body.id);
         
         await strapi.config.functions.deleteBundles(avatar);
-        await strapi.service('api::avatar.avatar').delete(avatar.id);
-        return "ok";
+        return await strapi.service('api::avatar.avatar').delete(avatar.id);
     },
 
     /*async convertAvatars(ctx) {

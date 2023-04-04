@@ -169,19 +169,21 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
         // TODO: Need channel?
         // if (!channel) return ctx.badRequest('No such channel: ' + ctx.request.uniqueID);
         var files = ctx.request.files;
+        let submissions = [];
         
         //Object.keys(files).forEach(async key => {
         for (const key of Object.keys(files)) {
             try { 
                 var submission = await createSubmission(files[key], channelID, ctx.request.body.lat, ctx.request.body.long);
                 if (!submission) return ctx.badRequest('Could not create submission');
+                submissions.push(submission);
             }
             catch (error) {
                 return ctx.badRequest(error);
             }
         };
 
-        return "ok";
+        return submissions;
     },
 
     async addCaption(ctx) {

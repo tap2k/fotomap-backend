@@ -50,14 +50,13 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
         if (!tag)
             return ctx.badRequest('Couldnt create tag');
 
-
         let submission = await strapi.db.query('api::submission.submission').findOne({
                 where: { id: ctx.request.body.submission },
         });
         if (!submission)
             return ctx.badRequest('No submission provided');
 
-        const entry = await strapi.db.query('api::tag.tag').update({
+        return await strapi.db.query('api::tag.tag').update({
             where: { id: tag.id },
             data: {
               submissions: {
@@ -69,7 +68,6 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
               },
             },
           });
-        return entry;
     },
 
     async removeTag(ctx) {
@@ -92,7 +90,7 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
         if (!submission)
             return ctx.badRequest('No submission provided');
 
-        const entry = await strapi.db.query('api::tag.tag').update({
+        return await strapi.db.query('api::tag.tag').update({
             populate: true,
             where: { id: tag.id },
             data: {
@@ -104,7 +102,6 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
               },
             },
           });
-        return entry;
     },
 
     async combineTags(ctx) {
@@ -159,7 +156,9 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
             });
         }
 
-        return await strapi.service('api::tag.tag').delete(tagsource.id);
+        await strapi.service('api::tag.tag').delete(tagsource.id);
+
+        return "ok";
     },
 
     async purgeTags(ctx) {

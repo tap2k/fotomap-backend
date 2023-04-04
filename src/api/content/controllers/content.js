@@ -92,12 +92,12 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
     async getContentForChannel(ctx) {
         const myContents = await strapi.db.query('api::content.content').findMany({
             where: {
-                channel: {
-                    uniqueID: {
-                        $eq: ctx.query.uniqueID
+                    channel: {
+                        uniqueID: {
+                            $eq: ctx.query.uniqueID
+                        },
                     },
-                }
-            },
+                },
             orderBy: { order: 'asc' },
             select: ['id', 'ext_url', 'is360', 'lat', 'long', 'mapping', 'packing'],
             populate: {
@@ -171,26 +171,32 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
 
         if (ctx.request.files) {
             var files = ctx.request.files;
-
+            let contents = [];
             //Object.keys(files).forEach(await async key => {
             for (const key of Object.keys(files)) {
                 try {
                     const content = await createContent(files[key], channelID, order, ctx.request.body.ext_url, ctx.request.body.lat, ctx.request.body.long);
                     if (!content) return ctx.badRequest('Could not create content');
                     order = order + 1;
+                    contents.push(content);
                 }
                 catch (error) {
                     return ctx.badRequest(error);
                 }
             };
+            return contents;
         }
         else
-            await createContent(null, channelID, order, ctx.request.body.ext_url, ctx.request.body.lat, ctx.request.body.long);
-
-        return "ok";
+        {
+            const content = await createContent(null, channelID, order, ctx.request.body.ext_url, ctx.request.body.lat, ctx.request.body.long);
+            if (!content) 
+                return ctx.badRequest("Could not create content");
+            else
+                return [content];
+        }
     },
 
-    async updateOrder(ctx) {
+    /*async updateOrder(ctx) {
         if (!ctx.request.body.order || !ctx.request.body.contentID)
             return ctx.badRequest('No order or content specified');
 
@@ -221,7 +227,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         await insertContent(content, ctx.request.body.order);
 
         return "ok";
-    },
+    },*/
 
     async updateContent(ctx) {
         if (!ctx.request.body.contentID)
@@ -290,7 +296,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         if (ctx.request.body.ext_url && content.mediafile)
             await strapi.config.functions.deleteMediafile(content.mediafile.id);
 
-        return "ok";
+        return newcontent;
     },
 
     async addCaption(ctx) {

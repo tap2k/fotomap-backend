@@ -215,7 +215,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
 
         await strapi.config.functions.deleteBundles(asset);
         await strapi.service('api::asset.asset').delete(asset.id);
-        return "ok";
+        return currentAsset;
     },
 
     /*async convertAssets(ctx) {
