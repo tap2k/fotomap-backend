@@ -1,22 +1,50 @@
 // TODO: Move this somewhere else?
 
+const { user } = require("pg/lib/defaults");
+
 module.exports = {
 
-  async getChannel(userID, uniqueID) {
+  async getMyChannel(userID, uniqueID) {
       const channel = await strapi.db.query('api::channel.channel').findOne({
         select: ['id'],
         where: { 
             owner: userID,
             uniqueID: uniqueID
         },
-        /*populate: {
+        populate: {
           owner: {
-              select: ['id'],
-              },}*/
+            select: ['id'],
+          },
+        }
       });
 
       return channel;
   },
+
+  async getChannel(userID, uniqueID) {
+    const channel = await strapi.db.query('api::channel.channel').findOne({
+      select: ['id'],
+      where: { 
+          uniqueID: uniqueID,
+          $or: [
+            {owner: userID},
+            {editors: userID}
+          ]
+      },
+      populate: {
+        owner: {
+            select: ['id'],
+        },
+      }
+    });
+
+    return channel;
+},
+
+  async canEdit(channel, userID) {
+    return (channel?.owner?.id == userID) || channel?.editors?.some(item => item.id == userID);
+  },
+
 
   async deleteMediafile(id) {
     const mediafileEntry = await strapi.db.query('plugin::upload.file').findOne({

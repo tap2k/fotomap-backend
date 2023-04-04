@@ -32,9 +32,7 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
         let tag = await strapi.db.query('api::tag.tag').findOne({
             select: ['id', 'tag'],
             where: {
-                tag: {
-                    $eq: ctx.request.body.tag
-                },
+                tag: ctx.request.body.tag
             },
         });
 
@@ -74,9 +72,7 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
         let tag = await strapi.db.query('api::tag.tag').findOne({
             select: ['id', 'tag'],
             where: {
-                tag: {
-                    $eq: ctx.request.body.tag
-                },
+                tag: ctx.request.body.tag
             },
         });
 
@@ -108,9 +104,7 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
         let tagsource = await strapi.db.query('api::tag.tag').findOne({
             select: ['id'],
             where: {
-                tag: {
-                    $eq: ctx.request.body.tagsource
-                },
+                tag: ctx.request.body.tagsource
             },
             populate: {
                 submissions: {

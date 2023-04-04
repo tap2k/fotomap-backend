@@ -14,9 +14,8 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
         const myAssets = await strapi.db.query('api::asset.asset').findMany({
             where: {
                 channel: {
-                  uniqueID: {
-                    $eq: ctx.query.uniqueID
-                  }},            
+                  uniqueID: ctx.query.uniqueID
+                  },            
             },
             orderBy: { order: 'asc' },
             select: ['id', 'name'],
@@ -45,16 +44,15 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
         
         const channel = await strapi.config.functions.getChannel(ctx.state.user.id, ctx.request.body.uniqueID);
         if (!channel) 
-            return ctx.badRequest('No such channel or you do not own this channel');
+            return ctx.badRequest('No such channel or you are not allowed to edit: ' + ctx.request.body.uniqueID);
 
         const platform = ctx.request.body.platform;
             
         var currentAsset = await strapi.db.query('api::asset.asset').findOne({
             where: {
                 channel: {
-                    uniqueID: {
-                    $eq: ctx.request.body.uniqueID
-                }},            
+                    uniqueID: ctx.request.body.uniqueID
+                },            
                 name: ctx.request.body.name
             },
             select: ['id'],
@@ -81,9 +79,8 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
             numItems = await strapi.query('api::asset.asset').count({ 
                 where: { 
                     channel: {
-                        uniqueID: {
-                        $eq: ctx.request.body.uniqueID
-                    }},
+                        uniqueID: ctx.request.body.uniqueID
+                    },
                     //platform: "All"
                 }
             });
@@ -201,17 +198,21 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                     populate: {
                         owner: { 
                             select: ['id'],
-                        }
-                    }
+                        },
+                        editor: { 
+                            select: ['id'],
+                        },                    }
                  },
             },
         });
 
         if (!asset)
-            return ctx.badRequest('No such asset: ' + ctx.request.body.id);
+            return ctx.badRequest('No such asset');
         
-        if (ctx.state.user.id != asset.channel.owner.id)
-            return ctx.badRequest('No such asset or you are not the owner');
+        //if (ctx.state.user.id != asset.channel.owner.id)
+        //if ((asset.channel.owner.id != ctx.state.user.id) && !asset.channel.editors.some(item => item.id == ctx.state.user.id))
+        if (!strapi.config.functions.canEdit(asset.channel, ctx.state.user.id))
+            return ctx.badRequest('No such channel or you are not allowed to edit: ' + asset.channel?.uniqueID);
 
         await strapi.config.functions.deleteBundles(asset);
         await strapi.service('api::asset.asset').delete(asset.id);

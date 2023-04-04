@@ -99,9 +99,9 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
 
         var whereclause = {};
         if (ctx.query.uniqueID)
-            whereclause["channel"] = {uniqueID: {$eq: ctx.query.uniqueID}};
+            whereclause["channel"] = {uniqueID: ctx.query.uniqueID};
         else
-            whereclause["channel"] = {uniqueID: {$eq: null}};
+            whereclause["channel"] = {uniqueID: null};
 
         const mySubmissions = await strapi.db.query('api::submission.submission').findMany({
             where: whereclause,
@@ -122,13 +122,11 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
     async getSubmissionsForTag(ctx) { 
         var whereclause = {};
         if (ctx.query.uniqueID)
-            whereclause = {channel: {uniqueID: {$eq: ctx.query.uniqueID}}};
+            whereclause = {channel: {uniqueID: ctx.query.uniqueID}};
         let tag = await strapi.db.query('api::tag.tag').findOne({
             select: ['id', 'tag'],
             where: {
-                tag: {
-                    $eq: ctx.query.tag
-                },
+                tag: ctx.query.tag
             },
             populate: {
                 submissions: {
@@ -158,7 +156,7 @@ module.exports = createCoreController('api::submission.submission', ({ strapi })
         const channel = await strapi.db.query('api::channel.channel').findOne({
             select: ['id'],
             where: {
-                uniqueID: {$eq: ctx.request.body.uniqueID},
+                uniqueID: ctx.request.body.uniqueID,
             }
         });
 

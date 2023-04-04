@@ -21,6 +21,9 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                 owner: {
                     select: ['id'],
                     },
+                editors: {
+                    select: ['id', 'username', 'email']
+                }
             },
           });
         return channel;
@@ -29,7 +32,13 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
     async getMyChannels(ctx) {
         const channels = await strapi.db.query('api::channel.channel').findMany({
             select: ['uniqueID', 'name', 'lat', 'long', 'zoom'],
-            where: { $and: [{ owner: ctx.state.user.id }, { parent: null }] }
+            //where: { $and: [{owner: ctx.state.user.id}, { parent: null }] },
+            where: { $and:[{$or: [{ owner: ctx.state.user.id }, { editors: ctx.state.user.id }]}, { parent: null }] },
+            populate: {
+                owner: {
+                    select: ['id', 'username', 'email'],
+                },
+            },
         });
         return channels;
     },
@@ -42,7 +51,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             populate: {
                 owner: {
                     select: ['id', 'username', 'email'],
-                    },
+                },
             },
           });
         return channels;
@@ -53,10 +62,13 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             select: ['uniqueID', 'name', 'lat', 'long', 'zoom'],
             where: {
                 parent: {
-                  uniqueID: {
-                    $eq: ctx.query.uniqueID
-                  },
+                  uniqueID: ctx.query.uniqueID
                 }
+            },
+            populate: {
+                owner: {
+                    select: ['id', 'username', 'email'],
+                },
             },
           });
         return channels;
@@ -125,7 +137,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
 
     async deleteChannel(ctx) {
-        const channel = await strapi.config.functions.getChannel(ctx.state.user.id, ctx.request.body.uniqueID);
+        const channel = await strapi.config.functions.getMyChannel(ctx.state.user.id, ctx.request.body.uniqueID);
         if (!channel)
             return ctx.badRequest('No such channel or you are not the owner');
 
@@ -178,5 +190,69 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         }
 
         return await strapi.service('api::channel.channel').deleteChannel(ctx, ctx.request.body.uniqueID);
-    }
+    },
+
+    async addEditor(ctx) {
+        const channel = await strapi.config.functions.getMyChannel(ctx.state.user.id, ctx.request.body.uniqueID);
+        if (!channel)
+            return ctx.badRequest('No such channel or you are not the owner ' + ctx.request.body.uniqueID);
+
+        let user = await strapi.db.query('plugin::users-permissions.user').findOne({
+                where: { $or: [
+                    {email: ctx.request.body.email},
+                    {username: ctx.request.body.username}
+                ] 
+            },
+        });
+
+        if (!user)
+            return ctx.badRequest('No such user');
+
+        // TODO: bad request?
+        if (channel.owner.id == user.id)
+            return "ok";
+
+        return await strapi.db.query('api::channel.channel').update({
+            where: { id: channel.id },
+            data: {
+              editors: {
+                connect: [
+                  {
+                    id: user.id
+                  }
+                ],
+              },
+            },
+          });
+    },
+
+    async removeEditor(ctx) {
+        const channel = await strapi.config.functions.getMyChannel(ctx.state.user.id, ctx.request.body.uniqueID);
+        if (!channel)
+            return ctx.badRequest('No such channel or you are not the owner ' + ctx.request.body.uniqueID);
+
+        let user = await strapi.db.query('plugin::users-permissions.user').findOne({
+                where: { $or: [
+                    {email: ctx.request.body.email},
+                    {username: ctx.request.body.username}
+                ] 
+            },
+        });
+
+        if (!user)
+            return ctx.badRequest('No such user');
+
+        return await strapi.db.query('api::channel.channel').update({
+            where: { id: channel.id },
+            data: {
+              editors: {
+                disconnect: [
+                  {
+                    id: user.id
+                  }
+                ],
+              },
+            },
+          });
+    },
 }));

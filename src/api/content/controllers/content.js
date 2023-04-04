@@ -93,9 +93,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         const myContents = await strapi.db.query('api::content.content').findMany({
             where: {
                     channel: {
-                        uniqueID: {
-                            $eq: ctx.query.uniqueID
-                        },
+                        uniqueID: ctx.query.uniqueID
                     },
                 },
             orderBy: { order: 'asc' },
@@ -152,7 +150,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         const channel = await strapi.config.functions.getChannel(ctx.state.user.id, ctx.request.body.uniqueID);
 
         if (!channel)
-            return ctx.badRequest('No such channel or you are not the owner ' + ctx.request.body.uniqueID);
+            return ctx.badRequest('No such channel or you are not allowed to edit ' + ctx.request.body.uniqueID);
 
         //TODO: Fix this! Or rely on moderation?
         //if (!channel.public && ctx.state.user.id != channel.owner.id);
@@ -244,16 +242,17 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
                     select: ['id', 'uniqueID'],
                     populate: {
                         owner: { select: ['id'] },
+                        editors: { select: ['id'] },
                     }
                 },
             }
         });
 
         if (!content)
-            return ctx.badRequest('No content found for ' + ctx.request.body.contentID);
+            return ctx.badRequest('No content found');
 
-        if (content.channel.owner.id != ctx.state.user.id)
-            return ctx.badRequest('No such channel or you are not the owner: ' + content.channel.uniqueID);
+        if (!strapi.config.functions.canEdit(content.channel, ctx.state.user.id))
+            return ctx.badRequest('No such channel or you are not allowed to edit: ' + content.channel.uniqueID);
 
         let data = {};
         data["lat"] = ctx.request.body.lat;
@@ -263,11 +262,11 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         data["packing"] = ctx.request.body.packing;
         data["ext_url"] = ctx.request.ext_url;
 
-        if (ctx.request.body.channelID)
+        if (ctx.request.body.uniqueID)
         {
-            const channel = await strapi.config.functions.getChannel(ctx.state.user.id, ctx.request.body.channelID);
+            const channel = await strapi.config.functions.getChannel(ctx.state.user.id, ctx.request.body.uniqueID);
             if (!channel)
-                return ctx.badRequest('No such channel or you are not the owner ' + ctx.request.body.uniqueID);
+                return ctx.badRequest('No such channel or you are not allowed to edit ' + ctx.request.body.uniqueID);
             data["channel"] = {connect: [{id: channel.id}]};
         }
 
@@ -284,7 +283,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
             }
         });
 
-        if (ctx.request.body.order ||  (ctx.request.body.channelID && (ctx.request.body.channelID != content.channel.id)))
+        if (ctx.request.body.order ||  (ctx.request.body.uniqueID && (ctx.request.body.uniqueID != content.channel.id)))
             await insertContent(newcontent, ctx.request.body.order ? ctx.request.body.order : 1);
 
         if (ctx.request.body.caption)
@@ -314,6 +313,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
                     select: ['id', 'uniqueID'],
                     populate: {
                         owner: { select: ['id'] },
+                        editors: { select: ['id'] },
                     }
                 },
             }
@@ -322,8 +322,8 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         if (!content)
             return ctx.badRequest('No content found');
 
-        if (content.channel.owner.id != ctx.state.user.id)
-            return ctx.badRequest('No such channel or you are not the owner: ' + content.channel.uniqueID);
+        if (!strapi.config.functions.canEdit(content.channel, ctx.state.user.id))
+            return ctx.badRequest('No such channel or you are not allowed to edit: ' + content.channel.uniqueID);
 
         if (content.mediafile?.id)
             await strapi.plugins.upload.services.upload.update(content.mediafile.id, { caption: ctx.request.body.caption });
@@ -345,6 +345,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
                     select: ['id', 'uniqueID'],
                     populate: {
                         owner: { select: ['id'] },
+                        editors: { select: ['id'] },
                     }
                 },
             },
@@ -355,8 +356,8 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
 
         /*const channel = await strapi.config.functions.getChannel(ctx.state.user.id, content.channel.uniqueID);
         if (!channel)*/
-        if (content.channel.owner.id != ctx.state.user.id)
-            return ctx.badRequest('No such channel or you are not the owner: ' + content.channel.uniqueID);
+        if (!strapi.config.functions.canEdit(content.channel, ctx.state.user.id))
+            return ctx.badRequest('No such channel or you are allowed to edit: ' + content.channel.uniqueID);
 
         // TODO: check if content.order is undefined
         if (content.order && content.order > 0) {

@@ -46,6 +46,21 @@ module.exports = {
         path: '/deleteChannel', 
         handler: 'channel.deleteChannel',
       },
+      { 
+        method: 'POST',
+        path: '/deleteChannel', 
+        handler: 'channel.deleteChannel',
+      },
+      { 
+        method: 'POST',
+        path: '/addEditor', 
+        handler: 'channel.addEditor',
+      },
+      { 
+        method: 'POST',
+        path: '/removeEditor', 
+        handler: 'channel.removeEditor',
+      },
     ],
   }
   
