@@ -15,6 +15,12 @@ module.exports = {
           owner: {
             select: ['id'],
           },
+          editors: {
+            select: ['id'],
+          },
+          parent: {
+            select: ['id'],
+          },
         }
       });
 
@@ -35,6 +41,12 @@ module.exports = {
         owner: {
             select: ['id'],
         },
+        editors: {
+          select: ['id'],
+        },
+        parent: {
+          select: ['id'],
+        },
       }
     });
 
@@ -42,7 +54,7 @@ module.exports = {
 },
 
   async canEdit(channel, userID) {
-    return (channel?.owner?.id == userID) || channel?.editors?.some(item => item.id == userID);
+    return (channel.owner?.id == userID) || channel.editors?.some(item => item.id == userID);
   },
 
 
