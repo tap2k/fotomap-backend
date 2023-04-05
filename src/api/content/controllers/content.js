@@ -64,6 +64,15 @@ async function insertContent(content, order) {
         orderBy: { order: ascending ? 'asc' : 'desc' },
     });
 
+    if (order == -1)
+    {
+        if (contentItems.length)
+            order = contentItems[contentItems.length - 1].order + 1;
+        else
+            order = 1;
+        console.log("order = " + order);
+    }
+
     var currOrder = order;
     for (const updateContent of contentItems) {
         if (updateContent.id === content.id)
@@ -283,11 +292,11 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
             }
         });
 
-        if (ctx.request.body.order ||  (ctx.request.body.uniqueID && (ctx.request.body.uniqueID != content.channel.id)))
-            await insertContent(newcontent, ctx.request.body.order ? ctx.request.body.order : 1);
+        if (ctx.request.body.order ||  (ctx.request.body.uniqueID && (ctx.request.body.uniqueID != content.channel.uniqueID)))
+            await insertContent(newcontent, ctx.request.body.order ? ctx.request.body.order : -1);
 
-        if (ctx.request.body.caption)
-            await strapi.controller('api::content.content').addCaption(ctx);
+        if (ctx.request.body.caption && content.mediafile?.id)
+            await strapi.plugins.upload.services.upload.update(content.mediafile.id, { caption: ctx.request.body.caption })
 
         //if (ctx.request.body.order && ctx.request.body.order != content.order)
         //    await strapi.controller('api::content.content').updateOrder(ctx);
