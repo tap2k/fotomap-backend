@@ -148,6 +148,9 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                 owner: {
                     select: ['id', 'username', 'email'],
                 },
+                parent: {
+                    select: ['id', 'name'],
+                }
             },
         });
         return channels;
@@ -245,7 +248,10 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         data["zoom"] = ctx.request.body.zoom;
         data["name"] = ctx.request.body.name;
         data["public"] = ctx.request.body.public;
-        data["parent"] = ctx.request.body.parent;
+        if (ctx.request.body.parent == "")
+            data["parent"] = null;
+        else
+            data["parent"] = ctx.request.body.parent;
         //data["owner"] = ctx.request.body.owner;
 
         return await strapi.query("api::channel.channel").update({ 
