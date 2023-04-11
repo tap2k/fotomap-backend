@@ -7,7 +7,7 @@
 async function getChannelFunc(channelID)
 {
     return  await strapi.query('api::channel.channel').findOne({
-        select: ['uniqueID', 'name', 'lat', 'long', 'zoom'],
+        select: ['uniqueID', 'name', 'lat', 'long', 'zoom', 'public'],
         where: { uniqueID: channelID },
         populate: {
             parent: {
