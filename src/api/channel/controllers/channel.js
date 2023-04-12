@@ -143,7 +143,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         const channels = await strapi.db.query('api::channel.channel').findMany({
             select: ['uniqueID', 'name', 'lat', 'long', 'zoom'],
             //where: { $and: [{owner: ctx.state.user.id}, { parent: null }] },
-            where: { $and:[{$or: [{ owner: ctx.state.user.id }, { editors: ctx.state.user.id }]}, { parent: null }] },
+            where: { $or: [{ owner: ctx.state.user.id }, { editors: ctx.state.user.id }] },
             populate: {
                 owner: {
                     select: ['id', 'username', 'email'],
