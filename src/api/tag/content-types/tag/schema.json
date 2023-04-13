@@ -21,6 +21,12 @@
       "relation": "manyToMany",
       "target": "api::submission.submission",
       "mappedBy": "tags"
+    },
+    "contents": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::content.content",
+      "mappedBy": "tags"
     }
   }
 }
