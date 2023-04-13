@@ -69,7 +69,7 @@ async function insertContent(content, order) {
     {
         if (contentItems?.length)
         {
-            if (contentItems[contentItems.length - 1].id != content.id)
+            if (contentItems[contentItems.length - 1].id == content.id)
                 return;
             order = contentItems[contentItems.length - 1].order + 1;
         }
@@ -297,7 +297,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         });
 
         // TODO: ignore order if changing channel? yes
-        if (ctx.request.body.order || (ctx.request.body.uniqueID && (ctx.request.body.uniqueID != content.channel.uniqueID)))
+        if (ctx.request.body.uniqueID && (ctx.request.body.uniqueID != content.channel.uniqueID))
             await insertContent(newcontent, -1);
         else if (ctx.request.body.order)
             await insertContent(newcontent, ctx.request.body.order);
