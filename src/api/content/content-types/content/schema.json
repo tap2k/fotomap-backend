@@ -8,7 +8,7 @@
     "description": ""
   },
   "options": {
-    "draftAndPublish": true
+    "draftAndPublish": false
   },
   "pluginOptions": {},
   "attributes": {
@@ -70,12 +70,6 @@
     },
     "long": {
       "type": "float"
-    },
-    "tags": {
-      "type": "relation",
-      "relation": "manyToMany",
-      "target": "api::tag.tag",
-      "inversedBy": "contents"
     }
   }
 }
