@@ -96,7 +96,7 @@ async function getChildChannelsFunc(channelID) {
               uniqueID: channelID
             }
         },
-        orderBy: { id: 'asc' },
+        orderBy: { name: 'asc' },
         populate: {
             owner: {
                 select: ['id', 'username', 'email'],
@@ -145,7 +145,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             select: ['uniqueID', 'name', 'lat', 'long', 'zoom'],
             //where: { $and: [{owner: ctx.state.user.id}, { parent: null }] },
             where: { $or: [{ owner: ctx.state.user.id }, { editors: ctx.state.user.id }] },
-            orderBy: { id: 'asc' },
+            orderBy: { name: 'asc' },
             populate: {
                 owner: {
                     select: ['id', 'username', 'email'],
@@ -162,7 +162,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         const channels = await strapi.db.query('api::channel.channel').findMany({
             select: ['uniqueID', 'name', 'lat', 'long', 'zoom'],
             where: { public: 'true' },
-            orderBy: { id: 'asc' },
+            orderBy: { name: 'asc' },
             populate: {
                 owner: {
                     select: ['id', 'username', 'email'],
