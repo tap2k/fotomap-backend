@@ -242,8 +242,8 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
 
     async updateContent(ctx) {
         if (!ctx.request.body.contentID)
-            return ctx.badRequest('No order or content specified');
-
+            return ctx.badRequest('No content specified');
+        
         const content = await strapi.db.query('api::content.content').findOne({
             where: { id: ctx.request.body.contentID },
             select: ['id'],
@@ -267,25 +267,30 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         if (!strapi.config.functions.canEdit(content.channel, ctx.state.user.id))
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + content.channel.uniqueID);
 
-        let data = {};
+        /*let data = {};
         data["lat"] = ctx.request.body.lat;
         data["long"] = ctx.request.body.long;
         data["is360"] = ctx.request.body.is360;
         data["mapping"] = ctx.request.body.mapping;
         data["packing"] = ctx.request.body.packing;
-        data["ext_url"] = ctx.request.ext_url;
+        data["ext_url"] = ctx.request.body.ext_url;*/
 
         if (ctx.request.body.uniqueID)
         {
             const channel = await strapi.config.functions.getChannel(ctx.state.user.id, ctx.request.body.uniqueID);
             if (!channel)
                 return ctx.badRequest('No such channel or you are not allowed to edit ' + ctx.request.body.uniqueID);
-            data["channel"] = {connect: [{id: channel.id}]};
+            //data["channel"] = {connect: [{id: channel.id}]};
+            ctx.request.body["channel"] = {connect: [{id: channel.id}]};
         }
+
+        strapi.config.functions.nullParam("lat", ctx.request.body);
+        strapi.config.functions.nullParam("long", ctx.request.body);
 
         const newcontent = await strapi.query("api::content.content").update({
             where: { id: content.id },
-            data: data,
+            data: ctx.request.body,
+            //data: data,
             populate: {
                 channel: {
                     select: ['id', 'uniqueID'],

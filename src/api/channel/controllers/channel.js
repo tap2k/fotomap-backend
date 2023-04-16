@@ -244,7 +244,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         if (!channel) 
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + ctx.request.body.uniqueID);
         
-        let data = {};
+        /*let data = {};
         data["lat"] = ctx.request.body.lat;
         data["long"] = ctx.request.body.long;
         data["zoom"] = ctx.request.body.zoom;
@@ -253,12 +253,17 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         if (ctx.request.body.parent == "")
             data["parent"] = null;
         else
-            data["parent"] = ctx.request.body.parent;
-        //data["owner"] = ctx.request.body.owner;
+            data["parent"] = ctx.request.body.parent;*/
+
+        strapi.config.functions.nullParam("parent", ctx.request.body);
+        strapi.config.functions.nullParam("lat", ctx.request.body);
+        strapi.config.functions.nullParam("long", ctx.request.body);
+        strapi.config.functions.nullParam("zoom", ctx.request.body);
 
         return await strapi.query("api::channel.channel").update({ 
             where: { id: channel.id },
-            data: data,
+            data: ctx.request.body,
+            //data: data
         });
     },
 

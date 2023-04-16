@@ -76,4 +76,9 @@ module.exports = {
       await strapi.config.functions.deleteMediafile(asset.macbundle.id);
   },
 
+  async nullParam(variable, data) {
+    if (data[variable] == "")
+      data[variable] = null;
+  },
+
 };
