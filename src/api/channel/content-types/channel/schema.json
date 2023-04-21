@@ -47,6 +47,11 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "plugin::users-permissions.user"
+    },
+    "tileset": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::tileset.tileset"
     }
   }
 }

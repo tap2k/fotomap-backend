@@ -61,6 +61,14 @@ module.exports = {
         path: '/removeEditor', 
         handler: 'channel.removeEditor',
       },
+      { 
+        method: 'GET',
+        path: '/getTilesets', 
+        handler: 'channel.getTilesets',
+        config: {
+          auth: false,
+        },
+      },
     ],
   }
   

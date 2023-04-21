@@ -17,7 +17,11 @@ async function getChannelFunc(channelID)
                 select: ['id'],
             },
             editors: {
-                select: ['id', 'username', 'email']
+                select: ['id', 'username', 'email'],
+            },
+            tileset:
+            {
+                select: ['id', 'name', 'urlFormatString', 'attribution'],
             }
         },
       });
@@ -259,6 +263,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         strapi.config.functions.nullParam("lat", ctx.request.body);
         strapi.config.functions.nullParam("long", ctx.request.body);
         strapi.config.functions.nullParam("zoom", ctx.request.body);
+        strapi.config.functions.nullParam("tileset", ctx.request.body);
 
         return await strapi.query("api::channel.channel").update({ 
             where: { id: channel.id },
@@ -301,5 +306,13 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             return ctx.badRequest('No such user');
         
         return await changeEditorFunc(ctx, user.id, ctx.request.body.uniqueID, false);
+    },
+
+    async getTilesets(ctx) {
+        const channels = await strapi.db.query('api::tileset.tileset').findMany({
+            select: ['id', 'name', 'urlFormatString'],
+            orderBy: { id: 'asc' },
+          });
+        return channels;
     },
 }));

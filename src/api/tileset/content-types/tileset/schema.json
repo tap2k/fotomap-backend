@@ -1,0 +1,25 @@
+{
+  "kind": "collectionType",
+  "collectionName": "tilesets",
+  "info": {
+    "singularName": "tileset",
+    "pluralName": "tilesets",
+    "displayName": "Tileset",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "urlFormatString": {
+      "type": "string"
+    },
+    "attribution": {
+      "type": "text"
+    }
+  }
+}
