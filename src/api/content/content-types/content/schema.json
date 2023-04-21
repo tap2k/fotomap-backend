@@ -70,6 +70,21 @@
     },
     "long": {
       "type": "float"
+    },
+    "markercolor": {
+      "type": "enumeration",
+      "enum": [
+        "black",
+        "blue",
+        "gold",
+        "green",
+        "grey",
+        "orange",
+        "red",
+        "violet",
+        "yellow"
+      ],
+      "default": "green"
     }
   }
 }

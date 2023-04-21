@@ -110,7 +110,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
                     },
                 },
             orderBy: { order: 'asc' },
-            select: ['id', 'ext_url', 'is360', 'lat', 'long', 'mapping', 'packing'],
+            select: ['id', 'ext_url', 'is360', 'lat', 'long', 'mapping', 'packing', 'markercolor'],
             populate: {
                 mediafile: {
                     select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
