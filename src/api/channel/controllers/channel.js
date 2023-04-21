@@ -307,12 +307,4 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         
         return await changeEditorFunc(ctx, user.id, ctx.request.body.uniqueID, false);
     },
-
-    async getTilesets(ctx) {
-        const channels = await strapi.db.query('api::tileset.tileset').findMany({
-            select: ['id', 'name', 'urlFormatString'],
-            orderBy: { id: 'asc' },
-          });
-        return channels;
-    },
 }));
