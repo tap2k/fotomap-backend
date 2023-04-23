@@ -4,10 +4,40 @@
  *  channel controller
  */
 
+async function addPictureFunc(channel, file)
+{
+    if (file) {
+        if (channel.picture)
+            await strapi.config.functions.deleteMediafile(channel.picture.id);
+
+        let path = file.path;
+        let filename = file.name;
+
+        const fs = require('fs');
+        const mime = require('mime');
+        const mimetype = mime.getType(filename);
+        const stats = fs.statSync(path);
+
+        await strapi.plugins.upload.services.upload.upload({
+            data: {
+                refId: channel.id,
+                ref: 'api::channel.channel',
+                field: 'picture',
+            },
+            files: {
+                path: path,
+                name: filename,
+                type: mimetype,
+                size: stats.size
+            }
+        });
+    }
+}
+
 async function getChannelFunc(channelID)
 {
     return  await strapi.query('api::channel.channel').findOne({
-        select: ['uniqueID', 'name', 'lat', 'long', 'zoom', 'public'],
+        select: ['uniqueID', 'name', 'description', 'lat', 'long', 'zoom', 'public', 'allowsubmissions'],
         where: { uniqueID: channelID },
         populate: {
             parent: {
@@ -21,8 +51,11 @@ async function getChannelFunc(channelID)
             },
             tileset:
             {
-                select: ['id', 'name', 'urlFormatString', 'attribution'],
-            }
+                select: ['id', 'name', 'urlformatstring', 'attribution'],
+            },
+            picture: {
+                select: ['id', 'url', 'formats'],
+            },
         },
       });
 }
@@ -89,12 +122,15 @@ async function deleteChannelFunc(ctx, channelID)
         await strapi.service('api::asset.asset').delete(asset.id);
     }
 
+    if (channel.picture)
+        await strapi.config.functions.deleteMediafile(content.picture.id);
+
     return await strapi.service('api::channel.channel').delete(channel.id);
 }
 
 async function getChildChannelsFunc(channelID) {
     const channels = await strapi.db.query('api::channel.channel').findMany({
-        select: ['uniqueID', 'name', 'lat', 'long', 'zoom'],
+        select: ['uniqueID', 'name', 'description', 'lat', 'long', 'zoom'],
         where: {
             parent: {
               uniqueID: channelID
@@ -146,7 +182,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
     async getMyChannels(ctx) {
         const channels = await strapi.db.query('api::channel.channel').findMany({
-            select: ['uniqueID', 'name', 'lat', 'long', 'zoom'],
+            select: ['uniqueID', 'name', 'description', 'lat', 'long', 'zoom'],
             //where: { $and: [{owner: ctx.state.user.id}, { parent: null }] },
             where: { $or: [{ owner: ctx.state.user.id }, { editors: ctx.state.user.id }] },
             orderBy: { name: 'asc' },
@@ -156,7 +192,10 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                 },
                 parent: {
                     select: ['id', 'name'],
-                }
+                },
+                picture: {
+                    select: ['id', 'url', 'formats'],
+                },
             },
         });
         return channels;
@@ -164,12 +203,15 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
     async getPublicChannels(ctx) {
         const channels = await strapi.db.query('api::channel.channel').findMany({
-            select: ['uniqueID', 'name', 'lat', 'long', 'zoom'],
+            select: ['uniqueID', 'name', 'description', 'lat', 'long', 'zoom'],
             where: { public: 'true' },
             orderBy: { name: 'asc' },
             populate: {
                 owner: {
                     select: ['id', 'username', 'email'],
+                },
+                picture: {
+                    select: ['id', 'url', 'formats'],
                 },
             },
           });
@@ -227,12 +269,15 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                 data: {
                     uniqueID: channelid,
                     name: ctx.request.body.name,
+                    description: ctx.request.body.description,
                     public: ispublic,
                     owner: owner,
                     editors: editors,
                     parent: ctx.request.body.parentID
                 },
             });
+
+            await addPictureFunc(channel, ctx.request.files.picture);
             return channel;
         } catch (err) {
             return ctx.badRequest(err);
@@ -264,6 +309,12 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         strapi.config.functions.nullParam("long", ctx.request.body);
         strapi.config.functions.nullParam("zoom", ctx.request.body);
         strapi.config.functions.nullParam("tileset", ctx.request.body);
+
+        if (channel.picture && ctx.request.body.deletepic)
+            await strapi.config.functions.deleteMediafile(channel.picture.id);
+
+        if (ctx.request.files)
+            await addPictureFunc(channel, ctx.request.files[Object.keys(ctx.request.files)]);
 
         return await strapi.query("api::channel.channel").update({ 
             where: { id: channel.id },
@@ -308,3 +359,4 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         return await changeEditorFunc(ctx, user.id, ctx.request.body.uniqueID, false);
     },
 }));
+

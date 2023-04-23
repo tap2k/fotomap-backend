@@ -52,6 +52,20 @@
       "type": "relation",
       "relation": "oneToOne",
       "target": "api::tileset.tileset"
+    },
+    "description": {
+      "type": "text"
+    },
+    "picture": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "allowsubmissions": {
+      "type": "boolean"
     }
   }
 }

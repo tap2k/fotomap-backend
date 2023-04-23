@@ -48,11 +48,6 @@ module.exports = {
     },
     { 
       method: 'POST',
-      path: '/deleteChannel', 
-      handler: 'channel.deleteChannel',
-    },
-    { 
-      method: 'POST',
       path: '/addEditor', 
       handler: 'channel.addEditor',
     },

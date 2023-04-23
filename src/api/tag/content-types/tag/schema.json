@@ -16,10 +16,10 @@
       "required": true,
       "unique": true
     },
-    "submissions": {
+    "contents": {
       "type": "relation",
       "relation": "manyToMany",
-      "target": "api::submission.submission",
+      "target": "api::content.content",
       "mappedBy": "tags"
     }
   }

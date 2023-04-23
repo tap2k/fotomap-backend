@@ -10,6 +10,11 @@ module.exports = {
           auth: false,
         },
       },
+      {
+        method: "GET",
+        path: "/getAllContentForChannel",
+        handler: "content.getAllContentForChannel",
+      },
       /*{
         method: "POST",
         path: "/getContentItem",
@@ -19,6 +24,14 @@ module.exports = {
         method: "POST",
         path: "/uploadContentToChannel",
         handler: "content.uploadContentToChannel",
+      },
+      {
+        method: "POST",
+        path: "/uploadSubmission",
+        handler: "content.uploadSubmission",
+        config: {
+          auth: false,
+        },
       },
       {
         method: "POST",
@@ -34,6 +47,11 @@ module.exports = {
         method: "POST",
         path: "/deleteContent",
         handler: "content.deleteContent",
+      },
+      {
+        method: "POST",
+        path: "/addCaption",
+        handler: "content.addCaption",
       },
     ],
   }

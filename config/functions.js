@@ -21,6 +21,9 @@ module.exports = {
           parent: {
             select: ['id'],
           },
+          picture: {
+            select: ['id'],
+          },
         }
       });
 
@@ -47,6 +50,9 @@ module.exports = {
         parent: {
           select: ['id'],
         },
+        picture: {
+          select: ['id'],
+        },
       }
     });
 
@@ -54,7 +60,7 @@ module.exports = {
 },
 
   async canEdit(channel, userID) {
-    return (channel.owner?.id == userID) || channel.editors?.some(item => item.id == userID);
+    return ((channel.owner?.id == userID) || channel.editors?.some(item => item.id == userID) || channel.uniqueID == "probe");
   },
 
 

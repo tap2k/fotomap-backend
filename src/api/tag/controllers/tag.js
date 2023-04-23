@@ -14,13 +14,13 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
         const myTags = await strapi.db.query('api::tag.tag').findMany({
             select: ['id', 'tag'],
             where: {
-                submissions: {
+                contents: {
                     $not: null
                 },
             },
             orderBy: { tag: 'asc' },
             /*populate: {
-                submissions: {
+                contents: {
                     select: ['id'],
                     },
             },*/
@@ -48,19 +48,19 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
         if (!tag)
             return ctx.badRequest('Couldnt create tag');
 
-        let submission = await strapi.db.query('api::submission.submission').findOne({
-                where: { id: ctx.request.body.submission },
+        let content = await strapi.db.query('api::content.content').findOne({
+                where: { id: ctx.request.body.contentID },
         });
-        if (!submission)
-            return ctx.badRequest('No submission provided');
+        if (!content)
+            return ctx.badRequest('No content provided');
 
         return await strapi.db.query('api::tag.tag').update({
             where: { id: tag.id },
             data: {
-              submissions: {
+              contents: {
                 connect: [
                   {
-                    id: ctx.request.body.submission
+                    id: ctx.request.body.contentID
                   }
                 ],
               },
@@ -79,21 +79,21 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
         if (!tag)
             return ctx.badRequest('No tag provided');
 
-        let submission = await strapi.db.query('api::submission.submission').findOne({
-                where: { id: ctx.request.body.submission },
+        let content = await strapi.db.query('api::content.content').findOne({
+                where: { id: ctx.request.body.contentID },
         });
 
-        if (!submission)
-            return ctx.badRequest('No submission provided');
+        if (!content)
+            return ctx.badRequest('No content provided');
 
         return await strapi.db.query('api::tag.tag').update({
             populate: true,
             where: { id: tag.id },
             data: {
-              submissions: {
+              contents: {
                 disconnect: 
                 [{
-                    id: ctx.request.body.submission
+                    id: ctx.request.body.contentID
                 }],
               },
             },
@@ -107,7 +107,7 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
                 tag: ctx.request.body.tagsource
             },
             populate: {
-                submissions: {
+                contents: {
                     select: ['id'],
                     },
             },
@@ -125,14 +125,14 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
         if (!tagsource || !tagdest)
             return ctx.badRequest('Source or dest tag not provided');
 
-        for (const submission of tagsource.submissions) {
+        for (const content of tagsource.contents) {
             const entry1 = await strapi.db.query('api::tag.tag').update({
                 where: { id: tagsource.id },
                 data: {
-                    submissions: {
+                    contents: {
                         disconnect: 
                         [{
-                            id: submission.id
+                            id: content.id
                         }],
                     },
                 },
@@ -140,10 +140,10 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
             const entry2 = await strapi.db.query('api::tag.tag').update({
                 where: { id: tagdest.id },
                 data: {
-                    submissions: {
+                    contents: {
                         connect: 
                         [{
-                            id: submission.id
+                            id: content.id
                         }],
                     },
                 },
@@ -159,7 +159,7 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
         let tags = await strapi.db.query('api::tag.tag').findMany({
             select: ['id'],
             where: {
-                submissions: null
+                contents: null
             }
         });
         for (const tag of tags) {
