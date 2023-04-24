@@ -277,7 +277,9 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                 },
             });
 
-            await addPictureFunc(channel, ctx.request.files.picture);
+            if (ctx.request.files?.picture)
+                await addPictureFunc(channel, ctx.request.files.picture);
+                
             return channel;
         } catch (err) {
             return ctx.badRequest(err);
