@@ -156,7 +156,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         const myContents = await strapi.db.query('api::content.content').findMany({
             where: {channel: {uniqueID: ctx.query.uniqueID}},
             orderBy: { order: 'asc' },
-            select: ['id', 'ext_url', 'is360', 'lat', 'long', 'mapping', 'packing', 'markercolor', 'createdAt', 'publishedAt'],
+            select: ['id', 'title', 'description', 'ext_url', 'is360', 'lat', 'long', 'mapping', 'packing', 'markercolor', 'createdAt', 'publishedAt'],
             populate: {
                 mediafile: {
                     select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
@@ -190,7 +190,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
                 ]
             },
             orderBy: { order: 'asc' },
-            select: ['id', 'ext_url', 'is360', 'lat', 'long', 'mapping', 'packing', 'markercolor', 'createdAt', 'publishedAt'],
+            select: ['id', 'title', 'description', 'ext_url', 'is360', 'lat', 'long', 'mapping', 'packing', 'markercolor', 'createdAt', 'publishedAt'],
             populate: {
                 mediafile: {
                     select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
@@ -218,7 +218,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
             select: ['id', 'ext_url', 'is360', 'lat', 'long', 'mapping', 'packing'],
             populate: {
                 mediafile: {
-                    select: ['id', 'name', 'url', 'size', 'caption'],
+                    select: ['id', 'title', 'description', 'ext_url', 'is360', 'lat', 'long', 'mapping', 'packing', 'markercolor', 'createdAt', 'publishedAt'],
                 },
                 channel: {
                     select: ['id', 'uniqueID'],
