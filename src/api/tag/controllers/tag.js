@@ -12,7 +12,6 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
 
     async getTags(ctx) {
         const myTags = await strapi.db.query('api::tag.tag').findMany({
-            select: ['id', 'tag'],
             where: {
                 contents: {
                     $not: null
@@ -30,7 +29,6 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
 
     async addTag(ctx) {
         let tag = await strapi.db.query('api::tag.tag').findOne({
-            select: ['id', 'tag'],
             where: {
                 tag: ctx.request.body.tag
             },
@@ -51,6 +49,7 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
         let content = await strapi.db.query('api::content.content').findOne({
                 where: { id: ctx.request.body.contentID },
         });
+
         if (!content)
             return ctx.badRequest('No content provided');
 
@@ -70,7 +69,6 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
 
     async removeTag(ctx) {
         let tag = await strapi.db.query('api::tag.tag').findOne({
-            select: ['id', 'tag'],
             where: {
                 tag: ctx.request.body.tag
             },

@@ -37,7 +37,6 @@ async function addPictureFunc(channel, file)
 async function getChannelFunc(channelID)
 {
     return  await strapi.query('api::channel.channel').findOne({
-        select: ['uniqueID', 'name', 'description', 'lat', 'long', 'zoom', 'public', 'allowsubmissions'],
         where: { uniqueID: channelID },
         populate: {
             parent: {
@@ -130,7 +129,6 @@ async function deleteChannelFunc(ctx, channelID)
 
 async function getChildChannelsFunc(channelID) {
     const channels = await strapi.db.query('api::channel.channel').findMany({
-        select: ['uniqueID', 'name', 'description', 'lat', 'long', 'zoom'],
         where: {
             parent: {
               uniqueID: channelID
@@ -182,7 +180,6 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
     async getMyChannels(ctx) {
         const channels = await strapi.db.query('api::channel.channel').findMany({
-            select: ['uniqueID', 'name', 'description', 'lat', 'long', 'zoom'],
             //where: { $and: [{owner: ctx.state.user.id}, { parent: null }] },
             where: { $or: [{ owner: ctx.state.user.id }, { editors: ctx.state.user.id }] },
             orderBy: { name: 'asc' },
@@ -203,7 +200,6 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
     async getPublicChannels(ctx) {
         const channels = await strapi.db.query('api::channel.channel').findMany({
-            select: ['uniqueID', 'name', 'description', 'lat', 'long', 'zoom'],
             where: { public: 'true' },
             orderBy: { name: 'asc' },
             populate: {
@@ -294,17 +290,6 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
         if (!channel) 
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + ctx.request.body.uniqueID);
-        
-        /*let data = {};
-        data["lat"] = ctx.request.body.lat;
-        data["long"] = ctx.request.body.long;
-        data["zoom"] = ctx.request.body.zoom;
-        data["name"] = ctx.request.body.name;
-        data["public"] = ctx.request.body.public;
-        if (ctx.request.body.parent == "")
-            data["parent"] = null;
-        else
-            data["parent"] = ctx.request.body.parent;*/
 
         strapi.config.functions.nullParam("parent", ctx.request.body);
         strapi.config.functions.nullParam("lat", ctx.request.body);
@@ -321,7 +306,6 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         return await strapi.query("api::channel.channel").update({ 
             where: { id: channel.id },
             data: ctx.request.body,
-            //data: data
         });
     },
 

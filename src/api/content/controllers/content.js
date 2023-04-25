@@ -8,7 +8,61 @@
 //const mime = require('mime'); 
 //const { createGzip } = require('zlib');
 
-async function uploadContent(ctx, channel)
+async function addFileFunc(content, file, key)
+{
+    if (!file)
+        return null;
+
+    if (file) {
+        let path = file.path;
+        let filename = file.name;
+
+        const fs = require('fs');
+        const mime = require('mime');
+        const mimetype = mime.getType(filename);
+        const stats = fs.statSync(path);
+
+        return await strapi.plugins.upload.services.upload.upload({
+            data: {
+                refId: content.id,
+                ref: 'api::content.content',
+                field: key,
+            },
+            files: {
+                path: path,
+                name: filename,
+                type: mimetype,
+                size: stats.size
+            }
+        });
+    }
+}
+
+async function createContentFunc(file, channelID, order, ext_url, lat, long) {
+    if (!channelID)
+        return null;
+
+    const content = await strapi.db.query('api::content.content').create({
+        data: {
+            channel: channelID,
+            order: order,
+            ext_url: ext_url,
+            lat: lat,
+            long: long,
+        }
+    });
+
+    if (!content)
+        return null;
+
+    if (file) {
+        addFileFunc(content, file, "mediafile");
+    }
+
+    return content;
+}
+
+async function uploadContentFunc(ctx, channel)
 {
     const contentItems = await strapi.db.query('api::content.content').findMany({
         where: { channel: channel.id },
@@ -28,10 +82,9 @@ async function uploadContent(ctx, channel)
     if (ctx.request.files) {
         var files = ctx.request.files;
         let contents = [];
-        //Object.keys(files).forEach(await async key => {
         for (const key of Object.keys(files)) {
             try {
-                const content = await createContent(files[key], channel.id, order, ctx.request.body.ext_url, ctx.request.body.lat, ctx.request.body.long);
+                const content = await createContentFunc(files[key], channel.id, order, ctx.request.body.ext_url, ctx.request.body.lat, ctx.request.body.long);
                 if (!content) return ctx.badRequest('Could not create content');
                 order = order + 1;
                 contents.push(content);
@@ -44,7 +97,7 @@ async function uploadContent(ctx, channel)
     }
     else
     {
-        const content = await createContent(null, channel.id, order, ctx.request.body.ext_url, ctx.request.body.lat, ctx.request.body.long);
+        const content = await createContentFunc(null, channel.id, order, ctx.request.body.ext_url, ctx.request.body.lat, ctx.request.body.long);
         if (!content) 
             return ctx.badRequest("Could not create content");
         else
@@ -52,53 +105,8 @@ async function uploadContent(ctx, channel)
     }
 }
 
-
-async function createContent(file, channelID, order, ext_url, lat, long) {
-    if (!channelID)
-        return null;
-
-    const content = await strapi.db.query('api::content.content').create({
-        data: {
-            channel: channelID,
-            order: order,
-            ext_url: ext_url,
-            lat: lat,
-            long: long,
-        }
-    });
-
-    if (!content)
-        return null;
-
-    if (file) {
-        let path = file.path;
-        let filename = file.name;
-
-        const fs = require('fs');
-        const mime = require('mime');
-        const mimetype = mime.getType(filename);
-        const stats = fs.statSync(path);
-
-        await strapi.plugins.upload.services.upload.upload({
-            data: {
-                refId: content.id,
-                ref: 'api::content.content',
-                field: 'mediafile',
-            },
-            files: {
-                path: path,
-                name: filename,
-                type: mimetype,
-                size: stats.size
-            }
-        });
-    }
-
-    return content;
-}
-
 // TODO: Make sure its in order?
-async function insertContent(content, order) {
+async function insertContentFunc(content, order) {
 
     var ascending = true;
     if (content.order < order)
@@ -156,7 +164,6 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         const myContents = await strapi.db.query('api::content.content').findMany({
             where: {channel: {uniqueID: ctx.query.uniqueID}},
             orderBy: { order: 'asc' },
-            select: ['id', 'title', 'description', 'ext_url', 'is360', 'lat', 'long', 'mapping', 'packing', 'markercolor', 'createdAt', 'publishedAt'],
             populate: {
                 mediafile: {
                     select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
@@ -180,17 +187,11 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         
         const myContents = await strapi.db.query('api::content.content').findMany({
             where: {
-                $and: [
-                    {
-                        channel: {uniqueID: ctx.query.uniqueID}
-                    },
-                    {
-                        publishedAt: { $ne: null },
-                    }
+                $and: [{ channel: {uniqueID: ctx.query.uniqueID} },
+                    { publishedAt: { $ne: null } }
                 ]
             },
             orderBy: { order: 'asc' },
-            select: ['id', 'title', 'description', 'ext_url', 'is360', 'lat', 'long', 'mapping', 'packing', 'markercolor', 'createdAt', 'publishedAt'],
             populate: {
                 mediafile: {
                     select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
@@ -215,16 +216,17 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         
         const content = await strapi.db.query('api::content.content').findOne({
             where: { id: ctx.request.body.contentID },
-            select: ['id', 'ext_url', 'is360', 'lat', 'long', 'mapping', 'packing'],
-            populate: {
                 mediafile: {
-                    select: ['id', 'title', 'description', 'ext_url', 'is360', 'lat', 'long', 'mapping', 'packing', 'markercolor', 'createdAt', 'publishedAt'],
+                    select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
                 },
                 channel: {
                     select: ['id', 'uniqueID'],
                     populate: {
-                        owner: { select: ['id']},
+                        owner: { select: ['id'] },
                     }
+                },
+                tags: {
+                    select: ['id', 'tag'],
                 },
             }
         });
@@ -250,7 +252,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         if (!channel)
             return ctx.badRequest('No such channel or you are not allowed to edit ' + ctx.request.body.uniqueID);
 
-        return await uploadContent(ctx, channel);
+        return await uploadContentFunc(ctx, channel);
 
     },
 
@@ -269,7 +271,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         if (!channel?.allowsubmissions)
             return ctx.badRequest('This channel does not allow submissions ' + ctx.request.body.uniqueID);
         
-        return await uploadContent(ctx, channel);
+        return await uploadContentFunc(ctx, channel);
 
     },
 
@@ -301,7 +303,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         if (content.order == ctx.request.body.order)
             return;
 
-        await insertContent(content, ctx.request.body.order);
+        await insertContentFunc(content, ctx.request.body.order);
 
         return "ok";
     },*/
@@ -380,15 +382,15 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
 
         // TODO: ignore order if changing channel? yes
         if (ctx.request.body.uniqueID && (ctx.request.body.uniqueID != content.channel.uniqueID))
-            await insertContent(newcontent, -1);
+            await insertContentFunc(newcontent, -1);
         else if (ctx.request.body.order)
-            await insertContent(newcontent, ctx.request.body.order);
+            await insertContentFunc(newcontent, ctx.request.body.order);
 
         if (ctx.request.body.caption && content.mediafile?.id)
             await strapi.plugins.upload.services.upload.update(content.mediafile.id, { caption: ctx.request.body.caption })
         
-        if (ctx.request.body.filename && content.mediafile?.id)
-            await strapi.plugins.upload.services.upload.update(content.mediafile.id, { name: ctx.request.body.filename })
+        //if (ctx.request.body.filename && content.mediafile?.id)
+        //    await strapi.plugins.upload.services.upload.update(content.mediafile.id, { name: ctx.request.body.filename })
 
         //if (ctx.request.body.order && ctx.request.body.order != content.order)
         //    await strapi.controller('api::content.content').updateOrder(ctx);
