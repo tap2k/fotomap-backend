@@ -220,7 +220,6 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
     async createChannel(ctx) {
         let channelid = ctx.request.body.uniqueID;
-        let ispublic = ctx.request.body.ispublic;
         if (!channelid)
         {
             const uuid = require('uuid');
@@ -258,19 +257,16 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             editors = parentchannel.editors;
         }
 
-        if (!ispublic)
-            ispublic = false;
+        if (!ctx.request.body.ispublic)
+            ctx.request.body.ispublic = false;
+        
+        ctx.request.body.uniqueID = channelid;
+        ctx.request.body.owner = owner;
+        ctx.request.body.editors = editors;
+        
         try {
             const channel = await strapi.db.query('api::channel.channel').create({
-                data: {
-                    uniqueID: channelid,
-                    name: ctx.request.body.name,
-                    description: ctx.request.body.description,
-                    public: ispublic,
-                    owner: owner,
-                    editors: editors,
-                    parent: ctx.request.body.parentID
-                },
+                data: ctx.request.body,
             });
 
             if (ctx.request.files?.picture)
