@@ -287,7 +287,11 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         if (!channel) 
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + ctx.request.body.uniqueID);
 
-        strapi.config.functions.nullParam("parent", ctx.request.body);
+        if (ctx.request.body.parent == channel.id)
+            ctx.request.body.parent = null;
+        else
+            strapi.config.functions.nullParam("parent", ctx.request.body);
+            
         strapi.config.functions.nullParam("lat", ctx.request.body);
         strapi.config.functions.nullParam("long", ctx.request.body);
         strapi.config.functions.nullParam("zoom", ctx.request.body);
