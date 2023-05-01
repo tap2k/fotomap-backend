@@ -168,6 +168,9 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
                 mediafile: {
                     select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
                 },
+                thumbnail: {
+                    select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
+                },
                 channel: {
                     select: ['id', 'uniqueID'],
                     populate: {
@@ -194,6 +197,9 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
             orderBy: { order: 'asc' },
             populate: {
                 mediafile: {
+                    select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
+                },
+                thumbnail: {
                     select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
                 },
                 channel: {
@@ -319,6 +325,9 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
                 mediafile: {
                     select: ['id'],
                 },
+                thumbnail: {
+                    select: ['id'],
+                },
                 channel: {
                     select: ['id', 'uniqueID'],
                     populate: {
@@ -376,9 +385,19 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
                     populate: {
                         owner: { select: ['id'] },
                     }
-                }
+                },
+                thumbnail: {
+                    select: ['id'],
+                },
             }
         });
+
+        if (ctx.request.files)
+        {
+            if (newcontent.thumbnail)
+                await strapi.config.functions.deleteMediafile(newcontent.thumbnail.id);
+            await addFileFunc(newcontent, ctx.request.files[Object.keys(ctx.request.files)], "thumbnail");
+        }
 
         // TODO: ignore order if changing channel? yes
         if (ctx.request.body.uniqueID && (ctx.request.body.uniqueID != content.channel.uniqueID))
@@ -409,6 +428,9 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
             },
             populate: {
                 mediafile: {
+                    select: ['id'],
+                },
+                thumbnail: {
                     select: ['id'],
                 },
                 channel: {
@@ -452,6 +474,10 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
 
         if (content.mediafile)
             await strapi.config.functions.deleteMediafile(content.mediafile.id);
+        
+        
+        if (content.thumbnail)
+            await strapi.config.functions.deleteMediafile(content.thumbnail.id);
 
         return await strapi.service('api::content.content').delete(content.id);
     },
