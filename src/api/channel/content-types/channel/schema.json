@@ -67,7 +67,7 @@
     "description": {
       "type": "richtext"
     },
-    "autoplay": {
+    "interval": {
       "type": "integer"
     }
   }
