@@ -74,7 +74,7 @@ async function uploadContentFunc(ctx, channel)
     if (!order)*/
     let order = 1;
     if (contentItems.length)
-        order = contentItems[contentItems.length - 1].order + 1;
+        order = parseInt(contentItems[contentItems.length - 1].order) + 1;
 
     strapi.config.functions.nullParam("lat", ctx.request.body);
     strapi.config.functions.nullParam("long", ctx.request.body);
@@ -125,7 +125,7 @@ async function insertContentFunc(content, order) {
         {
             if (contentItems[contentItems.length - 1].id == content.id)
                 return;
-            order = contentItems[contentItems.length - 1].order + 1;
+            order = parseInt(contentItems[contentItems.length - 1].order) + 1;
         }
         else
             order = 1;
