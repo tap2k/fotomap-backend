@@ -79,7 +79,8 @@ async function uploadContentFunc(ctx, channel)
     strapi.config.functions.nullParam("lat", ctx.request.body);
     strapi.config.functions.nullParam("long", ctx.request.body);
 
-    if (ctx.request.files) {
+    if (ctx.request.files && Object.keys(ctx.request.files).length) 
+    {
         var files = ctx.request.files;
         let contents = [];
         for (const key of Object.keys(files)) {
@@ -392,11 +393,16 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
             }
         });
 
-        if (ctx.request.files)
+        if (ctx.request.files && Object.keys(ctx.request.files).length)
         {
-            if (newcontent.thumbnail)
+            if (newcontent.thumbnail?.id)
                 await strapi.config.functions.deleteMediafile(newcontent.thumbnail.id);
             await addFileFunc(newcontent, ctx.request.files[Object.keys(ctx.request.files)], "thumbnail");
+        }
+        else
+        {
+            if (newcontent.thumbnail && ctx.request.body.deletepic)
+                await strapi.config.functions.deleteMediafile(newcontent.thumbnail.id);
         }
 
         // TODO: ignore order if changing channel? yes

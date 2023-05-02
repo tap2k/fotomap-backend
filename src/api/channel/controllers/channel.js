@@ -269,8 +269,8 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                 data: ctx.request.body,
             });
 
-            if (ctx.request.files?.picture)
-                await addPictureFunc(channel, ctx.request.files.picture);
+            if (ctx.request.files && Object.keys(ctx.request.files).length)
+                await addPictureFunc(channel, ctx.request.files[Object.keys(ctx.request.files)]);
                 
             return channel;
         } catch (err) {
@@ -297,11 +297,13 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         strapi.config.functions.nullParam("zoom", ctx.request.body);
         strapi.config.functions.nullParam("tileset", ctx.request.body);
 
-        if (channel.picture && ctx.request.body.deletepic)
-            await strapi.config.functions.deleteMediafile(channel.picture.id);
-
-        if (ctx.request.files)
+        if (ctx.request.files && Object.keys(ctx.request.files).length)
             await addPictureFunc(channel, ctx.request.files[Object.keys(ctx.request.files)]);
+        else
+        {
+            if (channel.picture && ctx.request.body.deletepic)
+                await strapi.config.functions.deleteMediafile(channel.picture.id);
+        }
 
         return await strapi.query("api::channel.channel").update({ 
             where: { id: channel.id },
