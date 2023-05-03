@@ -109,45 +109,38 @@ async function uploadContentFunc(ctx, channel)
 // TODO: Make sure its in order?
 async function insertContentFunc(content, order) {
 
-    var ascending = true;
-    if (content.order < order)
-        ascending = false;
+    if (order < -1)
+        return;
 
     const contentItems = await strapi.db.query('api::content.content').findMany({
         where: { channel: content.channel.id },
         select: ['id', 'order'],
-        orderBy: { order: ascending ? 'asc' : 'desc' },
+        orderBy: { order: 'asc' },
     });
 
     if (order == -1)
     {
         if (contentItems?.length)
-        {
-            if (contentItems[contentItems.length - 1].id == content.id)
-                return;
             order = parseInt(contentItems[contentItems.length - 1].order) + 1;
-        }
         else
             order = 1;
     }
-
-    var currOrder = order;
+    
+    var currOrder = 1;
     for (const updateContent of contentItems) {
-        if (updateContent.id === content.id)
-        {
-            await strapi.query("api::content.content").update({
-                where: { id: updateContent.id },
-                data: { order: order },
-            });
-        }
-        else if (parseInt(updateContent.order) == currOrder) {
-            await strapi.query("api::content.content").update({
-                where: { id: updateContent.id },
-                data: { order: ascending ? currOrder + 1 : currOrder - 1 },
-            });
-            currOrder = ascending ? currOrder + 1 : currOrder = currOrder - 1;
-        }
+        if (updateContent.id == content.id)
+            continue;
+        await strapi.query("api::content.content").update({
+            where: { id: updateContent.id },
+            data: { order: currOrder < order ? currOrder : parseInt(currOrder) + 1 },
+        });
+        currOrder = parseInt(currOrder) + 1;
     }
+
+    return await strapi.query("api::content.content").update({
+        where: { id: content.id },
+        data: { order: Math.min(currOrder, order) }
+    });
 }
 
 const { createCoreController } = require('@strapi/strapi').factories;
@@ -216,36 +209,6 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         });
         return myContents;
     },
-
-    /*async getContentItem(ctx) {
-        if (!ctx.request.body.contentID) 
-            return ctx.badRequest('No content specified'); 
-        
-        const content = await strapi.db.query('api::content.content').findOne({
-            where: { id: ctx.request.body.contentID },
-                mediafile: {
-                    select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
-                },
-                channel: {
-                    select: ['id', 'uniqueID'],
-                    populate: {
-                        owner: { select: ['id'] },
-                    }
-                },
-                tags: {
-                    select: ['id', 'tag'],
-                },
-            }
-        });
-
-        if (!content)
-            return ctx.badRequest('No content found for ' + ctx.request.body.contentID);
-            
-        if (content.channel.owner.id != ctx.state.user.id)
-            return ctx.badRequest('No such channel or you are not the owner: ' + content.channel.uniqueID);
-        
-        return content;
-    },*/
 
     async uploadContentToChannel(ctx) {
 
@@ -344,14 +307,6 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
 
         if (!strapi.config.functions.canEdit(content.channel, ctx.state.user.id))
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + content.channel.uniqueID);
-
-        /*let data = {};
-        data["lat"] = ctx.request.body.lat;
-        data["long"] = ctx.request.body.long;
-        data["is360"] = ctx.request.body.is360;
-        data["mapping"] = ctx.request.body.mapping;
-        data["packing"] = ctx.request.body.packing;
-        data["ext_url"] = ctx.request.body.ext_url;*/
 
         if (ctx.request.body.uniqueID)
         {
