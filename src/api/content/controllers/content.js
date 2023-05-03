@@ -322,7 +322,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
 
         if (ctx.request.body.published != undefined)
         {
-            if (ctx.request.body.published)
+            if (ctx.request.body.published == "true")
             {
                 if (!content.publishedAt)
                     ctx.request.body.publishedAt = new Date();
