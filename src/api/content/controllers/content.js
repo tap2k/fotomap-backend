@@ -55,9 +55,8 @@ async function createContentFunc(file, channelID, order, ext_url, lat, long) {
     if (!content)
         return null;
 
-    if (file) {
-        addFileFunc(content, file, "mediafile");
-    }
+    if (file)
+        await addFileFunc(content, file, "mediafile");
 
     return content;
 }
