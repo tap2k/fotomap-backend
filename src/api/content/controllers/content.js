@@ -355,7 +355,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         }
         else
         {
-            if (newcontent.thumbnail && ctx.request.body.deletepic)
+            if (newcontent.thumbnail && ctx.request.body.deletepic == "true")
                 await strapi.config.functions.deleteMediafile(newcontent.thumbnail.id);
         }
 
