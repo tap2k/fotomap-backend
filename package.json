@@ -18,6 +18,7 @@
     "jwt-decode": "^3.1.2",
     "mime": "^3.0.0",
     "pg": "^8.6.0",
+    "strapi-provider-upload-do": "^3.6.9",
     "yarn": "^1.22.19"
   },
   "author": {
