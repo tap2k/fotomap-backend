@@ -111,19 +111,7 @@ module.exports = createCoreController('api::avatar.avatar', ({ strapi }) =>  ({
         const stats = fs.statSync(ctx.request.files.bundle.path);
         //const mimetype = mime.getType(ctx.request.files.bundle.name);
 
-        await strapi.plugins.upload.services.upload.upload({
-            data: {
-                refId: currentAvatar.id,
-                ref: 'api::avatar.avatar',
-                field: field,
-            }, 
-            files: {
-                path: ctx.request.files.bundle.path,
-                name: ctx.request.files.bundle.name,
-                type: "application/octet-stream",
-                size: stats.size
-            }
-        });
+        await strapi.config.functions.addFile(currentAvatar.id, 'api::avatar.avatar', ctx.request.files.bundle, field);
 
         return currentAvatar;
     },

@@ -10,28 +10,10 @@ async function addPictureFunc(channel, file)
         if (channel.picture)
             await strapi.config.functions.deleteMediafile(channel.picture.id);
 
-        let path = file.path;
-        let filename = file.name;
-
-        const fs = require('fs');
-        const mime = require('mime');
-        const mimetype = mime.getType(filename);
-        const stats = fs.statSync(path);
-
-        await strapi.plugins.upload.services.upload.upload({
-            data: {
-                refId: channel.id,
-                ref: 'api::channel.channel',
-                field: 'picture',
-            },
-            files: {
-                path: path,
-                name: filename,
-                type: mimetype,
-                size: stats.size
-            }
-        });
+        return await strapi.config.functions.addFile(channel.id, 'api::channel.channel', file, "picture");   
     }
+    else
+        return null;
 }
 
 async function getChannelFunc(channelID)

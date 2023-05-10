@@ -72,7 +72,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         if (!channel)
             return ctx.badRequest('No such channel or you are not allowed to edit ' + ctx.request.body.uniqueID);
         
-        const file = ctx.request.files[Object.keys(ctx.request.files)[0]];
+        const file = ctx.request.files[Object.keys(ctx.request.files)];
     
         if (!file)
             return null;
@@ -91,27 +91,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         if (!overlay)
             return null;
 
-        let path = file.path;
-        let filename = file.name;
-
-        const fs = require('fs');
-        const mime = require('mime');
-        const mimetype = mime.getType(filename);
-        const stats = fs.statSync(path);
-
-        await strapi.plugins.upload.services.upload.upload({
-            data: {
-                refId: overlay.id,
-                ref: 'api::overlay.overlay',
-                field: 'image',
-            },
-            files: {
-                path: path,
-                name: filename,
-                type: mimetype,
-                size: stats.size
-            }
-        });
+        await strapi.config.functions.addFile(overlay.id, 'api::overlay.overlay', file, "image");
 
         return overlay;
 

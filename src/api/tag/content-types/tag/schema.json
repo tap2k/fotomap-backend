@@ -28,6 +28,27 @@
       "relation": "manyToOne",
       "target": "api::channel.channel",
       "inversedBy": "tags"
+    },
+    "thumbnail": {
+      "allowedTypes": [
+        "images"
+      ],
+      "type": "media",
+      "multiple": false
+    },
+    "markercolor": {
+      "type": "enumeration",
+      "enum": [
+        "black",
+        "blue",
+        "gold",
+        "green",
+        "grey",
+        "orange",
+        "red",
+        "violet",
+        "yellow"
+      ]
     }
   }
 }

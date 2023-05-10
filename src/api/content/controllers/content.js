@@ -8,36 +8,6 @@
 //const mime = require('mime'); 
 //const { createGzip } = require('zlib');
 
-async function addFileFunc(content, file, key)
-{
-    if (!file)
-        return null;
-
-    if (file) {
-        let path = file.path;
-        let filename = file.name;
-
-        const fs = require('fs');
-        const mime = require('mime');
-        const mimetype = mime.getType(filename);
-        const stats = fs.statSync(path);
-
-        return await strapi.plugins.upload.services.upload.upload({
-            data: {
-                refId: content.id,
-                ref: 'api::content.content',
-                field: key,
-            },
-            files: {
-                path: path,
-                name: filename,
-                type: mimetype,
-                size: stats.size
-            }
-        });
-    }
-}
-
 async function createContentFunc(file, channelID, order, ext_url, lat, long) {
     if (!channelID)
         return null;
@@ -56,7 +26,7 @@ async function createContentFunc(file, channelID, order, ext_url, lat, long) {
         return null;
 
     if (file)
-        await addFileFunc(content, file, "mediafile");
+        await strapi.config.functions.addFile(content.id, 'api::content.content', file, "mediafile");
 
     return content;
 }
@@ -171,7 +141,10 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
                     }
                 },
                 tags: {
-                    select: ['id', 'tag'],
+                    select: ['id', 'tag', 'markercolor'],
+                    populate: {
+                        thumbnail: { select: ['url', 'formats'] },
+                    }
                 },
             },
         });
@@ -202,7 +175,10 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
                     }
                 },
                 tags: {
-                    select: ['id', 'tag'],
+                    select: ['id', 'tag', 'markercolor'],
+                    populate: {
+                        thumbnail: { select: ['url', 'formats'] },
+                    }                
                 },
             },
         });
@@ -351,7 +327,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         {
             if (newcontent.thumbnail?.id)
                 await strapi.config.functions.deleteMediafile(newcontent.thumbnail.id);
-            await addFileFunc(newcontent, ctx.request.files[Object.keys(ctx.request.files)], "thumbnail");
+            await strapi.config.functions.addFile(content.id, 'api::content.content', ctx.request.files[Object.keys(ctx.request.files)], "thumbnail");
         }
         else
         {

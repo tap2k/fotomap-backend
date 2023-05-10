@@ -202,6 +202,57 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
         return "ok";
     },
 
+    async updateTag(ctx) {
+        if (!ctx.request.body.tagID)
+            return ctx.badRequest('No tag specified');
+    
+        const tag = await strapi.db.query('api::tag.tag').findOne({
+            where: { id: ctx.request.body.tagID },
+            populate: {
+                thumbnail: {
+                    select: ['id'],
+                },
+                channel: {
+                    select: ['id', 'uniqueID'],
+                    populate: {
+                        owner: { select: ['id'] },
+                        editors: { select: ['id'] },
+                    }
+                },
+            }
+    });
+
+        if (!tag)
+            return ctx.badRequest('No tag found');
+
+        if (!strapi.config.functions.canEdit(tag.channel, ctx.state.user.id))
+            return ctx.badRequest('No such channel or you are not allowed to edit: ' + content.channel.uniqueID);
+
+        const newtag = await strapi.query("api::tag.tag").update({
+            where: { id: tag.id },
+            data: ctx.request.body,
+            populate: {
+                thumbnail: {
+                    select: ['id'],
+                },
+            }
+        });
+            
+        if (ctx.request.files && Object.keys(ctx.request.files).length)
+        {
+            if (newtag.thumbnail?.id)
+                await strapi.config.functions.deleteMediafile(newtag.thumbnail.id);
+            await strapi.config.functions.addFile(tag.id, 'api::tag.tag', ctx.request.files[Object.keys(ctx.request.files)], "thumbnail");
+        }
+        else
+        {
+            if (newtag.thumbnail && ctx.request.body.deletepic == "true")
+                await strapi.config.functions.deleteMediafile(newtag.thumbnail.id);
+        }
+
+        return newtag;
+    },
+
     async purgeTags(ctx) {
 
         const channel = await strapi.config.functions.getChannel(ctx.state.user.id, ctx.request.body.uniqueID);
