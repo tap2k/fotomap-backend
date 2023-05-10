@@ -4,7 +4,8 @@
   "info": {
     "singularName": "tag",
     "pluralName": "tags",
-    "displayName": "Tag"
+    "displayName": "Tag",
+    "description": ""
   },
   "options": {
     "draftAndPublish": false
@@ -14,13 +15,19 @@
     "tag": {
       "type": "string",
       "required": true,
-      "unique": true
+      "unique": false
     },
     "contents": {
       "type": "relation",
       "relation": "manyToMany",
       "target": "api::content.content",
       "mappedBy": "tags"
+    },
+    "channel": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::channel.channel",
+      "inversedBy": "tags"
     }
   }
 }

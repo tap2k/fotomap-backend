@@ -48,12 +48,19 @@ async function getChannelFunc(channelID)
             editors: {
                 select: ['id', 'username', 'email'],
             },
-            tileset:
-            {
+            tileset: {
                 select: ['id', 'name', 'urlformatstring', 'attribution'],
             },
             picture: {
                 select: ['id', 'url', 'formats'],
+            },
+            overlay: {
+                select: ['id', 'tl_lat', 'tl_long', 'tr_lat', 'tr_long', 'br_lat', 'br_long', 'bl_lat', 'bl_long'],
+                    populate: {
+                        image: {
+                            select: ['id', 'url', 'formats'],
+                        }
+                    }
             },
         },
       });
@@ -81,7 +88,15 @@ async function deleteChannelFunc(ctx, channelID)
                 select: ['id'],
                 },
             },
-          });
+            overlay: {
+                select: ['id'],
+                    populate: {
+                        image: {
+                            select: ['id', 'url', 'formats'],
+                        }
+                    }
+            },
+    });
 
     //ctx.query.uniqueID = ctx.request.body.uniqueID;
     //const myContents = strapi.controller('api::content.content').getContentForChannel(ctx);
@@ -119,6 +134,13 @@ async function deleteChannelFunc(ctx, channelID)
     {
         await strapi.config.functions.deleteBundles(asset);
         await strapi.service('api::asset.asset').delete(asset.id);
+    }
+
+    if (channel.overlay)
+    {
+        if (channel.overlay.image)
+            await strapi.config.functions.deleteMediafile(channel.overlay.image.id);
+        await strapi.service('api::channel.channel').delete(channel.overlay.id);
     }
 
     if (channel.picture)

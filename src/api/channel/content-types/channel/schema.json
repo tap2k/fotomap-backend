@@ -69,6 +69,18 @@
     },
     "interval": {
       "type": "integer"
+    },
+    "overlay": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::overlay.overlay",
+      "inversedBy": "channel"
+    },
+    "tags": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::tag.tag",
+      "mappedBy": "channel"
     }
   }
 }

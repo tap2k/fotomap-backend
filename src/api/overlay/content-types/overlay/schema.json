@@ -1,0 +1,54 @@
+{
+  "kind": "collectionType",
+  "collectionName": "overlays",
+  "info": {
+    "singularName": "overlay",
+    "pluralName": "overlays",
+    "displayName": "Overlay",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "tl_lat": {
+      "type": "float"
+    },
+    "tl_long": {
+      "type": "float"
+    },
+    "tr_lat": {
+      "type": "float"
+    },
+    "tr_long": {
+      "type": "float"
+    },
+    "br_lat": {
+      "type": "float"
+    },
+    "br_long": {
+      "type": "float"
+    },
+    "bl_lat": {
+      "type": "float"
+    },
+    "bl_long": {
+      "type": "float"
+    },
+    "channel": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::channel.channel",
+      "mappedBy": "overlay"
+    }
+  }
+}
