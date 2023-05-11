@@ -265,6 +265,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             ctx.request.body.ispublic = false;
         
         ctx.request.body.uniqueID = channelid;
+        ctx.request.body.parent = ctx.request.body.parentID;
         ctx.request.body.owner = owner;
         ctx.request.body.editors = editors;
         

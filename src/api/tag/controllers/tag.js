@@ -25,6 +25,10 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
                 ]
             },
             orderBy: { tag: 'asc' },
+            populate: {
+                owner: { select: ['id'] },
+                editors: { select: ['id'] },
+            },
             /*populate: {
                 contents: {
                     select: ['id'],
@@ -203,11 +207,11 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
     },
 
     async updateTag(ctx) {
-        if (!ctx.request.body.tagID)
+        if (!ctx.request.body.tag)
             return ctx.badRequest('No tag specified');
     
         const tag = await strapi.db.query('api::tag.tag').findOne({
-            where: { id: ctx.request.body.tagID },
+            where: { tag: ctx.request.body.tag },
             populate: {
                 thumbnail: {
                     select: ['id'],
@@ -262,14 +266,19 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
 
         let tags = await strapi.db.query('api::tag.tag').findMany({
             select: ['id'],
-            where: 
-            { $and: [
+            populate: {
+                owner: { select: ['id'] },
+                editors: { select: ['id'] },
+            },
+            where: {$and: [
                 { channel: channel.id },
                 { contents: null },
-            ] },     
+            ]},     
         });
-        console.log(tags);
+
         for (const tag of tags) {
+            if (tag.thumbnail)
+                await strapi.config.functions.deleteMediafile(tag.thumbnail.id);
             strapi.service('api::tag.tag').delete(tag.id);
         }
         return "ok";
