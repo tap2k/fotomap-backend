@@ -74,6 +74,7 @@
     "markercolor": {
       "type": "enumeration",
       "enum": [
+        "none",
         "black",
         "blue",
         "gold",
@@ -84,7 +85,7 @@
         "violet",
         "yellow"
       ],
-      "default": "green"
+      "default": "none"
     },
     "tags": {
       "type": "relation",
@@ -95,15 +96,16 @@
     "title": {
       "type": "string"
     },
-    "description": {
-      "type": "text"
-    },
     "thumbnail": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
       "allowedTypes": [
         "images"
-      ],
-      "type": "media",
-      "multiple": false
+      ]
+    },
+    "description": {
+      "type": "richtext"
     }
   }
 }
