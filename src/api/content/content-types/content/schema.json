@@ -84,7 +84,7 @@
         "violet",
         "yellow"
       ],
-      "default": "none"
+      "default": "green"
     },
     "tags": {
       "type": "relation",
