@@ -115,7 +115,7 @@ build
 .strapi-updater.json
 public/uploads/*
 !public/uploads/.gitkeep
-config
+config/*
 
 ############################
 # Next
