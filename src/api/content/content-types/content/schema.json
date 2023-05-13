@@ -74,7 +74,6 @@
     "markercolor": {
       "type": "enumeration",
       "enum": [
-        "none",
         "black",
         "blue",
         "gold",
