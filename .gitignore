@@ -116,6 +116,7 @@ build
 public/uploads/*
 !public/uploads/.gitkeep
 config/*
+!config/functions.js
 
 ############################
 # Next
