@@ -21,7 +21,7 @@
     },
     "public": {
       "type": "boolean",
-      "default": true,
+      "default": false,
       "required": false
     },
     "owner": {
@@ -62,7 +62,8 @@
       ]
     },
     "allowsubmissions": {
-      "type": "boolean"
+      "type": "boolean",
+      "default": false
     },
     "description": {
       "type": "richtext"
