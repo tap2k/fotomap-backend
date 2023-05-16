@@ -295,6 +295,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         if (!channel) 
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + ctx.request.body.uniqueID);
 
+        // TODO: Dont allow reparent?
         if (ctx.request.body.parent == channel.id)
             ctx.request.body.parent = null;
         else
