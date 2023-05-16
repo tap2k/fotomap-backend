@@ -4,6 +4,30 @@
  * tag controller
  */
 
+async function getTagsFunc(channel)
+{
+    let myTags = await strapi.db.query('api::tag.tag').findMany({
+        where: {
+            $and: [
+                { channel: channel.id },
+                { contents: { $not: null } }
+            ]
+        },
+        orderBy: { tag: 'asc' },
+        populate: {
+            owner: { select: ['id'] },
+            editors: { select: ['id'] },
+            thumbnail: { select: ['url', 'formats'] },
+            contents: { select: ['id'] },
+        },
+    });
+
+    if (channel.parent)
+        myTags = myTags.concat(await getTagsFunc(channel.parent));
+    
+    return myTags;
+}
+
 const { createCoreController } = require('@strapi/strapi').factories;
 
 //module.exports = createCoreController('api::tag.tag');
@@ -11,30 +35,13 @@ const { createCoreController } = require('@strapi/strapi').factories;
 module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
 
     async getTags(ctx) {
-
         const channel = await strapi.controller('api::channel.channel').getChannel(ctx);
         //const channel = await strapi.config.functions.getChannel(ctx.state.user.id, ctx.query.uniqueID);
 
         if (!channel)
             return ctx.badRequest('No such channel: ' + ctx.query.uniqueID);
-
-        const myTags = await strapi.db.query('api::tag.tag').findMany({
-            where: {
-                $and: [
-                    { channel: channel.id },
-                    { contents: { $not: null } }
-                ]
-            },
-            orderBy: { tag: 'asc' },
-            populate: {
-                owner: { select: ['id'] },
-                editors: { select: ['id'] },
-                thumbnail: { select: ['url', 'formats'] },
-                contents: { select: ['id'] },
-            },
-        });
-        return myTags;    
         
+        return await getTagsFunc(channel);
     },
 
     async addTag(ctx) {
@@ -55,14 +62,21 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
         if (!content)
             return ctx.badRequest('No content provided');
         
+        let tagID = parseInt(ctx.request.body.tagID);
+        if (isNaN(tagID))
+            tagID = null;
+
         if (!strapi.config.functions.canEdit(content.channel, ctx.state.user.id))
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + content.channel.uniqueID);
 
         let tag = await strapi.db.query('api::tag.tag').findOne({
             where: {
-                    $and: [
-                        { channel: content.channel.id },
-                        { tag: ctx.request.body.tag },
+                    $or: [
+                            {$and: [
+                                { channel: content.channel.id },
+                                { tag: ctx.request.body.tag },
+                            ]},
+                            { id: tagID }
                     ]
             },
         });
@@ -113,12 +127,19 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
         if (!strapi.config.functions.canEdit(content.channel, ctx.state.user.id))
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + content.channel.uniqueID);
 
+        let tagID = parseInt(ctx.request.body.tagID);
+        if (isNaN(tagID))
+            tagID = null;
+
         let tag = await strapi.db.query('api::tag.tag').findOne({
             where: {
-                    $and: [
+                $or: [
+                    {$and: [
                         { channel: content.channel.id },
                         { tag: ctx.request.body.tag },
-                    ]
+                    ]},
+                    { id: tagID }
+                ]
             },
         });
 
