@@ -12,10 +12,11 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
 
     async getTags(ctx) {
 
-        const channel = await strapi.config.functions.getChannel(ctx.state.user.id, ctx.query.uniqueID);
+        const channel = await strapi.controller('api::channel.channel').getChannel(ctx);
+        //const channel = await strapi.config.functions.getChannel(ctx.state.user.id, ctx.query.uniqueID);
 
         if (!channel)
-            return ctx.badRequest('No such channel or you are not allowed to edit ' + ctx.query.uniqueID);
+            return ctx.badRequest('No such channel: ' + ctx.query.uniqueID);
 
         const myTags = await strapi.db.query('api::tag.tag').findMany({
             where: {
@@ -28,12 +29,9 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
             populate: {
                 owner: { select: ['id'] },
                 editors: { select: ['id'] },
+                thumbnail: { select: ['url', 'formats'] },
+                contents: { select: ['id'] },
             },
-            /*populate: {
-                contents: {
-                    select: ['id'],
-                    },
-            },*/
         });
         return myTags;    
         
