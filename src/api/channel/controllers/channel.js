@@ -18,11 +18,19 @@ async function addPictureFunc(channel, file)
 
 async function getChannelFunc(channelID)
 {
-    return  await strapi.query('api::channel.channel').findOne({
+    return await strapi.query('api::channel.channel').findOne({
         where: { uniqueID: channelID },
         populate: {
             parent: {
-                select: ['id', 'uniqueID'],
+                select: ['id', 'name', 'uniqueID'],
+                populate: {
+                    owner: {
+                        select: ['id'],
+                    },
+                    editors: {
+                        select: ['id', 'username', 'email'],
+                    },
+                }
             },
             owner: {
                 select: ['id'],
@@ -44,6 +52,9 @@ async function getChannelFunc(channelID)
                         }
                     }
             },
+            tags: {
+                select: ['id']
+            }
         },
       });
 }
@@ -52,15 +63,8 @@ async function deleteChannelFunc(ctx, channelID)
 {
     const channel = await getChannelFunc(channelID);
 
-    let canEdit = false;
-    if (channel.parent?.uniqueID)
-    {
-        const parentChannel = await getChannelFunc(channel.parent.uniqueID);
-        canEdit = await strapi.config.functions.canEdit(parentChannel, ctx.state.user.id);
-    }
-
-    if (!(channel.owner.id == ctx.state.user.id) && !canEdit)
-        return ctx.badRequest('No such channel or you are not the owner');
+    const children = await getChildChannelsFunc(channelID);
+    children.forEach(async(child) => await deleteChannelFunc(ctx, child.uniqueID));
 
     const myContents = await strapi.db.query('api::content.content').findMany({
         where: { channel: channel.id },
@@ -125,6 +129,13 @@ async function deleteChannelFunc(ctx, channelID)
         await strapi.service('api::channel.channel').delete(channel.overlay.id);
     }
 
+    for (const tag of channel.tags)
+    {
+        if (tag.thumbnail)
+            await strapi.config.functions.deleteMediafile(tag.thumbnail.id);
+        await strapi.service('api::tag.tag').delete(tag.id);
+    }
+
     if (channel.picture)
         await strapi.config.functions.deleteMediafile(content.picture.id);
 
@@ -142,6 +153,9 @@ async function getChildChannelsFunc(channelID) {
         populate: {
             owner: {
                 select: ['id', 'username', 'email'],
+            },
+            picture: {
+                select: ['id', 'url', 'formats'],
             },
         },
       });
@@ -273,8 +287,6 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             ctx.request.body.allowsubmissions = false;
         
         ctx.request.body.uniqueID = channelid;
-        if (!ctx.request.body.name)
-            ctx.request.body.name = channelid;
         ctx.request.body.parent = ctx.request.body.parentID;
         ctx.request.body.owner = owner;
         ctx.request.body.editors = editors;
@@ -330,8 +342,20 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
     //TODO: Delete child channels?
     async deleteChannel(ctx) {
-        const children = await getChildChannelsFunc(ctx.request.body.uniqueID);
-        children.forEach(async(child) => await deleteChannelFunc(ctx, child.uniqueID));
+        const channel = await getChannelFunc(ctx.request.body.uniqueID);
+        if (!(channel.owner.id == ctx.state.user.id) && !canEdit)
+            return ctx.badRequest('No such channel or you are not the owner')
+
+        let canEdit = false;
+        if (channel.parent?.uniqueID)
+        {
+            const parentChannel = await getChannelFunc(channel.parent.uniqueID);
+            canEdit = await strapi.config.functions.canEdit(parentChannel, ctx.state.user.id);
+        }
+    
+        if (!(channel.owner.id == ctx.state.user.id) && !canEdit)
+            return ctx.badRequest('No such channel or you are not the owner');
+
         return await deleteChannelFunc(ctx, ctx.request.body.uniqueID);
     },
 
