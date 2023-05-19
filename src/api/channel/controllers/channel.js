@@ -224,22 +224,27 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
     async createChannel(ctx) {
         let channelid = ctx.request.body.uniqueID;
-        if (!channelid)
+
+        if (channelid)
         {
-            const uuid = require('uuid');
-            channelid = uuid.v4().substring(0,8);
+            const channel = await strapi.query('api::channel.channel').findOne({
+                where: { uniqueID: ctx.request.body.uniqueID },
+              });
+            if (channel)
+                return ctx.badRequest("channel ID already exists: " + channel.uniqueID);
         }
-        const channel = await strapi.query('api::channel.channel').findOne({
-            select: ['id', 'uniqueID'],
-            where: { uniqueID: ctx.request.body.uniqueID },
-            populate: {
-                owner: {
-                    select: ['id'],
-                    },
-            },
-          });
-        if (channel)
-            return ctx.badRequest("channel ID already exists: " + channel.uniqueID);
+        else
+        {
+            while (!channelid)
+            {
+                channelid = (Math.random()+1).toString(36).slice(5);
+                const currchannel = await strapi.query('api::channel.channel').findOne({
+                    where: { uniqueID: channelid }
+                });
+                if (currchannel)
+                    channelid = null;
+            }
+        }
 
         let owner = ctx.state.user.id;
         let editors = [];
@@ -268,6 +273,8 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             ctx.request.body.allowsubmissions = false;
         
         ctx.request.body.uniqueID = channelid;
+        if (!ctx.request.body.name)
+            ctx.request.body.name = channelid;
         ctx.request.body.parent = ctx.request.body.parentID;
         ctx.request.body.owner = owner;
         ctx.request.body.editors = editors;
