@@ -4,6 +4,23 @@
  * tag controller
  */
 
+async function createTagFunc(tag, content, channel)
+{
+    if (channel.parent)
+    {
+        const parentChannel = await strapi.config.functions.getChannel(channel.parent.uniqueID);
+        if (channel)
+            return await createTagFunc(tag, content, parentChannel);
+    }
+    else return await strapi.db.query('api::tag.tag').create({
+        data: {
+            tag: tag,
+            content: content.id,
+            channel: channel.id
+        }
+    });
+}
+
 async function getTagsFunc(channel)
 {
     let myTags = await strapi.db.query('api::tag.tag').findMany({
@@ -54,6 +71,7 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
                     populate: {
                         owner: { select: ['id'] },
                         editors: { select: ['id'] },
+                        parent: { select: ['id', 'uniqueID'] },
                     }
                 },
             }
@@ -82,15 +100,7 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
         });
 
         if (!tag)
-        {
-            tag =  await strapi.db.query('api::tag.tag').create({
-                data: {
-                    tag: ctx.request.body.tag,
-                    content: content.id,
-                    channel: content.channel.id
-                }
-            });
-        }
+            tag = await createTagFunc(ctx.request.body.tag, content, content.channel);
 
         return await strapi.db.query('api::tag.tag').update({
             where: { id: tag.id },
