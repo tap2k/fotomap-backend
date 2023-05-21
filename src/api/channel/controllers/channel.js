@@ -16,55 +16,10 @@ async function addPictureFunc(channel, file)
         return null;
 }
 
-async function getChannelFunc(channelID)
+async function deleteChannelFunc(ctx, channel)
 {
-    return await strapi.query('api::channel.channel').findOne({
-        where: { uniqueID: channelID },
-        populate: {
-            parent: {
-                select: ['id', 'name', 'uniqueID'],
-                populate: {
-                    owner: {
-                        select: ['id'],
-                    },
-                    editors: {
-                        select: ['id', 'username', 'email'],
-                    },
-                }
-            },
-            owner: {
-                select: ['id'],
-            },
-            editors: {
-                select: ['id', 'username', 'email'],
-            },
-            tileset: {
-                select: ['id', 'name', 'urlformatstring', 'attribution'],
-            },
-            picture: {
-                select: ['id', 'url', 'formats'],
-            },
-            overlay: {
-                select: ['id', 'tl_lat', 'tl_long', 'tr_lat', 'tr_long', 'br_lat', 'br_long', 'bl_lat', 'bl_long'],
-                    populate: {
-                        image: {
-                            select: ['id', 'url', 'formats'],
-                        }
-                    }
-            },
-            tags: {
-                select: ['id']
-            }
-        },
-      });
-}
-
-async function deleteChannelFunc(ctx, channelID)
-{
-    const channel = await getChannelFunc(channelID);
-
-    const children = await getChildChannelsFunc(channelID);
-    children.forEach(async(child) => await deleteChannelFunc(ctx, child.uniqueID));
+    const children = await getChildChannelsFunc(channel.uniqueID);
+    children.forEach(async(child) => await deleteChannelFunc(ctx, child));
 
     const myContents = await strapi.db.query('api::content.content').findMany({
         where: { channel: channel.id },
@@ -157,33 +112,12 @@ async function getChildChannelsFunc(channelID) {
             picture: {
                 select: ['id', 'url', 'formats'],
             },
+            parent:{
+                select: ['id', 'uniqueID']
+            }
         },
       });
     return channels;
-}
-
-async function changeEditorFunc(ctx, userID, channelID, add=true) {
-    const channel = await strapi.config.functions.getMyChannel(ctx.state.user.id, channelID);
-    
-    if (!channel)
-        return ctx.badRequest('No such channel or you are not the owner: ' + channelID);
-    
-    if (channel.owner.id == userID)
-        return "ok";
-
-    const children = await getChildChannelsFunc(channelID);
-    children.forEach(async(child) => await changeEditorFunc(ctx, userID, child.uniqueID, add));
-
-    let connectClause = { disconnect: [{id: userID}] };
-    if (add)
-        connectClause = { connect: [{id: userID}] };
-        
-    return await strapi.db.query('api::channel.channel').update({
-        where: { id: channel.id },
-        data: {
-          editors: connectClause
-        },
-      });
 }
 
 const { createCoreController } = require('@strapi/strapi').factories;
@@ -193,7 +127,7 @@ const { createCoreController } = require('@strapi/strapi').factories;
 module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  ({
 
     async getChannel(ctx) {
-        return await getChannelFunc(ctx.query.uniqueID);
+        return await strapi.config.functions.getChannel(ctx.query.uniqueID);
     },
 
     async getMyChannels(ctx) {
@@ -309,10 +243,12 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         if (!ctx.request.body.uniqueID) 
             return ctx.badRequest('No channel specified'); 
             
-        const channel = await strapi.config.functions.getChannel(ctx.state.user.id, ctx.request.body.uniqueID);
+        const canEdit = await strapi.config.functions.canEdit(ctx.request.body.uniqueID, ctx.state.user.id);
 
-        if (!channel) 
+        if (!canEdit) 
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + ctx.request.body.uniqueID);
+        
+        const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
 
         // TODO: Dont allow reparent?
         if (ctx.request.body.parent == channel.id)
@@ -342,36 +278,44 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
     //TODO: Delete child channels?
     async deleteChannel(ctx) {
-        const channel = await getChannelFunc(ctx.request.body.uniqueID);
-        if (!(channel.owner.id == ctx.state.user.id) && !canEdit)
-            return ctx.badRequest('No such channel or you are not the owner')
-
+        const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
+        
         let canEdit = false;
-        if (channel.parent?.uniqueID)
-        {
-            const parentChannel = await getChannelFunc(channel.parent.uniqueID);
-            canEdit = await strapi.config.functions.canEdit(parentChannel, ctx.state.user.id);
-        }
+        if (channel.parent)
+            canEdit = await strapi.config.functions.canEdit(channel.parent.uniqueID, ctx.state.user.id);
     
         if (!(channel.owner.id == ctx.state.user.id) && !canEdit)
             return ctx.badRequest('No such channel or you are not the owner');
 
-        return await deleteChannelFunc(ctx, ctx.request.body.uniqueID);
+        return await deleteChannelFunc(ctx, channel);
     },
 
     async addEditor(ctx) {
         let user = await strapi.db.query('plugin::users-permissions.user').findOne({
-                where: { $or: [
-                    {email: ctx.request.body.email},
-                    {username: ctx.request.body.username}
-                ] 
-            },
+            where: {$or: [
+                {email: ctx.request.body.email},
+                {username: ctx.request.body.username}
+            ]},
         });
 
         if (!user)
             return ctx.badRequest('No such user');
+
+        const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
+    
+        if (!channel)
+            return ctx.badRequest('No such channel');
+    
+        // TODO: alloww this?
+        if (channel.owner.id != ctx.state.user.id)
+            return ctx.badRequest('You dont own this channel');
         
-        return await changeEditorFunc(ctx, user.id, ctx.request.body.uniqueID, true);
+        return await strapi.db.query('api::channel.channel').update({
+            where: { id: channel.id },
+            data: {
+                editors: { connect: [{id: user.id}] }
+            },
+        });        
     },
 
     async removeEditor(ctx) {
@@ -384,8 +328,22 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
         if (!user)
             return ctx.badRequest('No such user');
+
+        const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
+    
+        if (!channel)
+            return ctx.badRequest('No such channel');
+    
+        // TODO: alloww this?
+        if (channel.owner.id != ctx.state.user.id)
+            return ctx.badRequest('You dont own this channel');
         
-        return await changeEditorFunc(ctx, user.id, ctx.request.body.uniqueID, false);
+        return await strapi.db.query('api::channel.channel').update({
+            where: { id: channel.id },
+            data: {
+                editors: { disconnect: [{id: user.id}] }
+            },
+        });        
     },
 }));
 

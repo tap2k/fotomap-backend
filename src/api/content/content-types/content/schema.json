@@ -74,6 +74,7 @@
     "markercolor": {
       "type": "enumeration",
       "enum": [
+        "none",
         "black",
         "blue",
         "gold",
@@ -84,7 +85,7 @@
         "violet",
         "yellow"
       ],
-      "default": "green"
+      "default": "none"
     },
     "tags": {
       "type": "relation",

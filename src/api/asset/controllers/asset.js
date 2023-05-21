@@ -42,9 +42,11 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
         if (!ctx.request.files.bundle) 
             return ctx.badRequest('No asset bundle specified');
         
-        const channel = await strapi.config.functions.getChannel(ctx.state.user.id, ctx.request.body.uniqueID);
-        if (!channel) 
+        const canEdit = await strapi.config.functions.canEdit(ctx.request.body.uniqueID, ctx.state.user.id);
+        if (!canEdit) 
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + ctx.request.body.uniqueID);
+
+        const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
 
         const platform = ctx.request.body.platform;
             
@@ -81,7 +83,6 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                     channel: {
                         uniqueID: ctx.request.body.uniqueID
                     },
-                    //platform: "All"
                 }
             });
             order = numItems + 1;
@@ -113,15 +114,11 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                 await strapi.config.functions.deleteMediafile(currentAsset.macbundle.id);
         }
 
-        //if (oldAsset)
-        //    await strapi.service('api::asset.asset').delete(oldAsset.id);
-
         if (!currentAsset)
             currentAsset = await strapi.db.query('api::asset.asset').create({
                 data: {
                     channel: channel.id,
                     name: ctx.request.body.name,
-                    //platform: "All",
                     order: order,
                 }
             });
@@ -137,7 +134,6 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                 where: {
                     $and: [
                         {channel: channel.id},
-                        //{platform: "All"},
                         {order: {$gte: order}}
                     ]
                 },
@@ -192,9 +188,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
         if (!asset)
             return ctx.badRequest('No such asset');
         
-        //if (ctx.state.user.id != asset.channel.owner.id)
-        //if ((asset.channel.owner.id != ctx.state.user.id) && !asset.channel.editors.some(item => item.id == ctx.state.user.id))
-        if (!strapi.config.functions.canEdit(asset.channel, ctx.state.user.id))
+        if (!strapi.config.functions.canEdit(asset.channel.uniqueID, ctx.state.user.id))
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + asset.channel?.uniqueID);
 
         await strapi.config.functions.deleteBundles(asset);

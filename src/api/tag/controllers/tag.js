@@ -35,8 +35,8 @@ const { createCoreController } = require('@strapi/strapi').factories;
 module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
 
     async getTags(ctx) {
-        const channel = await strapi.controller('api::channel.channel').getChannel(ctx);
-        //const channel = await strapi.config.functions.getChannel(ctx.state.user.id, ctx.query.uniqueID);
+        const channel = await strapi.config.functions.getChannel(ctx.query.uniqueID);
+        //const channel = await strapi.controller('api::channel.channel').getChannel(ctx);
 
         if (!channel)
             return ctx.badRequest('No such channel: ' + ctx.query.uniqueID);
@@ -66,7 +66,7 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
         if (isNaN(tagID))
             tagID = null;
 
-        if (!strapi.config.functions.canEdit(content.channel, ctx.state.user.id))
+        if (!strapi.config.functions.canEdit(content.channel.uniqueID, ctx.state.user.id))
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + content.channel.uniqueID);
 
         let tag = await strapi.db.query('api::tag.tag').findOne({
@@ -124,7 +124,7 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
         if (!content)
             return ctx.badRequest('No content provided');
         
-        if (!strapi.config.functions.canEdit(content.channel, ctx.state.user.id))
+        if (!strapi.config.functions.canEdit(content.channel.uniqueID, ctx.state.user.id))
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + content.channel.uniqueID);
 
         let tagID = parseInt(ctx.request.body.tagID);
@@ -162,10 +162,11 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
 
     async combineTags(ctx) {
 
-        const channel = await strapi.config.functions.getChannel(ctx.state.user.id, ctx.request.body.uniqueID);
+        const canEdit = await strapi.config.functions.canEdit(ctx.request.body.uniqueID, ctx.state.user.id);
+        if (!canEdit) 
+            return ctx.badRequest('No such channel or you are not allowed to edit: ' + ctx.request.body.uniqueID);
 
-        if (!channel)
-            return ctx.badRequest('No such channel or you are not allowed to edit ' + ctx.request.body.uniqueID);
+        const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
             
         let tagsource = await strapi.db.query('api::tag.tag').findOne({
             select: ['id'],
@@ -248,7 +249,7 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
         if (!tag)
             return ctx.badRequest('No tag found');
 
-        if (!strapi.config.functions.canEdit(tag.channel, ctx.state.user.id))
+        if (!strapi.config.functions.canEdit(tag.channel.uniqueID, ctx.state.user.id))
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + content.channel.uniqueID);
 
         const newtag = await strapi.query("api::tag.tag").update({
@@ -278,10 +279,11 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
 
     async purgeTags(ctx) {
 
-        const channel = await strapi.config.functions.getChannel(ctx.state.user.id, ctx.request.body.uniqueID);
+        const canEdit = await strapi.config.functions.canEdit(ctx.request.body.uniqueID, ctx.state.user.id);
+        if (!canEdit) 
+            return ctx.badRequest('No such channel or you are not allowed to edit: ' + ctx.request.body.uniqueID);
 
-        if (!channel)
-            return ctx.badRequest('No such channel or you are not allowed to edit ' + ctx.request.body.uniqueID);
+        const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
 
         let tags = await strapi.db.query('api::tag.tag').findMany({
             select: ['id'],

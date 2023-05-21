@@ -34,81 +34,57 @@ module.exports = {
       }
   },
 
-  async getMyChannel(userID, uniqueID) {
-      const channel = await strapi.db.query('api::channel.channel').findOne({
-        select: ['id'],
-        where: { 
-            owner: userID,
-            uniqueID: uniqueID
-        },
-        populate: {
-          owner: {
-            select: ['id'],
-          },
-          editors: {
-            select: ['id'],
-          },
-          parent: {
-            select: ['id'],
-          },
-          picture: {
-            select: ['id'],
-          },
-          overlay: {
-            select: ['id', 'tl_lat', 'tl_long', 'tr_lat', 'tr_long', 'br_lat', 'br_long', 'bl_lat', 'bl_long'],
-                populate: {
-                    image: {
-                        select: ['id', 'url', 'formats'],
+    async getChannel(channelID)
+    {
+        return await strapi.query('api::channel.channel').findOne({
+            where: { uniqueID: channelID },
+            select: ['id', 'name', 'uniqueID', 'lat', 'long', 'zoom'],
+            populate: {
+                parent: {
+                    select: ['id', 'name', 'uniqueID'],
+                    populate: {
+                        owner: {
+                            select: ['id'],
+                        },
+                        editors: {
+                            select: ['id', 'username', 'email'],
+                        },
                     }
+                },
+                owner: {
+                    select: ['id'],
+                },
+                editors: {
+                    select: ['id', 'username', 'email'],
+                },
+                tileset: {
+                    select: ['id', 'name', 'urlformatstring', 'attribution'],
+                },
+                picture: {
+                    select: ['id', 'url', 'formats'],
+                },
+                overlay: {
+                    select: ['id', 'tl_lat', 'tl_long', 'tr_lat', 'tr_long', 'br_lat', 'br_long', 'bl_lat', 'bl_long'],
+                        populate: {
+                            image: {
+                                select: ['id', 'url', 'formats'],
+                            }
+                        }
+                },
+                tags: {
+                    select: ['id']
                 }
-          },
-        }
-      });
+            },
+          });
+    },
 
-      return channel;
+  async canEdit(channelID, userID) {
+    const channel = await strapi.config.functions.getChannel(channelID);
+    if (!channel)
+      return false;
+    return ((channel.owner?.id == userID) || channel.editors?.some(item => item.id == userID) || channel.uniqueID == "probe"
+    || await strapi.config.functions.canEdit(channel.parent?.uniqueID, userID));
   },
-
-  async getChannel(userID, uniqueID) {
-    const channel = await strapi.db.query('api::channel.channel').findOne({
-      select: ['id'],
-      where: { 
-          uniqueID: uniqueID,
-          $or: [
-            {owner: userID},
-            {editors: userID}
-          ]
-      },
-      populate: {
-        owner: {
-            select: ['id'],
-        },
-        editors: {
-          select: ['id'],
-        },
-        parent: {
-          select: ['id'],
-        },
-        picture: {
-          select: ['id'],
-        },
-        overlay: {
-          select: ['id', 'tl_lat', 'tl_long', 'tr_lat', 'tr_long', 'br_lat', 'br_long', 'bl_lat', 'bl_long'],
-              populate: {
-                  image: {
-                      select: ['id', 'url', 'formats'],
-                  }
-              }
-        },
-      }
-    });
-
-    return channel;
-},
-
-  async canEdit(channel, userID) {
-    return ((channel.owner?.id == userID) || channel.editors?.some(item => item.id == userID) || channel.uniqueID == "probe");
-  },
-
 
   async deleteMediafile(id) {
     const mediafileEntry = await strapi.db.query('plugin::upload.file').findOne({

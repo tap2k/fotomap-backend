@@ -119,10 +119,10 @@ const { createCoreController } = require('@strapi/strapi').factories;
 module.exports = createCoreController('api::content.content', ({ strapi }) => ({
 
     async getAllContentForChannel(ctx) {
-        const channel = await strapi.config.functions.getChannel(ctx.state.user.id, ctx.query.uniqueID);
 
-        if (!channel)
-            return ctx.badRequest('No such channel or you are not allowed to edit ' + ctx.query.uniqueID);
+        const canEdit = await strapi.config.functions.canEdit(ctx.query.uniqueID, ctx.state.user.id);
+        if (!canEdit) 
+            return ctx.badRequest('No such channel or you are not allowed to edit: ' + ctx.query.uniqueID);
         
         const myContents = await strapi.db.query('api::content.content').findMany({
             where: {channel: {uniqueID: ctx.query.uniqueID}},
@@ -190,12 +190,11 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         if (!ctx.request.body.ext_url && !ctx.request.files)
             return ctx.badRequest('No content specified');
 
-        //TODO: Fix this! Or rely on moderation?
-        //if (!channel.public && ctx.state.user.id != channel.owner.id);
-        const channel = await strapi.config.functions.getChannel(ctx.state.user.id, ctx.request.body.uniqueID);
+        const canEdit = await strapi.config.functions.canEdit(ctx.request.body.uniqueID, ctx.state.user.id);
+        if (!canEdit) 
+            return ctx.badRequest('No such channel or you are not allowed to edit: ' + ctx.request.body.uniqueID);
 
-        if (!channel)
-            return ctx.badRequest('No such channel or you are not allowed to edit ' + ctx.request.body.uniqueID);
+        const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
 
         return await uploadContentFunc(ctx, channel);
 
@@ -280,14 +279,17 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         if (!content)
             return ctx.badRequest('No content found');
 
-        if (!strapi.config.functions.canEdit(content.channel, ctx.state.user.id))
+        if (!strapi.config.functions.canEdit(content.channel.uniqueID, ctx.state.user.id))
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + content.channel.uniqueID);
 
         if (ctx.request.body.uniqueID)
         {
-            const channel = await strapi.config.functions.getChannel(ctx.state.user.id, ctx.request.body.uniqueID);
-            if (!channel)
-                return ctx.badRequest('No such channel or you are not allowed to edit ' + ctx.request.body.uniqueID);
+            const canEdit = await strapi.config.functions.canEdit(ctx.request.body.uniqueID, ctx.state.user.id);
+            if (!canEdit) 
+                return ctx.badRequest('No such channel or you are not allowed to edit: ' + ctx.request.body.uniqueID);
+
+            const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
+
             //data["channel"] = {connect: [{id: channel.id}]};
             ctx.request.body["channel"] = {connect: [{id: channel.id}]};
         }
@@ -382,10 +384,9 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         if (!content)
             return ctx.badRequest('No such content: ' + ctx.request.body.id);
 
-        /*const channel = await strapi.config.functions.getChannel(ctx.state.user.id, content.channel.uniqueID);
-        if (!channel)*/
-        if (!strapi.config.functions.canEdit(content.channel, ctx.state.user.id))
-            return ctx.badRequest('No such channel or you are allowed to edit: ' + content.channel.uniqueID);
+        const canEdit = await strapi.config.functions.canEdit(content.channel.uniqueID, ctx.state.user.id);
+        if (!canEdit) 
+            return ctx.badRequest('No such channel or you are not allowed to edit: ' + content.channel.uniqueID);
 
         // TODO: check if content.order is undefined
         if (content.order && content.order > 0) {
@@ -442,7 +443,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         if (!content)
             return ctx.badRequest('No content found');
 
-        if (!strapi.config.functions.canEdit(content.channel, ctx.state.user.id))
+        if (!strapi.config.functions.canEdit(content.channel.uniqueID, ctx.state.user.id))
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + content.channel.uniqueID);
 
         if (content.mediafile?.id)
