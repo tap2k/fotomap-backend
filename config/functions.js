@@ -38,7 +38,7 @@ module.exports = {
     {
         return await strapi.query('api::channel.channel').findOne({
             where: { uniqueID: channelID },
-            select: ['id', 'name', 'uniqueID', 'lat', 'long', 'zoom'],
+            select: ['id', 'name', 'uniqueID', 'lat', 'long', 'zoom', 'interval'],
             populate: {
                 parent: {
                     select: ['id', 'name', 'uniqueID'],
