@@ -84,11 +84,14 @@ async function deleteChannelFunc(ctx, channel)
         await strapi.service('api::channel.channel').delete(channel.overlay.id);
     }
 
-    for (const tag of channel.tags)
+    if (channel.tags)
     {
-        if (tag.thumbnail)
-            await strapi.config.functions.deleteMediafile(tag.thumbnail.id);
-        await strapi.service('api::tag.tag').delete(tag.id);
+        for (const tag of channel.tags)
+        {
+            if (tag.thumbnail)
+                await strapi.config.functions.deleteMediafile(tag.thumbnail.id);
+            await strapi.service('api::tag.tag').delete(tag.id);
+        }
     }
 
     if (channel.picture)
@@ -127,7 +130,10 @@ const { createCoreController } = require('@strapi/strapi').factories;
 module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  ({
 
     async getChannel(ctx) {
-        return await strapi.config.functions.getChannel(ctx.query.uniqueID);
+        let channel = await strapi.config.functions.getChannel(ctx.query.uniqueID);
+        if (!channel)
+            return null;
+        return channel;
     },
 
     async getMyChannels(ctx) {
