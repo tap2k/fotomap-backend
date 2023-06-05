@@ -338,10 +338,13 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         }
 
         // TODO: ignore order if changing channel? yes NO
-        //if (ctx.request.body.uniqueID && (ctx.request.body.uniqueID != content.channel.uniqueID))
-        //    await insertContentFunc(newcontent, -1);
         if (ctx.request.body.order)
             await insertContentFunc(newcontent, ctx.request.body.order);
+        else
+        {
+            if (ctx.request.body.uniqueID && (ctx.request.body.uniqueID != content.channel.uniqueID))
+                await insertContentFunc(newcontent, -1);
+        }
 
         if (ctx.request.body.caption && content.mediafile?.id)
             await strapi.plugins.upload.services.upload.update(content.mediafile.id, { caption: ctx.request.body.caption })
