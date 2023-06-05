@@ -9,7 +9,7 @@ async function createTagFunc(tag, content, channel)
     if (channel.parent)
     {
         const parentChannel = await strapi.config.functions.getChannel(channel.parent.uniqueID);
-        if (channel)
+        if (parentChannel)
             return await createTagFunc(tag, content, parentChannel);
     }
     else return await strapi.db.query('api::tag.tag').create({

@@ -131,8 +131,11 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
     async getChannel(ctx) {
         let channel = await strapi.config.functions.getChannel(ctx.query.uniqueID);
-        if (!channel)
-            return null;
+        return channel;
+    },
+
+    async getMyChannel(ctx) {
+        let channel = await strapi.config.functions.getChannel(ctx.query.uniqueID, ctx.state.user.id);
         return channel;
     },
 
@@ -308,6 +311,8 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             return ctx.badRequest('No such user');
 
         const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
+        if (channel.editors.some(editor => editor.id == ctx.state.user.id))
+            return "ok";
     
         if (!channel)
             return ctx.badRequest('No such channel');
@@ -334,15 +339,18 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
         if (!user)
             return ctx.badRequest('No such user');
-
+        
         const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
     
         if (!channel)
             return ctx.badRequest('No such channel');
     
-        // TODO: alloww this?
+        // TODO: allow this?
         if (channel.owner.id != ctx.state.user.id)
             return ctx.badRequest('You dont own this channel');
+        
+        if (!channel.editors.some(editor => editor.id == user.id))
+            return ctx.badRequest('Not an editor');
         
         return await strapi.db.query('api::channel.channel').update({
             where: { id: channel.id },

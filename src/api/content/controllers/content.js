@@ -39,8 +39,6 @@ async function uploadContentFunc(ctx, channel)
         orderBy: { order: 'asc' },
     });
 
-    /*var order = ctx.request.body.order;
-    if (!order)*/
     let order = 1;
     if (contentItems.length)
         order = parseInt(contentItems[contentItems.length - 1].order) + 1;
@@ -290,7 +288,6 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
 
             const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
 
-            //data["channel"] = {connect: [{id: channel.id}]};
             ctx.request.body["channel"] = {connect: [{id: channel.id}]};
         }
 
@@ -348,12 +345,6 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
 
         if (ctx.request.body.caption && content.mediafile?.id)
             await strapi.plugins.upload.services.upload.update(content.mediafile.id, { caption: ctx.request.body.caption })
-        
-        //if (ctx.request.body.filename && content.mediafile?.id)
-        //    await strapi.plugins.upload.services.upload.update(content.mediafile.id, { name: ctx.request.body.filename })
-
-        //if (ctx.request.body.order && ctx.request.body.order != content.order)
-        //    await strapi.controller('api::content.content').updateOrder(ctx);
 
         if (ctx.request.body.ext_url && content.mediafile)
             await strapi.config.functions.deleteMediafile(content.mediafile.id);

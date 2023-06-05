@@ -34,8 +34,12 @@ module.exports = {
       }
   },
 
-    async getChannel(channelID)
+    async getChannel(channelID, userID)
     {
+        let whereclause = {};
+        if (!await strapi.config.functions.canEdit(channelID, userID))
+          whereclause = { publishedAt: { $ne: null } };
+
         return await strapi.query('api::channel.channel').findOne({
             where: { uniqueID: channelID },
             select: ['id', 'name', 'uniqueID', 'lat', 'long', 'zoom', 'interval', 'public', 'allowsubmissions'],
@@ -65,20 +69,78 @@ module.exports = {
                 },
                 overlay: {
                     select: ['id', 'tl_lat', 'tl_long', 'tr_lat', 'tr_long', 'br_lat', 'br_long', 'bl_lat', 'bl_long'],
-                        populate: {
-                            image: {
-                                select: ['id', 'url', 'formats'],
-                            }
+                    populate: {
+                        image: {
+                            select: ['id', 'url', 'formats'],
                         }
+                    }
                 },
                 tags: {
-                    select: ['id']
+                    select: ['id', 'tag', 'markercolor']
+                },
+                children: {
+                  select: ['id', 'uniqueID', 'lat', 'long'],
+                  populate: {
+                    picture: {
+                        select: ['id', 'url', 'formats'],
+                    },
+                    owner: {
+                      select: ['id'],
+                    },
+                    parent: {
+                      select: ['id', 'name', 'uniqueID'],
+                    },
+                  },
+                },
+                assets: {
+                  orderBy: { order: 'asc' },
+                  select: ['id', 'name'],
+                  populate: {
+                      pcbundle: {
+                          select: ['id', 'name', 'url', 'size'],
+                      },
+                      androidbundle: {
+                          select: ['id', 'name', 'url', 'size'],
+                      },
+                      webglbundle: {
+                          select: ['id', 'name', 'url', 'size'],
+                      },
+                      macbundle: {
+                          select: ['id', 'name', 'url', 'size'],
+                      }
+                  },
+                },
+                contents: {
+                  where: whereclause,
+                  orderBy: { order: 'asc' },
+                  populate: {
+                      mediafile: {
+                          select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
+                      },
+                      thumbnail: {
+                          select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
+                      },
+                      channel: {
+                          select: ['id', 'uniqueID'],
+                          populate: {
+                              owner: { select: ['id'] },
+                          }
+                      },
+                      tags: {
+                          select: ['id', 'tag', 'markercolor'],
+                          populate: {
+                              thumbnail: { select: ['url', 'formats'] },
+                          }
+                      },
+                  },
                 }
             },
           });
     },
 
   async canEdit(channelID, userID) {
+    if (!userID)
+      return false;
     const channel = await strapi.config.functions.getChannel(channelID);
     if (!channel)
       return false;

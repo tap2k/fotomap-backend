@@ -31,6 +31,11 @@ module.exports = {
         auth: false,
       },
     },
+    {
+      method: "GET",
+      path: "/getMyChannel",
+      handler: "channel.getMyChannel",
+    },
     { 
       method: 'POST',
       path: '/createChannel', 
