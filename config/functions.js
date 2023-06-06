@@ -75,7 +75,12 @@ module.exports = {
                     }
                 },
                 tags: {
-                    select: ['id', 'tag', 'markercolor']
+                    select: ['id', 'tag', 'markercolor'],
+                    populate: {
+                      thumbnail: {
+                          select: ['id', 'url', 'formats'],
+                      },
+                    }
                 },
                 children: {
                   select: ['id', 'uniqueID', 'lat', 'long'],
@@ -138,12 +143,14 @@ module.exports = {
     },
 
   async canEdit(channelID, userID) {
+    if (channelID == "probe")
+      return true;
     if (!userID)
       return false;
     const channel = await strapi.config.functions.getChannel(channelID);
     if (!channel)
       return false;
-    return ((channel.owner?.id == userID) || channel.editors?.some(item => item.id == userID) || channel.uniqueID == "probe"
+    return ((channel.owner?.id == userID) || channel.editors?.some(item => item.id == userID)
     || await strapi.config.functions.canEdit(channel.parent?.uniqueID, userID));
   },
 
