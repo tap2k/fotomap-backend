@@ -18,7 +18,6 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
                   },            
             },
             orderBy: { order: 'asc' },
-            select: ['id', 'name'],
             populate: {
                 pcbundle: {
                     select: ['id', 'name', 'url', 'size'],

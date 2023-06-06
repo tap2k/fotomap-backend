@@ -11,11 +11,10 @@ const { createCoreController } = require('@strapi/strapi').factories;
 module.exports = createCoreController('api::tileset.tileset', ({ strapi }) =>  ({
 
     async getTilesets(ctx) {
-        const channels = await strapi.db.query('api::tileset.tileset').findMany({
-            select: ['id', 'name', 'urlformatstring'],
+        const tilesets = await strapi.db.query('api::tileset.tileset').findMany({
             orderBy: { id: 'asc' },
         });
-        return channels;
+        return tilesets;
     },
 
 }));

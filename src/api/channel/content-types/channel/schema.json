@@ -101,6 +101,21 @@
       "relation": "oneToMany",
       "target": "api::content.content",
       "mappedBy": "channel"
+    },
+    "markercolor": {
+      "type": "enumeration",
+      "enum": [
+        "none",
+        "black",
+        "blue",
+        "gold",
+        "green",
+        "grey",
+        "orange",
+        "red",
+        "violet",
+        "yellow"
+      ]
     }
   }
 }

@@ -17,7 +17,6 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                   uniqueID: ctx.query.uniqueID
                   },            
             },
-            select: ['id', 'tl_lat', 'tl_long', 'tr_lat', 'tr_long', 'br_lat', 'br_long', 'bl_lat', 'bl_long'],
             populate: {
                 image: {
                     select: ['id', 'url', 'formats'],

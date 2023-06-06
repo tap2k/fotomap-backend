@@ -19,7 +19,6 @@ module.exports = createCoreController('api::avatar.avatar', ({ strapi }) =>  ({
                 owner: ctx.state.user.id,
                 //platform: platform
             },
-            select: ['id'],
             populate: {
                 pcbundle: {
                     select: ['id', 'url'],
