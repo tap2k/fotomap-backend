@@ -94,15 +94,15 @@ async function insertContentFunc(content, order) {
     }
     
     var currOrder = 1;
-    await Promise.all(contentItems.map(
-    async updateContent => {
-        if (updateContent.id != content.id)
+    for (const contentItem of contentItems)
+    {
+        if (contentItem.id != content.id)
             await strapi.query("api::content.content").update({
-                where: { id: updateContent.id },
+                where: { id: contentItem.id },
                 data: { order: currOrder < order ? currOrder : parseInt(currOrder) + 1 },
         });
         currOrder = parseInt(currOrder) + 1;
-    }));
+    }
 
     return await strapi.query("api::content.content").update({
         where: { id: content.id },
