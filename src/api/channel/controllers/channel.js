@@ -19,7 +19,9 @@ async function addPictureFunc(channel, file)
 async function deleteChannelFunc(ctx, channel)
 {
     const children = await getChildChannelsFunc(channel.uniqueID);
-    children.forEach(async(child) => await deleteChannelFunc(ctx, child));
+    await Promise.all(children.map(
+        async child => await deleteChannelFunc(ctx, child)
+    ));
 
     const myContents = await strapi.db.query('api::content.content').findMany({
         where: { channel: channel.id },
