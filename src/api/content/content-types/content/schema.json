@@ -107,9 +107,6 @@
     },
     "description": {
       "type": "richtext"
-    },
-    "credits": {
-      "type": "string"
     }
   }
 }
