@@ -116,6 +116,9 @@
         "violet",
         "yellow"
       ]
+    },
+    "order": {
+      "type": "integer"
     }
   }
 }

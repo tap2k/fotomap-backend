@@ -83,7 +83,8 @@ module.exports = {
                     }
                 },
                 children: {
-                  select: ['id', 'uniqueID', 'lat', 'long'],
+                  orderBy: { order: 'asc' },
+                  select: ['id', 'uniqueID', 'lat', 'long', 'order'],
                   populate: {
                     picture: {
                         select: ['id', 'url', 'formats'],
@@ -125,7 +126,7 @@ module.exports = {
                           select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
                       },
                       channel: {
-                          select: ['id', 'uniqueID', 'markercolor'],
+                          select: ['id', 'uniqueID', 'markercolor', 'lat', 'long'],
                           populate: {
                               owner: { select: ['id'] },
                           }

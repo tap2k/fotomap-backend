@@ -16,6 +16,47 @@ async function addPictureFunc(channel, file)
         return null;
 }
 
+async function insertChannelFunc(channel, parent, order) {
+
+    if (order < -1)
+        return;
+
+    const channels = await strapi.db.query('api::channel.channel').findMany({
+        where: { parent: parent },
+        select: ['id', 'order'],
+        orderBy: { order: 'asc' },
+    });
+
+    if (order == -1)
+    {
+        if (channels?.length)
+        {
+            console.log("order = " + JSON.stringify(channels));
+            order = parseInt(channels[channels.length - 1].order) + 1;
+            if (!order)
+                order = channels.length;
+        }
+        else
+            order = 1;
+    } 
+
+    var currOrder = 1;
+    for (const channelItem of channels)
+    {
+        if (channelItem.id != channel.id)
+            await strapi.query("api::channel.channel").update({
+                where: { id: channelItem.id },
+                data: { order: currOrder < order ? currOrder : currOrder + 1 },
+        });
+        currOrder = currOrder + 1;
+    }
+    
+    return await strapi.query("api::channel.channel").update({
+        where: { id: channel.id },
+        data: { order: Math.min(currOrder, order) }
+    }); 
+}
+
 async function deleteChannelFunc(ctx, channel)
 {
     const children = await getChildChannelsFunc(channel.uniqueID);
@@ -97,7 +138,7 @@ async function deleteChannelFunc(ctx, channel)
     }
 
     if (channel.picture)
-        await strapi.config.functions.deleteMediafile(content.picture.id);
+        await strapi.config.functions.deleteMediafile(channel.picture.id);
 
     return await strapi.service('api::channel.channel').delete(channel.id);
 }
@@ -109,7 +150,7 @@ async function getChildChannelsFunc(channelID) {
               uniqueID: channelID
             }
         },
-        orderBy: { name: 'asc' },
+        orderBy: { order: 'asc' },
         populate: {
             owner: {
                 select: ['id', 'username', 'email'],
@@ -182,6 +223,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
     },
 
     async createChannel(ctx) {
+        
         let channelid = ctx.request.body.uniqueID;
 
         if (channelid)
@@ -207,6 +249,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
         let owner = ctx.state.user.id;
         let editors = [];
+        let order = -1;
         if (ctx.request.body.parentID)
         {
             const parentchannel = await strapi.query('api::channel.channel').findOne({
@@ -221,8 +264,19 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                     },
                 },
                 });
-            owner = parentchannel.owner.id;
-            editors = parentchannel.editors;
+            if (parentchannel)
+            {
+                owner = parentchannel.owner.id;
+                const channelItems = await strapi.db.query('api::channel.channel').findMany({
+                    where: { parent: parentchannel.id },
+                    select: ['id', 'order'],
+                    orderBy: { order: 'asc' },
+                });
+                if (channelItems?.length)
+                    order = parseInt(channelItems[channelItems.length - 1].order) + 1;
+                if (!order)
+                    order = -1;
+            }
         }
 
         if (!ctx.request.body.public)
@@ -230,7 +284,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
         if (!ctx.request.body.allowsubmissions)
             ctx.request.body.allowsubmissions = false;
-        
+
         ctx.request.body.uniqueID = channelid;
         ctx.request.body.parent = ctx.request.body.parentID;
         ctx.request.body.owner = owner;
@@ -243,7 +297,13 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
             if (ctx.request.files && Object.keys(ctx.request.files).length)
                 await addPictureFunc(channel, ctx.request.files[Object.keys(ctx.request.files)]);
-                
+            
+            console.log("order = " + order);
+            if (order && ctx.request.body.parent)
+                await insertChannelFunc(channel, ctx.request.body.parent, order);
+            else
+                await insertChannelFunc(channel, null, -1);  
+
             return channel;
         } catch (err) {
             return ctx.badRequest(err);
@@ -282,10 +342,20 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                 await strapi.config.functions.deleteMediafile(channel.picture.id);
         }
 
-        return await strapi.query("api::channel.channel").update({ 
+        let newchannel = await strapi.query("api::channel.channel").update({ 
             where: { id: channel.id },
             data: ctx.request.body,
+            populate: {
+                parent: {
+                    select: ['id'],
+                },
+            }
         });
+
+        if (ctx.request.body.order)
+            await insertChannelFunc(newchannel, newchannel.parent.id, ctx.request.body.order);
+
+        return newchannel;
     },
 
     //TODO: Delete child channels?

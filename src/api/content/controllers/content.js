@@ -8,22 +8,31 @@
 //const mime = require('mime'); 
 //const { createGzip } = require('zlib');
 
-async function createContentFunc(file, channelID, order, ext_url, lat, long) {
+async function createContentFunc(file, channelID, ext_url, order, lat, long) {
     if (!channelID)
         return null;
 
     const content = await strapi.db.query('api::content.content').create({
         data: {
             channel: channelID,
-            order: order,
             ext_url: ext_url,
             lat: lat,
             long: long,
+        },
+        populate: {
+            channel: {
+                select: ['id'],
+            },
         }
     });
 
     if (!content)
         return null;
+
+    if (order)
+        await insertContentFunc(content, order);
+    else
+        await insertContentFunc(content, -1);
 
     if (file)
         await strapi.config.functions.addFile(content.id, 'api::content.content', file, "mediafile");
@@ -33,16 +42,6 @@ async function createContentFunc(file, channelID, order, ext_url, lat, long) {
 
 async function uploadContentFunc(ctx, channel)
 {
-    const contentItems = await strapi.db.query('api::content.content').findMany({
-        where: { channel: channel.id },
-        select: ['id', 'order'],
-        orderBy: { order: 'asc' },
-    });
-
-    let order = 1;
-    if (contentItems.length)
-        order = parseInt(contentItems[contentItems.length - 1].order) + 1;
-
     strapi.config.functions.nullParam("lat", ctx.request.body);
     strapi.config.functions.nullParam("long", ctx.request.body);
 
@@ -50,12 +49,23 @@ async function uploadContentFunc(ctx, channel)
     {
         var files = ctx.request.files;
         let contents = [];
+        const contentItems = await strapi.db.query('api::content.content').findMany({
+            where: { channel: channel.id },
+            select: ['id', 'order'],
+            orderBy: { order: 'asc' },
+        });
+        let order = null;
+        if (contentItems?.length)
+            order = parseInt(contentItems[contentItems.length - 1].order) + 1;
+        if (!order)
+            order = -1;
+
         for (const key of Object.keys(files)) {
             try {
-                const content = await createContentFunc(files[key], channel.id, order, ctx.request.body.ext_url, ctx.request.body.lat, ctx.request.body.long);
+                const content = await createContentFunc(files[key], channel.id,  ctx.request.body.ext_url, order, ctx.request.body.lat, ctx.request.body.long);
                 if (!content) return ctx.badRequest('Could not create content');
-                order = order + 1;
                 contents.push(content);
+                order = order + 1;
             }
             catch (error) {
                 return ctx.badRequest(error);
@@ -65,7 +75,7 @@ async function uploadContentFunc(ctx, channel)
     }
     else
     {
-        const content = await createContentFunc(null, channel.id, order, ctx.request.body.ext_url, ctx.request.body.lat, ctx.request.body.long);
+        const content = await createContentFunc(null, channel.id, ctx.request.body.ext_url, ctx.request.body.order, ctx.request.body.lat, ctx.request.body.long);
         if (!content) 
             return ctx.badRequest("Could not create content");
         else
@@ -76,9 +86,6 @@ async function uploadContentFunc(ctx, channel)
 // TODO: Make sure its in order?
 async function insertContentFunc(content, order) {
 
-    if (order < -1)
-        return;
-
     const contentItems = await strapi.db.query('api::content.content').findMany({
         where: { channel: content.channel.id },
         select: ['id', 'order'],
@@ -88,10 +95,15 @@ async function insertContentFunc(content, order) {
     if (order == -1)
     {
         if (contentItems?.length)
+        {   
             order = parseInt(contentItems[contentItems.length - 1].order) + 1;
+            if (!order)
+                order = 1;
+        }
         else
             order = 1;
     }
+
     
     var currOrder = 1;
     for (const contentItem of contentItems)
@@ -106,7 +118,7 @@ async function insertContentFunc(content, order) {
 
     return await strapi.query("api::content.content").update({
         where: { id: content.id },
-        data: { order: Math.min(currOrder, order) }
+        data: { order: order ? Math.min(currOrder, order) : currOrder}
     });
 }
 
