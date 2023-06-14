@@ -229,39 +229,6 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
 
     },
 
-    /*async updateOrder(ctx) {
-        if (!ctx.request.body.order || !ctx.request.body.contentID)
-            return ctx.badRequest('No order or content specified');
-
-        const content = await strapi.db.query('api::content.content').findOne({
-            where: { id: ctx.request.body.contentID },
-            populate: {
-                mediafile: {
-                    select: ['id'],
-                },
-                channel: {
-                    select: ['id', 'uniqueID'],
-                    populate: {
-                        owner: { select: ['id'] },
-                    }
-                },
-            }
-        });
-
-        if (!content)
-            return ctx.badRequest('No content found for ' + ctx.request.body.contentID);
-
-        if (content.channel.owner.id != ctx.state.user.id)
-            return ctx.badRequest('No such channel or you are not the owner: ' + content.channel.uniqueID);
-
-        if (content.order == ctx.request.body.order)
-            return;
-
-        await insertContentFunc(content, ctx.request.body.order);
-
-        return "ok";
-    },*/
-
     async updateContent(ctx) {
         if (!ctx.request.body.contentID)
             return ctx.badRequest('No content specified');
@@ -417,7 +384,6 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
 
         if (content.mediafile)
             await strapi.config.functions.deleteMediafile(content.mediafile.id);
-        
         
         if (content.thumbnail)
             await strapi.config.functions.deleteMediafile(content.thumbnail.id);
