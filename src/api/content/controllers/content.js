@@ -212,11 +212,15 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
                     mediafile: {
                         select: ['id'],
                     },
+                    thumbnail: {
+                        select: ['id'],
+                    },
                 }
             });
+            // TODO: what about thumbnail?
             if (contentItem.mediafile)
                 await strapi.config.functions.deleteMediafile(contentItem.mediafile.id);
-            await strapi.query("api::content.content").update({
+                await strapi.query("api::content.content").update({
                 where: { id: ctx.request.body.contentID},
                 data: { ext_url: null },
             });
