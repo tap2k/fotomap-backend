@@ -31,7 +31,6 @@ async function insertChannelFunc(channel, parent, order) {
     {
         if (channels?.length)
         {
-            console.log("order = " + JSON.stringify(channels));
             order = parseInt(channels[channels.length - 1].order) + 1;
             if (!order)
                 order = channels.length;

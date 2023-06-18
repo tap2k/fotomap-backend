@@ -204,9 +204,35 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         if (!canEdit) 
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + ctx.request.body.uniqueID);
 
-        const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
-
-        return await uploadContentFunc(ctx, channel);
+        if (ctx.request.body.contentID)
+        {
+            const contentItem = await strapi.db.query('api::content.content').findOne({
+                where: { id: ctx.request.body.contentID },
+                populate: {
+                    mediafile: {
+                        select: ['id'],
+                    },
+                }
+            });
+            if (contentItem.mediafile)
+                await strapi.config.functions.deleteMediafile(contentItem.mediafile.id);
+            await strapi.query("api::content.content").update({
+                where: { id: ctx.request.body.contentID},
+                data: { ext_url: null },
+            });
+            if (ctx.request.files && Object.keys(ctx.request.files).length)
+                return await strapi.config.functions.addFile(ctx.request.body.contentID, 'api::content.content', ctx.request.files[Object.keys(ctx.request.files)], "mediafile");
+            else
+                return await strapi.query("api::content.content").update({
+                    where: { id: ctx.request.body.contentID},
+                    data: { ext_url: ctx.request.body.ext_url },
+                });    
+        }
+        else
+        {
+            const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
+            return await uploadContentFunc(ctx, channel);
+        }
 
     },
 
