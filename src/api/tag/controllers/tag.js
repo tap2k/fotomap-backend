@@ -63,6 +63,31 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
 
     async addTag(ctx) {
 
+        // TODO: add tag to parent?
+        if (ctx.request.body.uniqueID)
+        {
+            if (!strapi.config.functions.canEdit(ctx.request.body.uniqueID, ctx.state.user.id))
+                return ctx.badRequest('No such channel or you are not allowed to edit: ' + content.channel.uniqueID);
+            const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
+            const tag = await strapi.db.query('api::tag.tag').findOne({
+                select: ['id'],
+                where: {
+                    $and: [
+                        { channel: channel.id },
+                        { tag: ctx.request.body.tag },
+                    ]            
+                }
+            });
+            if (tag)
+                return tag;
+
+            return await strapi.db.query('api::tag.tag').create({
+                data: {
+                    tag: ctx.request.body.tag,
+                    channel: channel.id
+                }});
+        }
+
         let content = await strapi.db.query('api::content.content').findOne({
             where: { id: ctx.request.body.contentID },
             populate: { 
@@ -117,6 +142,24 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
     },
 
     async removeTag(ctx) {
+
+        if (ctx.request.body.uniqueID)
+        {
+            if (!strapi.config.functions.canEdit(ctx.request.body.uniqueID, ctx.state.user.id))
+                return ctx.badRequest('No such channel or you are not allowed to edit: ' + content.channel.uniqueID);
+            const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
+            const tag = await strapi.db.query('api::tag.tag').findOne({
+                select: ['id'],
+                where: {
+                    $and: [
+                        { channel: channel.id },
+                        { tag: ctx.request.body.tag },
+                    ]            
+                }
+            });
+            await strapi.service('api::tag.tag').delete(tag.id);
+            return "ok"
+        }
 
         let content = await strapi.db.query('api::content.content').findOne({
             where: { id: ctx.request.body.contentID },
