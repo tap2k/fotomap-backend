@@ -280,11 +280,23 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
     },
 
     async updateTag(ctx) {
+
         if (!ctx.request.body.tag)
             return ctx.badRequest('No tag specified');
-    
+
+        const canEdit = await strapi.config.functions.canEdit(ctx.request.body.uniqueID, ctx.state.user.id);
+        if (!canEdit) 
+            return ctx.badRequest('No such channel or you are not allowed to edit: ' + ctx.request.body.uniqueID);
+
+        const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
+
         const tag = await strapi.db.query('api::tag.tag').findOne({
-            where: { tag: ctx.request.body.tag },
+            where: {
+                $and: [
+                    { channel: channel.id },
+                    { tag: ctx.request.body.tag },
+                ]            
+            },
             populate: {
                 thumbnail: {
                     select: ['id'],
