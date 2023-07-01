@@ -53,6 +53,11 @@ module.exports = {
     },
     { 
       method: 'POST',
+      path: '/regenChannelID', 
+      handler: 'channel.regenChannelID',
+    },
+    { 
+      method: 'POST',
       path: '/addEditor', 
       handler: 'channel.addEditor',
     },

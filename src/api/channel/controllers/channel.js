@@ -371,6 +371,31 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         return await deleteChannelFunc(ctx, channel);
     },
 
+    async regenChannelID(ctx) {
+        const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
+    
+        if (!(channel.owner.id == ctx.state.user.id))
+            return ctx.badRequest('You are not the owner of this channel');
+
+        let channelid = null;
+        while (!channelid)
+        {
+            channelid = (Math.random()+1).toString(36).slice(5);
+            const currchannel = await strapi.query('api::channel.channel').findOne({
+                where: { uniqueID: channelid }
+            });
+            if (currchannel)
+                channelid = null;
+        }
+        
+        return await strapi.db.query('api::channel.channel').update({
+            where: { id: channel.id },
+            data: {
+                uniqueID: channelid
+            },
+        });        
+    },
+
     async addEditor(ctx) {
         let user = await strapi.db.query('plugin::users-permissions.user').findOne({
             where: {$or: [
@@ -389,7 +414,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         if (!channel)
             return ctx.badRequest('No such channel');
     
-        // TODO: alloww this?
+        // TODO: allow this?
         if (channel.owner.id != ctx.state.user.id)
             return ctx.badRequest('You dont own this channel');
         
