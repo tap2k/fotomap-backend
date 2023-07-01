@@ -25,6 +25,11 @@ module.exports = {
       },
       {
         method: "POST",
+        path: "/deleteTag",
+        handler: "tag.deleteTag",
+      },
+      {
+        method: "POST",
         path: "/combineTags",
         handler: "tag.combineTags",
       },

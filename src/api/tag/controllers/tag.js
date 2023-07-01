@@ -279,6 +279,39 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
         return "ok";
     },
 
+    async deleteTag(ctx) {
+
+        const canEdit = await strapi.config.functions.canEdit(ctx.request.body.uniqueID, ctx.state.user.id);
+        if (!canEdit) 
+            return ctx.badRequest('No such channel or you are not allowed to edit: ' + ctx.request.body.uniqueID);
+
+        const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
+
+        let tagID = parseInt(ctx.request.body.tagID);
+        if (isNaN(tagID))
+            tagID = null;
+
+        let tag = await strapi.db.query('api::tag.tag').findOne({
+            select: ['id'],
+            populate: {
+                thumbnail: { select: ['id'] },
+            },
+            where: {
+                $or: [
+                        {$and: [
+                            { channel: channel.id },
+                            { tag: ctx.request.body.tag },
+                        ]},
+                        { id: tagID }
+                ]
+            },     
+        });
+
+        if (tag.thumbnail)
+            await strapi.config.functions.deleteMediafile(tag.thumbnail.id);
+        return strapi.service('api::tag.tag').delete(tag.id);
+    },
+
     async updateTag(ctx) {
 
         if (!ctx.request.body.tag)
@@ -353,8 +386,7 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
         let tags = await strapi.db.query('api::tag.tag').findMany({
             select: ['id'],
             populate: {
-                owner: { select: ['id'] },
-                editors: { select: ['id'] },
+                thumbnail: { select: ['id'] },
             },
             where: {$and: [
                 { channel: channel.id },
