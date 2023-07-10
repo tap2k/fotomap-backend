@@ -71,14 +71,6 @@ async function deleteChannelFunc(ctx, channel)
                 select: ['id'],
                 },
             },
-            overlay: {
-                select: ['id'],
-                    populate: {
-                        image: {
-                            select: ['id', 'url', 'formats'],
-                        }
-                    }
-            },
     });
 
     //ctx.query.uniqueID = ctx.request.body.uniqueID;
@@ -159,7 +151,15 @@ async function getChildChannelsFunc(channelID) {
             },
             parent:{
                 select: ['id', 'uniqueID']
-            }
+            },
+            overlay: {
+                select: ['id', 'tl_lat', 'tl_long', 'tr_lat', 'tr_long', 'br_lat', 'br_long', 'bl_lat', 'bl_long'],
+                populate: {
+                    image: {
+                        select: ['id', 'url', 'formats'],
+                    }
+                }
+            },
         },
       });
     return channels;
