@@ -64,13 +64,13 @@ module.exports = {
                     select: ['id', 'name', 'urlformatstring', 'attribution'],
                 },
                 picture: {
-                    select: ['id', 'url', 'formats'],
+                    select: ['id', 'url', 'formats', 'size'],
                 },
                 overlay: {
                     select: ['id', 'tl_lat', 'tl_long', 'tr_lat', 'tr_long', 'br_lat', 'br_long', 'bl_lat', 'bl_long'],
                     populate: {
                         image: {
-                            select: ['id', 'url', 'formats'],
+                            select: ['id', 'url', 'formats', 'size'],
                         }
                     }
                 },
@@ -78,7 +78,7 @@ module.exports = {
                     select: ['id', 'tag', 'markercolor'],
                     populate: {
                       thumbnail: {
-                          select: ['id', 'url', 'formats'],
+                          select: ['id', 'url', 'formats', 'size'],
                       },
                     }
                 },
@@ -87,7 +87,7 @@ module.exports = {
                   select: ['id', 'uniqueID', 'lat', 'long', 'order'],
                   populate: {
                     picture: {
-                        select: ['id', 'url', 'formats'],
+                        select: ['id', 'url', 'formats', 'size'],
                     },
                     owner: {
                       select: ['id'],
