@@ -40,7 +40,10 @@ async function getTagsFunc(channel)
     });
 
     if (channel.parent)
-        myTags = myTags.concat(await getTagsFunc(channel.parent));
+    {
+        const parent = await strapi.config.functions.getChannel(channel.parent.uniqueID);
+        myTags = myTags.concat(await getTagsFunc(parent));
+    }
     
     return myTags;
 }
