@@ -18,23 +18,16 @@ async function addPictureFunc(channel, file)
 
 async function insertChannelFunc(channel, parent, order) {
 
-    if (order < -1)
-        return;
-
     const channels = await strapi.db.query('api::channel.channel').findMany({
-        where: { parent: parent },
-        select: ['id', 'order'],
+        where: { $and: [{ parent: parent }, { $not: { id: channel.id } }] },
+        select: ['id', 'order', 'name'],
         orderBy: { order: 'asc' },
     });
 
     if (order == -1)
     {
-        if (channels?.length)
-        {
-            order = parseInt(channels[channels.length - 1].order) + 1;
-            if (!order)
-                order = channels.length;
-        }
+        if (channels?.length && channels[channels.length - 1].order)
+            order = channels[channels.length - 1].order + 1;
         else
             order = 1;
     } 
@@ -52,7 +45,7 @@ async function insertChannelFunc(channel, parent, order) {
     
     return await strapi.query("api::channel.channel").update({
         where: { id: channel.id },
-        data: { order: Math.min(currOrder, order) }
+        data: { order: order ? Math.min(currOrder, order) : currOrder }
     }); 
 }
 
@@ -249,6 +242,11 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         let owner = ctx.state.user.id;
         let editors = [];
         let order = -1;
+
+        // TODO: should check if has key
+        if (ctx.request.body.order)
+            order = ctx.request.body.order;
+
         if (ctx.request.body.parentID)
         {
             const parentchannel = await strapi.query('api::channel.channel').findOne({
@@ -264,18 +262,8 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                 },
                 });
             if (parentchannel)
-            {
                 owner = parentchannel.owner.id;
-                const channelItems = await strapi.db.query('api::channel.channel').findMany({
-                    where: { parent: parentchannel.id },
-                    select: ['id', 'order'],
-                    orderBy: { order: 'asc' },
-                });
-                if (channelItems?.length)
-                    order = parseInt(channelItems[channelItems.length - 1].order) + 1;
-                if (!order)
-                    order = -1;
-            }
+
         }
 
         if (!ctx.request.body.public)
@@ -292,17 +280,21 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         try {
             const channel = await strapi.db.query('api::channel.channel').create({
                 data: ctx.request.body,
+                select: ['id', 'uniqueID']
             });
 
             if (ctx.request.files && Object.keys(ctx.request.files).length)
                 await addPictureFunc(channel, ctx.request.files[Object.keys(ctx.request.files)]);
             
-            console.log("order = " + order);
             if (order && ctx.request.body.parent)
                 await insertChannelFunc(channel, ctx.request.body.parent, order);
             else
-                await insertChannelFunc(channel, null, -1);  
-
+            {
+                if (ctx.request.body.parent)
+                    await insertChannelFunc(channel, ctx.request.body.parent, -1); 
+                else
+                    await insertChannelFunc(channel, null, -1); 
+            }
             return channel;
         } catch (err) {
             return ctx.badRequest(err);

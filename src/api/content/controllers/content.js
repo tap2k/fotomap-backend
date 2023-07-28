@@ -87,23 +87,18 @@ async function uploadContentFunc(ctx, channel)
 async function insertContentFunc(content, order) {
 
     const contentItems = await strapi.db.query('api::content.content').findMany({
-        where: { channel: content.channel.id },
+        where: { $and: [{ channel: content.channel.id }, { $not: { id: content.id } }] },
         select: ['id', 'order'],
         orderBy: { order: 'asc' },
     });
 
     if (order == -1)
     {
-        if (contentItems?.length)
-        {   
-            order = parseInt(contentItems[contentItems.length - 1].order) + 1;
-            if (!order)
-                order = 1;
-        }
+        if (contentItems?.length && contentItems[contentItems.length - 1].order)
+            order = contentItems[contentItems.length - 1].order + 1;
         else
             order = 1;
     }
-
     
     var currOrder = 1;
     for (const contentItem of contentItems)
@@ -111,9 +106,9 @@ async function insertContentFunc(content, order) {
         if (contentItem.id != content.id)
             await strapi.query("api::content.content").update({
                 where: { id: contentItem.id },
-                data: { order: currOrder < order ? currOrder : parseInt(currOrder) + 1 },
+                data: { order: currOrder < order ? currOrder : currOrder + 1 },
         });
-        currOrder = parseInt(currOrder) + 1;
+        currOrder = currOrder + 1;
     }
 
     return await strapi.query("api::content.content").update({
