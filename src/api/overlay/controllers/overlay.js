@@ -10,8 +10,8 @@ const { createCoreController } = require('@strapi/strapi').factories;
 
 module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  ({
     
-    async getOverlay(ctx) {
-        const overlay = await strapi.db.query('api::overlay.overlay').findOne({
+    async getOverlays(ctx) {
+        const overlays = await strapi.db.query('api::overlay.overlay').findMany({
             where: {
                 channel: {
                   uniqueID: ctx.query.uniqueID
@@ -23,7 +23,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                 },
             },
           });
-        return overlay;
+        return overlays;
     },
 
     async deleteOverlay(ctx) {
@@ -77,12 +77,12 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         if (!file)
             return null;
         
-        if (channel.overlay)
+        /*if (channel.overlay)
         {
             if (channel.overlay.image)
                 await strapi.config.functions.deleteMediafile(channel.overlay.image.id);
             await strapi.service('api::overlay.overlay').delete(channel.overlay.id);
-        }
+        }*/
 
         const overlay = await strapi.db.query('api::overlay.overlay').create({
             data: { channel: channel.id }
@@ -93,12 +93,18 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
         await strapi.config.functions.addFile(overlay.id, 'api::overlay.overlay', file, "image");
 
+        await strapi.db.query('api::channel.channel').update({
+            where: { id: channel.id },
+            data: {
+                overlays: { connect: [{id: overlay.id}] }
+            },
+        });     
+
         return overlay;
 
     },
 
     async updateOverlay(ctx) {
-
         if (!ctx.request.body.overlayID)
             return ctx.badRequest('No overlay specified');
     

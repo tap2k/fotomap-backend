@@ -104,11 +104,14 @@ async function deleteChannelFunc(ctx, channel)
         await strapi.service('api::asset.asset').delete(asset.id);
     }
 
-    if (channel.overlay)
+    if (channel.overlays)
     {
-        if (channel.overlay.image)
-            await strapi.config.functions.deleteMediafile(channel.overlay.image.id);
-        await strapi.service('api::channel.channel').delete(channel.overlay.id);
+        for (const overlay of channel.overlays)
+        {
+            if (overlay.image)
+                await strapi.config.functions.deleteMediafile(overlay.image.id);
+            await strapi.service('api::channel.channel').delete(overlay.id);
+        }
     }
 
     if (channel.tags)
@@ -145,7 +148,7 @@ async function getChildChannelsFunc(channelID) {
             parent:{
                 select: ['id', 'uniqueID']
             },
-            overlay: {
+            overlays: {
                 select: ['id', 'tl_lat', 'tl_long', 'tr_lat', 'tr_long', 'br_lat', 'br_long', 'bl_lat', 'bl_long'],
                 populate: {
                     image: {

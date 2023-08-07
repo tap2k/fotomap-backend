@@ -46,9 +46,9 @@
     },
     "channel": {
       "type": "relation",
-      "relation": "oneToOne",
+      "relation": "manyToOne",
       "target": "api::channel.channel",
-      "mappedBy": "overlay"
+      "inversedBy": "overlays"
     }
   }
 }

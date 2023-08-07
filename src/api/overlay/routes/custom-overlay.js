@@ -4,8 +4,8 @@ module.exports = {
   routes: [
     {
       method: "GET",
-      path: "/getOverlay",
-      handler: "overlay.getOverlay",
+      path: "/getOverlays",
+      handler: "overlay.getOverlays",
       config: {
         auth: false,
       },

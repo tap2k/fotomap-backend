@@ -78,11 +78,11 @@
     "interval": {
       "type": "integer"
     },
-    "overlay": {
+    "overlays": {
       "type": "relation",
-      "relation": "oneToOne",
+      "relation": "oneToMany",
       "target": "api::overlay.overlay",
-      "inversedBy": "channel"
+      "mappedBy": "channel"
     },
     "tags": {
       "type": "relation",
@@ -119,6 +119,14 @@
     },
     "order": {
       "type": "integer"
+    },
+    "markericon": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": [
+        "images"
+      ]
     }
   }
 }
