@@ -4,13 +4,13 @@
  *  channel controller
  */
 
-async function addPictureFunc(channel, file)
+async function addIconFunc(channel, file)
 {
     if (file) {
-        if (channel.picture)
-            await strapi.config.functions.deleteMediafile(channel.picture.id);
+        if (channel.markericon)
+            await strapi.config.functions.deleteMediafile(channel.markericon.id);
 
-        return await strapi.config.functions.addFile(channel.id, 'api::channel.channel', file, "picture");   
+        return await strapi.config.functions.addFile(channel.id, 'api::channel.channel', file, "markericon");   
     }
     else
         return null;
@@ -124,8 +124,8 @@ async function deleteChannelFunc(ctx, channel)
         }
     }
 
-    if (channel.picture)
-        await strapi.config.functions.deleteMediafile(channel.picture.id);
+    if (channel.markericon)
+        await strapi.config.functions.deleteMediafile(channel.markericon.id);
 
     return await strapi.service('api::channel.channel').delete(channel.id);
 }
@@ -142,7 +142,7 @@ async function getChildChannelsFunc(channelID) {
             owner: {
                 select: ['id', 'username', 'email'],
             },
-            picture: {
+            markericon: {
                 select: ['id', 'url', 'formats'],
             },
             parent:{
@@ -189,7 +189,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                 parent: {
                     select: ['id', 'name'],
                 },
-                picture: {
+                markericon: {
                     select: ['id', 'url', 'formats'],
                 },
             },
@@ -205,7 +205,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                 owner: {
                     select: ['id', 'username', 'email'],
                 },
-                picture: {
+                markericon: {
                     select: ['id', 'url', 'formats'],
                 },
             },
@@ -287,7 +287,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             });
 
             if (ctx.request.files && Object.keys(ctx.request.files).length)
-                await addPictureFunc(channel, ctx.request.files[Object.keys(ctx.request.files)]);
+                await addIconFunc(channel, ctx.request.files[Object.keys(ctx.request.files)]);
             
             if (order && ctx.request.body.parent)
                 await insertChannelFunc(channel, ctx.request.body.parent, order);
@@ -329,11 +329,11 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         strapi.config.functions.nullParam("markercolor", ctx.request.body);
 
         if (ctx.request.files && Object.keys(ctx.request.files).length)
-            await addPictureFunc(channel, ctx.request.files[Object.keys(ctx.request.files)]);
+            await addIconFunc(channel, ctx.request.files[Object.keys(ctx.request.files)]);
         else
         {
-            if (channel.picture && ctx.request.body.deletepic)
-                await strapi.config.functions.deleteMediafile(channel.picture.id);
+            if (channel.markericon && ctx.request.body.deletepic)
+                await strapi.config.functions.deleteMediafile(channel.markericon.id);
         }
 
         let newchannel = await strapi.query("api::channel.channel").update({ 

@@ -63,7 +63,7 @@ module.exports = {
                 tileset: {
                     select: ['id', 'name', 'urlformatstring', 'attribution'],
                 },
-                picture: {
+                markericon: {
                     select: ['id', 'url', 'formats', 'size'],
                 },
                 overlays: {
@@ -86,7 +86,7 @@ module.exports = {
                   orderBy: { order: 'asc' },
                   select: ['id', 'uniqueID', 'lat', 'long', 'order'],
                   populate: {
-                    picture: {
+                    markericon: {
                         select: ['id', 'url', 'formats', 'size'],
                     },
                     owner: {

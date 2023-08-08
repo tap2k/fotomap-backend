@@ -60,7 +60,7 @@
       "relation": "oneToOne",
       "target": "api::tileset.tileset"
     },
-    "picture": {
+    "markericon": {
       "type": "media",
       "multiple": false,
       "required": false,
@@ -119,14 +119,6 @@
     },
     "order": {
       "type": "integer"
-    },
-    "markericon": {
-      "type": "media",
-      "multiple": false,
-      "required": false,
-      "allowedTypes": [
-        "images"
-      ]
     }
   }
 }
