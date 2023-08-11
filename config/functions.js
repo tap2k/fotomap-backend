@@ -63,8 +63,8 @@ module.exports = {
                 tileset: {
                     select: ['id', 'name', 'urlformatstring', 'attribution'],
                 },
-                markericon: {
-                    select: ['id', 'url', 'formats', 'size'],
+                picture: {
+                  select: ['id', 'url', 'formats', 'size'],
                 },
                 overlays: {
                     select: ['id', 'tl_lat', 'tl_long', 'tr_lat', 'tr_long', 'br_lat', 'br_long', 'bl_lat', 'bl_long'],
@@ -86,8 +86,8 @@ module.exports = {
                   orderBy: { order: 'asc' },
                   select: ['id', 'uniqueID', 'lat', 'long', 'order'],
                   populate: {
-                    markericon: {
-                        select: ['id', 'url', 'formats', 'size'],
+                    picture: {
+                      select: ['id', 'url', 'formats', 'size'],
                     },
                     owner: {
                       select: ['id'],
@@ -129,6 +129,12 @@ module.exports = {
                           select: ['id', 'uniqueID', 'markercolor', 'lat', 'long'],
                           populate: {
                               owner: { select: ['id'] },
+                              tags: {
+                                select: ['id', 'tag', 'markercolor'],
+                                populate: {
+                                    thumbnail: { select: ['url', 'formats'] },
+                                }
+                              },
                           }
                       },
                       tags: {

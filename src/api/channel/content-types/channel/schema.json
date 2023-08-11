@@ -60,7 +60,7 @@
       "relation": "oneToOne",
       "target": "api::tileset.tileset"
     },
-    "markericon": {
+    "picture": {
       "type": "media",
       "multiple": false,
       "required": false,
@@ -82,12 +82,6 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::overlay.overlay",
-      "mappedBy": "channel"
-    },
-    "tags": {
-      "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::tag.tag",
       "mappedBy": "channel"
     },
     "assets": {
@@ -119,6 +113,19 @@
     },
     "order": {
       "type": "integer"
+    },
+    "markericon": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "tags": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::tag.tag"
     }
   }
 }

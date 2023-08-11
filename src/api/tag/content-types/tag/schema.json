@@ -17,17 +17,10 @@
       "required": true,
       "unique": false
     },
-    "contents": {
-      "type": "relation",
-      "relation": "manyToMany",
-      "target": "api::content.content",
-      "mappedBy": "tags"
-    },
     "channel": {
       "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::channel.channel",
-      "inversedBy": "tags"
+      "relation": "oneToOne",
+      "target": "api::channel.channel"
     },
     "markercolor": {
       "type": "enumeration",
@@ -44,11 +37,12 @@
       ]
     },
     "thumbnail": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
       "allowedTypes": [
         "images"
-      ],
-      "type": "media",
-      "multiple": false
+      ]
     }
   }
 }

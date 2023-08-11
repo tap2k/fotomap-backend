@@ -88,12 +88,6 @@
       ],
       "default": "none"
     },
-    "tags": {
-      "type": "relation",
-      "relation": "manyToMany",
-      "target": "api::tag.tag",
-      "inversedBy": "contents"
-    },
     "title": {
       "type": "string"
     },
@@ -107,6 +101,11 @@
     },
     "description": {
       "type": "richtext"
+    },
+    "tags": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::tag.tag"
     }
   }
 }
