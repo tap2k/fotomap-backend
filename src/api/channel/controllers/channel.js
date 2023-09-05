@@ -196,6 +196,11 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                 },
                 parent: {
                     select: ['id', 'name'],
+                    populate: {
+                        owner: {
+                            select: ['id'],
+                        },
+                    }
                 },
                 picture: {
                     select: ['id', 'url', 'formats'],
