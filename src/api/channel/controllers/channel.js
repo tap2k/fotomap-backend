@@ -340,6 +340,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         strapi.config.functions.nullParam("tileset", ctx.request.body);
         strapi.config.functions.nullParam("interval", ctx.request.body);
         strapi.config.functions.nullParam("markercolor", ctx.request.body);
+        console.log(ctx.request.body);
 
         if (ctx.request.files && Object.keys(ctx.request.files).length)
             await addPictureFunc(channel, ctx.request.files[Object.keys(ctx.request.files)]);
