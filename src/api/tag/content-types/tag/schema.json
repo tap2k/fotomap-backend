@@ -43,6 +43,12 @@
       "allowedTypes": [
         "images"
       ]
+    },
+    "content": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::content.content",
+      "inversedBy": "tags"
     }
   }
 }

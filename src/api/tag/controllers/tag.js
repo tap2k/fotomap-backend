@@ -46,7 +46,7 @@ async function getTagsFunc(channel)
                 owner: { select: ['id'] },
                 editors: { select: ['id'] },
                 thumbnail: { select: ['url', 'formats'] },
-                contents: { select: ['id'] },
+                content: { select: ['id'] },
             },
         });
     
@@ -85,8 +85,6 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
             if (!tag)
                 return ctx.badRequest('Could not create tag: ' + ctx.request.body.tag);
             
-            console.log("creating " + channel.id + " " + tag.id);
-
             await strapi.db.query('api::channel.channel').update({
                 where: { id: channel.id },
                 data: {

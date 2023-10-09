@@ -1010,6 +1010,11 @@ export interface ApiTagTag extends Schema.CollectionType {
       ]
     >;
     thumbnail: Attribute.Media;
+    content: Attribute.Relation<
+      'api::tag.tag',
+      'manyToOne',
+      'api::content.content'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<'api::tag.tag', 'oneToOne', 'admin::user'> &
