@@ -135,6 +135,9 @@ module.exports = {
                                     thumbnail: { select: ['url', 'formats'] },
                                 }
                               },
+                              tileset: {
+                                select: ['id', 'name', 'urlformatstring', 'attribution'],
+                              },
                           }
                       },
                       tags: {
