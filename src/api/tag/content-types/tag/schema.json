@@ -44,9 +44,9 @@
         "images"
       ]
     },
-    "content": {
+    "contents": {
       "type": "relation",
-      "relation": "manyToOne",
+      "relation": "manyToMany",
       "target": "api::content.content",
       "inversedBy": "tags"
     }

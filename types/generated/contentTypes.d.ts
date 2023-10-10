@@ -914,7 +914,7 @@ export interface ApiContentContent extends Schema.CollectionType {
     description: Attribute.RichText;
     tags: Attribute.Relation<
       'api::content.content',
-      'oneToMany',
+      'manyToMany',
       'api::tag.tag'
     >;
     createdAt: Attribute.DateTime;
@@ -1010,9 +1010,9 @@ export interface ApiTagTag extends Schema.CollectionType {
       ]
     >;
     thumbnail: Attribute.Media;
-    content: Attribute.Relation<
+    contents: Attribute.Relation<
       'api::tag.tag',
-      'manyToOne',
+      'manyToMany',
       'api::content.content'
     >;
     createdAt: Attribute.DateTime;
