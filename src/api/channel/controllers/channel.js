@@ -205,6 +205,9 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                 picture: {
                     select: ['id', 'url', 'formats'],
                 },
+                tileset: {
+                    select: ['id', 'name', 'urlformatstring', 'attribution'],
+                },
             },
         });
         return channels;
@@ -220,6 +223,9 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                 },
                 picture: {
                     select: ['id', 'url', 'formats'],
+                },
+                tileset: {
+                    select: ['id', 'name', 'urlformatstring', 'attribution'],
                 },
             },
           });
