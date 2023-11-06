@@ -8,13 +8,15 @@
 //const mime = require('mime'); 
 //const { createGzip } = require('zlib');
 
-async function createContentFunc(file, channelID, ext_url, order, lat, long) {
+async function createContentFunc(file, channelID, title, description, ext_url, order, lat, long) {
     if (!channelID)
         return null;
 
     const content = await strapi.db.query('api::content.content').create({
         data: {
             channel: channelID,
+            title: title,
+            description: description,
             ext_url: ext_url,
             lat: lat,
             long: long,
@@ -62,7 +64,7 @@ async function uploadContentFunc(ctx, channel)
 
         for (const key of Object.keys(files)) {
             try {
-                const content = await createContentFunc(files[key], channel.id,  ctx.request.body.ext_url, order, ctx.request.body.lat, ctx.request.body.long);
+                const content = await createContentFunc(files[key], channel.id,  ctx.request.body.title, ctx.request.body.description, ctx.request.body.ext_url, order, ctx.request.body.lat, ctx.request.body.long);
                 if (!content) return ctx.badRequest('Could not create content');
                 contents.push(content);
                 order = order + 1;
@@ -75,7 +77,7 @@ async function uploadContentFunc(ctx, channel)
     }
     else
     {
-        const content = await createContentFunc(null, channel.id, ctx.request.body.ext_url, ctx.request.body.order, ctx.request.body.lat, ctx.request.body.long);
+        const content = await createContentFunc(null, channel.id, ctx.request.body.title, ctx.request.body.description, ctx.request.body.ext_url, ctx.request.body.order, ctx.request.body.lat, ctx.request.body.long);
         if (!content) 
             return ctx.badRequest("Could not create content");
         else
