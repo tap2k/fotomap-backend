@@ -194,8 +194,9 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
 
     async uploadContentToChannel(ctx) {
 
-        if (!ctx.request.body.ext_url && !ctx.request.files)
-            return ctx.badRequest('No content specified');
+        // TODO: Dont need content?
+        //if (!ctx.request.body.ext_url && !ctx.request.files)
+        //    return ctx.badRequest('No content specified');
 
         const canEdit = await strapi.config.functions.canEdit(ctx.request.body.uniqueID, ctx.state.user.id);
         if (!canEdit) 
@@ -239,6 +240,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
 
     async uploadSubmission(ctx) {
 
+        // TODO: Dont need content?
         if (!ctx.request.body.ext_url && !ctx.request.files)
             return ctx.badRequest('No content specified');
         
