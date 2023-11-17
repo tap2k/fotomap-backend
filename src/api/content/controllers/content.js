@@ -11,9 +11,11 @@
 async function uploadJSONFunc(channelid, contents)
 {
     let newcontents = [];
-    await Promise.all(contents.map(async (element) => {
+    contents.forEach(async (element)=> {
+    //await Promise.all(contents.map(async (element) => {
         newcontents.push(await createContentFunc(null, channelid, element.title, element.description, element.ext_url, element.order, element.lat, element.long));
-    }));
+    //}));
+    });
     return newcontents;
 }
 
