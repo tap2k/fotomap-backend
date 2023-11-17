@@ -238,6 +238,30 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
 
     },
 
+    async uploadJSONToChannel(ctx) {
+
+        const canEdit = await strapi.config.functions.canEdit(ctx.request.body.uniqueID, ctx.state.user.id);
+        if (!canEdit) 
+            return ctx.badRequest('No such channel or you are not allowed to edit: ' + ctx.request.body.uniqueID);
+
+        if (!ctx.request.body.contents) 
+            return ctx.badRequest('No contents provided in JSON');
+
+        let channelid = ctx.request.body.id;
+        if (!channelid)
+        {
+            const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
+            channelid = channel.id;
+        }
+        await Promise.all(ctx.request.body.contents.map(async (element) => {
+            //await uploadContent({channelID: channel.uniqueID, title: element.title, description: element.description, ext_url: element.ext_url, lat: element.lat, long: element.long, jwt: jwt});
+            await createContentFunc(null, channelid, element.title, element.description, element.ext_url, element.order, element.lat, element.long)
+        }));
+
+        return "ok";
+    
+    },
+
     async uploadSubmission(ctx) {
 
         // TODO: Dont need content?

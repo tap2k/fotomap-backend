@@ -27,6 +27,11 @@ module.exports = {
       },
       {
         method: "POST",
+        path: "/uploadJSONToChannel",
+        handler: "content.uploadJSONToChannel",
+      },
+      {
+        method: "POST",
         path: "/uploadSubmission",
         handler: "content.uploadSubmission",
         config: {
