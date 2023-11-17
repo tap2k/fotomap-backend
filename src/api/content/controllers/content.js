@@ -8,6 +8,15 @@
 //const mime = require('mime'); 
 //const { createGzip } = require('zlib');
 
+async function uploadJSONFunc(channelid, contents)
+{
+    let newcontents = [];
+    await Promise.all(contents.map(async (element) => {
+        newcontents.push(await createContentFunc(null, channelid, element.title, element.description, element.ext_url, element.order, element.lat, element.long));
+    }));
+    return newcontents;
+}
+
 async function createContentFunc(file, channelID, title, description, ext_url, order, lat, long) {
     if (!channelID)
         return null;
@@ -64,10 +73,22 @@ async function uploadContentFunc(ctx, channel)
 
         for (const key of Object.keys(files)) {
             try {
-                const content = await createContentFunc(files[key], channel.id,  ctx.request.body.title, ctx.request.body.description, ctx.request.body.ext_url, order, ctx.request.body.lat, ctx.request.body.long);
-                if (!content) return ctx.badRequest('Could not create content');
-                contents.push(content);
-                order = order + 1;
+                const mime = require('mime');
+                const mimetype = mime.getType(files[key].name);
+                if (mimetype.toLowerCase() == "text/csv")
+                {
+                    const csvToJson = require('convert-csv-to-json');
+                    const jsondata = csvToJson.supportQuotedField(true).fieldDelimiter(',').getJsonFromCsv(files[key].path);
+                    const newcontents = uploadJSONFunc(channel.id, jsondata);
+                    contents = contents.concat(newcontents);
+                }
+                else
+                {
+                    const content = await createContentFunc(files[key], channel.id,  ctx.request.body.title, ctx.request.body.description, ctx.request.body.ext_url, order, ctx.request.body.lat, ctx.request.body.long);
+                    if (!content) return ctx.badRequest('Could not create content');
+                    contents.push(content);
+                    order = order + 1;
+                }
             }
             catch (error) {
                 return ctx.badRequest(error);
@@ -253,10 +274,8 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
             const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
             channelid = channel.id;
         }
-        await Promise.all(ctx.request.body.contents.map(async (element) => {
-            //await uploadContent({channelID: channel.uniqueID, title: element.title, description: element.description, ext_url: element.ext_url, lat: element.lat, long: element.long, jwt: jwt});
-            await createContentFunc(null, channelid, element.title, element.description, element.ext_url, element.order, element.lat, element.long)
-        }));
+
+        await uploadJSONFunc(channelid, ctx.request.body.contents);
 
         return "ok";
     
