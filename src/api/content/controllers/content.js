@@ -13,7 +13,8 @@ async function uploadJSONFunc(channelid, contents)
     let newcontents = [];
     contents.forEach(async (element)=> {
     //await Promise.all(contents.map(async (element) => {
-        newcontents.push(await createContentFunc(null, channelid, element.title, element.description, element.ext_url, element.order, element.lat, element.long));
+        const contentItem = await createContentFunc(null, channelid, element.title, element.description, element.ext_url, element.order, element.lat, element.long);
+        newcontents.push(contentItem);
     //}));
     });
     return newcontents;
@@ -256,6 +257,13 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         else
         {
             const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
+            if (ctx.request.body.published != undefined)
+            {
+                if (ctx.request.body.published == "true")
+                    ctx.request.body.publishedAt = new Date();
+                else
+                    ctx.request.body.publishedAt = null;
+            }    
             return await uploadContentFunc(ctx, channel);
         }
 
