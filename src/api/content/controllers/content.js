@@ -8,21 +8,25 @@
 //const mime = require('mime'); 
 //const { createGzip } = require('zlib');
 
-async function uploadJSONFunc(channelid, contents)
+async function uploadJSONFunc(channelid, contents, published)
 {
     let newcontents = [];
     contents.forEach(async (element)=> {
     //await Promise.all(contents.map(async (element) => {
-        const contentItem = await createContentFunc(null, channelid, element.title, element.description, element.ext_url, element.order, element.lat, element.long);
+        const contentItem = await createContentFunc(null, channelid, element.title, element.description, element.ext_url, element.order, element.lat, element.long, published);
         newcontents.push(contentItem);
     //}));
     });
     return newcontents;
 }
 
-async function createContentFunc(file, channelID, title, description, ext_url, order, lat, long) {
+async function createContentFunc(file, channelID, title, description, ext_url, order, lat, long, published) {
     if (!channelID)
         return null;
+
+    let publishedAt = null;
+    if (published != undefined && published == "true")
+        publishedAt = new Date();
 
     const content = await strapi.db.query('api::content.content').create({
         data: {
@@ -32,6 +36,7 @@ async function createContentFunc(file, channelID, title, description, ext_url, o
             ext_url: ext_url,
             lat: lat,
             long: long,
+            publishedAt: publishedAt
         },
         populate: {
             channel: {
@@ -82,12 +87,12 @@ async function uploadContentFunc(ctx, channel)
                 {
                     const csvToJson = require('convert-csv-to-json');
                     const jsondata = csvToJson.supportQuotedField(true).fieldDelimiter(',').getJsonFromCsv(files[key].path);
-                    const newcontents = uploadJSONFunc(channel.id, jsondata);
+                    const newcontents = uploadJSONFunc(channel.id, jsondata, ctx.request.body.published);
                     contents = contents.concat(newcontents);
                 }
                 else
                 {
-                    const content = await createContentFunc(files[key], channel.id,  ctx.request.body.title, ctx.request.body.description, ctx.request.body.ext_url, order, ctx.request.body.lat, ctx.request.body.long);
+                    const content = await createContentFunc(files[key], channel.id,  ctx.request.body.title, ctx.request.body.description, ctx.request.body.ext_url, order, ctx.request.body.lat, ctx.request.body.long, ctx.request.body.published);
                     if (!content) return ctx.badRequest('Could not create content');
                     contents.push(content);
                     order = order + 1;
@@ -257,13 +262,6 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         else
         {
             const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
-            if (ctx.request.body.published != undefined)
-            {
-                if (ctx.request.body.published == "true")
-                    ctx.request.body.publishedAt = new Date();
-                else
-                    ctx.request.body.publishedAt = null;
-            }    
             return await uploadContentFunc(ctx, channel);
         }
 
@@ -285,7 +283,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
             channelid = channel.id;
         }
 
-        await uploadJSONFunc(channelid, ctx.request.body.contents);
+        await uploadJSONFunc(channelid, ctx.request.body.contents, ctx.request.body.published);
 
         return "ok";
     
