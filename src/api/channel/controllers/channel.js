@@ -326,7 +326,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
     async updateChannel(ctx) {
         if (!ctx.request.body.uniqueID) 
             return ctx.badRequest('No channel specified'); 
-            
+        
         const canEdit = await strapi.config.functions.canEdit(ctx.request.body.uniqueID, ctx.state.user.id);
 
         if (!canEdit) 
@@ -351,7 +351,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             await addPictureFunc(channel, ctx.request.files[Object.keys(ctx.request.files)]);
         else
         {
-            if (channel.picture && ctx.request.body.deletepic)
+            if (channel.picture && ctx.request.body.deletepic == "true")
                 await strapi.config.functions.deleteMediafile(channel.picture.id);
         }
 
