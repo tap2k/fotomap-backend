@@ -422,8 +422,8 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             return ctx.badRequest('No such user');
 
         const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
-        if (channel.editors.some(editor => editor.id == ctx.state.user.id))
-            return "ok";
+        /*if (channel.editors.some(editor => editor.id == ctx.state.user.id))
+            return "ok";*/
     
         if (!channel)
             return ctx.badRequest('No such channel');
