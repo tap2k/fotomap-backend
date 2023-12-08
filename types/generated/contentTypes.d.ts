@@ -993,7 +993,7 @@ export interface ApiTagTag extends Schema.CollectionType {
     tag: Attribute.String & Attribute.Required;
     channel: Attribute.Relation<
       'api::tag.tag',
-      'oneToOne',
+      'manyToOne',
       'api::channel.channel'
     >;
     markercolor: Attribute.Enumeration<

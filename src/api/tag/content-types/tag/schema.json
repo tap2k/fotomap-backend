@@ -19,8 +19,9 @@
     },
     "channel": {
       "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::channel.channel"
+      "relation": "manyToOne",
+      "target": "api::channel.channel",
+      "inversedBy": "tags"
     },
     "markercolor": {
       "type": "enumeration",

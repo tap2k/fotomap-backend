@@ -125,7 +125,8 @@
     "tags": {
       "type": "relation",
       "relation": "oneToMany",
-      "target": "api::tag.tag"
+      "target": "api::tag.tag",
+      "mappedBy": "channel"
     }
   }
 }
