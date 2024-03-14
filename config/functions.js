@@ -11,6 +11,8 @@ module.exports = {
       if (file) {
           let path = file.path;
           let filename = file.name;
+          if (!filename.includes('.'))
+            filename += ".bin";
   
           const fs = require('fs');
           const mime = require('mime');
