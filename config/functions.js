@@ -156,13 +156,16 @@ module.exports = {
   async canEdit(channelID, userID) {
     if (channelID == "probe")
       return true;
-    if (!userID)
+    if (!userID || !channelID)
       return false;
     const channel = await strapi.config.functions.getChannel(channelID);
     if (!channel)
       return false;
-    return ((channel.owner?.id == userID) || channel.editors?.some(item => item.id == userID)
-    || await strapi.config.functions.canEdit(channel.parent?.uniqueID, userID));
+    if ((channel.owner?.id == userID) || channel.editors?.some(item => item.id == userID))
+      return true;
+    if (channel.parent?.uniqueID)
+      return await strapi.config.functions.canEdit(channel.parent.uniqueID, userID);
+    return false;
   },
 
   async deleteMediafile(id) {

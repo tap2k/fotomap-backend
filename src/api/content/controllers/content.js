@@ -310,6 +310,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
     },
 
     async updateContent(ctx) {
+
         if (!ctx.request.body.contentID)
             return ctx.badRequest('No content specified');
         
@@ -336,7 +337,8 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         if (!content)
             return ctx.badRequest('No content found');
 
-        if (!strapi.config.functions.canEdit(content.channel.uniqueID, ctx.state.user.id))
+        const canedit = await strapi.config.functions.canEdit(content.channel.uniqueID, ctx.state.user.id);
+        if (!canedit)
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + content.channel.uniqueID);
 
         if (ctx.request.body.uniqueID)
