@@ -40,6 +40,9 @@ module.exports = {
       method: 'POST',
       path: '/createChannel', 
       handler: 'channel.createChannel',
+      config: {
+        auth: false,
+      },
     },
     {
       method: "POST",

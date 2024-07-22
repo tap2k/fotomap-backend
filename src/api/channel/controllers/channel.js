@@ -261,7 +261,14 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             }
         }
 
-        let owner = ctx.state.user.id;
+        let owner = ctx.state.user?.id;
+        // HACK for Maustro
+        if (!owner)
+        {
+            ctx.request.body.allowsubmissions = true;
+            owner = 1;
+        }
+
         let editors = [];
         let order = -1;
 
