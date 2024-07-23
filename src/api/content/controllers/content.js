@@ -20,7 +20,7 @@ async function uploadJSONFunc(channelid, contents, published)
     return newcontents;
 }
 
-async function createContentFunc(file, channelID, title, description, ext_url, order, lat, long, published) {
+async function createContentFunc(file, channelID, title, description, ext_url, order, lat, long, published, thumbnailFile) {
     if (!channelID)
         return null;
 
@@ -56,6 +56,9 @@ async function createContentFunc(file, channelID, title, description, ext_url, o
     if (file)
         await strapi.config.functions.addFile(content.id, 'api::content.content', file, "mediafile");
 
+    if (thumbnailFile)
+        await strapi.config.functions.addFile(content.id, 'api::content.content', thumbnailFile, "thumbnail");
+
     return content;
 }
 
@@ -79,6 +82,7 @@ async function uploadContentFunc(ctx, channel)
         if (!order)
             order = -1;
 
+        const thumbnailFile = files["thumbnail"]
         for (const key of Object.keys(files)) {
             try {
                 const mime = require('mime');
@@ -92,7 +96,9 @@ async function uploadContentFunc(ctx, channel)
                 }
                 else
                 {
-                    const content = await createContentFunc(files[key], channel.id,  ctx.request.body.title, ctx.request.body.description, ctx.request.body.ext_url, order, ctx.request.body.lat, ctx.request.body.long, ctx.request.body.published);
+                    if (key == "thumbnail")
+                        continue;
+                    const content = await createContentFunc(files[key], channel.id,  ctx.request.body.title, ctx.request.body.description, ctx.request.body.ext_url, order, ctx.request.body.lat, ctx.request.body.long, ctx.request.body.published, thumbnailFile);
                     if (!content) return ctx.badRequest('Could not create content');
                     contents.push(content);
                     order = order + 1;
@@ -251,6 +257,8 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
                 where: { id: ctx.request.body.contentID},
                 data: { ext_url: null },
             });
+            //if (contentItem.thumbnail)
+            //    await strapi.config.functions.deleteMediafile(contentItem.thumbnail.id);
             if (ctx.request.files && Object.keys(ctx.request.files).length)
                 return await strapi.config.functions.addFile(ctx.request.body.contentID, 'api::content.content', ctx.request.files[Object.keys(ctx.request.files)], "mediafile");
             else
