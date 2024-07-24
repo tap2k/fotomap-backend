@@ -8,6 +8,58 @@
 //const mime = require('mime'); 
 //const { createGzip } = require('zlib');
 
+async function updateContentFunc(ctx, content) {
+    strapi.config.functions.nullParam("lat", ctx.request.body);
+    strapi.config.functions.nullParam("long", ctx.request.body);
+
+    if (ctx.request.body.published != undefined) {
+        if (ctx.request.body.published == "true") {
+            if (!content.publishedAt)
+                ctx.request.body.publishedAt = new Date();
+        } else {
+            ctx.request.body.publishedAt = null;
+        }
+    }    
+
+    const newcontent = await strapi.query("api::content.content").update({
+        where: { id: content.id },
+        data: ctx.request.body,
+        populate: {
+            channel: {
+                select: ['id', 'uniqueID'],
+                populate: {
+                    owner: { select: ['id'] },
+                }
+            },
+            thumbnail: {
+                select: ['id'],
+            },
+        }
+    });
+
+    if (ctx.request.files && Object.keys(ctx.request.files).length) {
+        if (newcontent.thumbnail?.id)
+            await strapi.config.functions.deleteMediafile(newcontent.thumbnail.id);
+        await strapi.config.functions.addFile(content.id, 'api::content.content', ctx.request.files[Object.keys(ctx.request.files)], "thumbnail");
+    } else {
+        if (newcontent.thumbnail && ctx.request.body.deletepic == "true")
+            await strapi.config.functions.deleteMediafile(newcontent.thumbnail.id);
+    }
+
+    if (ctx.request.body.order)
+        await insertContentFunc(newcontent, ctx.request.body.order);
+    else if (ctx.request.body.uniqueID && (ctx.request.body.uniqueID != content.channel.uniqueID))
+        await insertContentFunc(newcontent, -1);
+
+    if (ctx.request.body.caption && content.mediafile?.id)
+        await strapi.plugins.upload.services.upload.update(content.mediafile.id, { caption: ctx.request.body.caption })
+
+    if (ctx.request.body.ext_url && content.mediafile)
+        await strapi.config.functions.deleteMediafile(content.mediafile.id);
+
+    return newcontent;
+}
+
 async function uploadJSONFunc(channelid, contents, published)
 {
     let newcontents = [];
@@ -317,8 +369,8 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
 
     },
 
-    async updateContent(ctx) {
 
+    async updateSubmission(ctx) {
         if (!ctx.request.body.contentID)
             return ctx.badRequest('No content specified');
         
@@ -326,12 +378,37 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
             where: { id: ctx.request.body.contentID },
             select: ['id', 'publishedAt'],
             populate: {
-                mediafile: {
-                    select: ['id'],
+                mediafile: { select: ['id'] },
+                thumbnail: { select: ['id'] },
+                channel: {
+                    select: ['id', 'uniqueID', 'allowsubmissions'],
+                    populate: {
+                        owner: { select: ['id'] },
+                        editors: { select: ['id'] },
+                    }
                 },
-                thumbnail: {
-                    select: ['id'],
-                },
+            }
+        });
+    
+        if (!content)
+            return ctx.badRequest('No content found');
+    
+        if (!content.channel.allowsubmissions)
+            return ctx.badRequest('This channel doesnt allow you to edit items without logging in: ' + content.channel.uniqueID);
+    
+        return await updateContentFunc(ctx, content);
+    },
+    
+    async updateContent(ctx) {
+        if (!ctx.request.body.contentID)
+            return ctx.badRequest('No content specified');
+        
+        const content = await strapi.db.query('api::content.content').findOne({
+            where: { id: ctx.request.body.contentID },
+            select: ['id', 'publishedAt'],
+            populate: {
+                mediafile: { select: ['id'] },
+                thumbnail: { select: ['id'] },
                 channel: {
                     select: ['id', 'uniqueID'],
                     populate: {
@@ -341,86 +418,25 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
                 },
             }
         });
-
+    
         if (!content)
             return ctx.badRequest('No content found');
-
+    
         const canedit = await strapi.config.functions.canEdit(content.channel.uniqueID, ctx.state.user.id);
         if (!canedit)
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + content.channel.uniqueID);
-
-        if (ctx.request.body.uniqueID)
-        {
+    
+        if (ctx.request.body.uniqueID) {
             const canEdit = await strapi.config.functions.canEdit(ctx.request.body.uniqueID, ctx.state.user.id);
             if (!canEdit) 
                 return ctx.badRequest('No such channel or you are not allowed to edit: ' + ctx.request.body.uniqueID);
-
             const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
-
-            ctx.request.body["channel"] = {connect: [{id: channel.id}]};
+            ctx.request.body["channel"] = {connect: [{id: channel.id}]};        
         }
-
-        strapi.config.functions.nullParam("lat", ctx.request.body);
-        strapi.config.functions.nullParam("long", ctx.request.body);
-
-        if (ctx.request.body.published != undefined)
-        {
-            if (ctx.request.body.published == "true")
-            {
-                if (!content.publishedAt)
-                    ctx.request.body.publishedAt = new Date();
-            }
-            else
-                ctx.request.body.publishedAt = null;
-        }    
-
-        const newcontent = await strapi.query("api::content.content").update({
-            where: { id: content.id },
-            data: ctx.request.body,
-            //data: data,
-            populate: {
-                channel: {
-                    select: ['id', 'uniqueID'],
-                    populate: {
-                        owner: { select: ['id'] },
-                    }
-                },
-                thumbnail: {
-                    select: ['id'],
-                },
-            }
-        });
-
-        if (ctx.request.files && Object.keys(ctx.request.files).length)
-        {
-            if (newcontent.thumbnail?.id)
-                await strapi.config.functions.deleteMediafile(newcontent.thumbnail.id);
-            await strapi.config.functions.addFile(content.id, 'api::content.content', ctx.request.files[Object.keys(ctx.request.files)], "thumbnail");
-        }
-        else
-        {
-            if (newcontent.thumbnail && ctx.request.body.deletepic == "true")
-                await strapi.config.functions.deleteMediafile(newcontent.thumbnail.id);
-        }
-
-        // TODO: ignore order if changing channel? yes NO
-        if (ctx.request.body.order)
-            await insertContentFunc(newcontent, ctx.request.body.order);
-        else
-        {
-            if (ctx.request.body.uniqueID && (ctx.request.body.uniqueID != content.channel.uniqueID))
-                await insertContentFunc(newcontent, -1);
-        }
-
-        if (ctx.request.body.caption && content.mediafile?.id)
-            await strapi.plugins.upload.services.upload.update(content.mediafile.id, { caption: ctx.request.body.caption })
-
-        if (ctx.request.body.ext_url && content.mediafile)
-            await strapi.config.functions.deleteMediafile(content.mediafile.id);
-
-        return newcontent;
+    
+        return await updateContentFunc(ctx, content);
     },
-
+       
     async deleteContent(ctx) {
         const content = await strapi.db.query('api::content.content').findOne({
             select: ['order'],

@@ -43,11 +43,14 @@ module.exports = {
         path: "/updateContent",
         handler: "content.updateContent",
       },
-      /*{
+      {
         method: "POST",
-        path: "/updateOrder",
-        handler: "content.updateOrder",
-      },*/
+        path: "/updateSubmission",
+        handler: "content.updateSubmission",
+        config: {
+          auth: false,
+        },
+      },
       {
         method: "POST",
         path: "/deleteContent",
