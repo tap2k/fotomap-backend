@@ -27,8 +27,13 @@ module.exports = {
       },
       {
         method: "POST",
-        path: "/uploadJSONToChannel",
-        handler: "content.uploadJSONToChannel",
+        path: "/updateContent",
+        handler: "content.updateContent",
+      },
+      {
+        method: "POST",
+        path: "/deleteContent",
+        handler: "content.deleteContent",
       },
       {
         method: "POST",
@@ -40,11 +45,6 @@ module.exports = {
       },
       {
         method: "POST",
-        path: "/updateContent",
-        handler: "content.updateContent",
-      },
-      {
-        method: "POST",
         path: "/updateSubmission",
         handler: "content.updateSubmission",
         config: {
@@ -53,8 +53,8 @@ module.exports = {
       },
       {
         method: "POST",
-        path: "/deleteContent",
-        handler: "content.deleteContent",
+        path: "/uploadJSONToChannel",
+        handler: "content.uploadJSONToChannel",
       },
       {
         method: "POST",

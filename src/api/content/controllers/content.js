@@ -54,8 +54,9 @@ async function updateContentFunc(ctx, content) {
     if (ctx.request.body.caption && content.mediafile?.id)
         await strapi.plugins.upload.services.upload.update(content.mediafile.id, { caption: ctx.request.body.caption })
 
-    if (ctx.request.body.ext_url && content.mediafile)
-        await strapi.config.functions.deleteMediafile(content.mediafile.id);
+    // Maustro
+    //if (ctx.request.body.ext_url && content.mediafile)
+    //    await strapi.config.functions.deleteMediafile(content.mediafile.id);
 
     return newcontent;
 }
@@ -304,17 +305,21 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
             });
             // TODO: what about thumbnail?
             if (contentItem.mediafile)
+            {
                 await strapi.config.functions.deleteMediafile(contentItem.mediafile.id);
+                /* Maustro
                 await strapi.query("api::content.content").update({
                 where: { id: ctx.request.body.contentID},
-                data: { ext_url: null },
-            });
+                data: { ext_url: null }});*/
+            }
             //if (contentItem.thumbnail)
             //    await strapi.config.functions.deleteMediafile(contentItem.thumbnail.id);
             if (ctx.request.files && Object.keys(ctx.request.files).length)
-                return await strapi.config.functions.addFile(ctx.request.body.contentID, 'api::content.content', ctx.request.files[Object.keys(ctx.request.files)], "mediafile");
-            else
-                return await strapi.query("api::content.content").update({
+                await strapi.config.functions.addFile(ctx.request.body.contentID, 'api::content.content', ctx.request.files[Object.keys(ctx.request.files)], "mediafile");
+            
+            // Maustro
+            if (ctx.request.body.ext_url)
+                await strapi.query("api::content.content").update({
                     where: { id: ctx.request.body.contentID},
                     data: { ext_url: ctx.request.body.ext_url },
                 });    
@@ -352,8 +357,8 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
     async uploadSubmission(ctx) {
 
         // TODO: Dont need content?
-        if (!ctx.request.body.ext_url && !ctx.request.files)
-            return ctx.badRequest('No content specified');
+        //if (!ctx.request.body.ext_url && !ctx.request.files)
+        //    return ctx.badRequest('No content specified');
         
         const channel = await strapi.db.query('api::channel.channel').findOne({
                 select: ['id', 'allowsubmissions'],

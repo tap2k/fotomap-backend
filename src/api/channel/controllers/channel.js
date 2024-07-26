@@ -138,6 +138,44 @@ async function deleteChannelFunc(ctx, channel)
     return await strapi.service('api::channel.channel').delete(channel.id);
 }
 
+async function updateChannelFunc(ctx, channel) {
+    // TODO: Dont allow reparent?
+    if (ctx.request.body.parent == channel.id)
+        ctx.request.body.parent = null;
+    else
+        strapi.config.functions.nullParam("parent", ctx.request.body);
+        
+    strapi.config.functions.nullParam("lat", ctx.request.body);
+    strapi.config.functions.nullParam("long", ctx.request.body);
+    strapi.config.functions.nullParam("zoom", ctx.request.body);
+    strapi.config.functions.nullParam("tileset", ctx.request.body);
+    strapi.config.functions.nullParam("interval", ctx.request.body);
+    strapi.config.functions.nullParam("markercolor", ctx.request.body);
+
+    if (ctx.request.files && Object.keys(ctx.request.files).length)
+        await addPictureFunc(channel, ctx.request.files[Object.keys(ctx.request.files)]);
+    else
+    {
+        if (channel.picture && ctx.request.body.deletepic == "true")
+            await strapi.config.functions.deleteMediafile(channel.picture.id);
+    }
+
+    let newchannel = await strapi.query("api::channel.channel").update({ 
+        where: { id: channel.id },
+        data: ctx.request.body,
+        populate: {
+            parent: {
+                select: ['id'],
+            }
+        }
+    });
+
+    if (ctx.request.body.order)
+        await insertChannelFunc(newchannel, newchannel.parent.id, ctx.request.body.order);
+
+    return newchannel;
+}
+
 async function getChildChannelsFunc(channelID) {
     const channels = await strapi.db.query('api::channel.channel').findMany({
         where: {
@@ -341,45 +379,26 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         
         const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
 
-        // TODO: Dont allow reparent?
-        if (ctx.request.body.parent == channel.id)
-            ctx.request.body.parent = null;
-        else
-            strapi.config.functions.nullParam("parent", ctx.request.body);
-            
-        strapi.config.functions.nullParam("lat", ctx.request.body);
-        strapi.config.functions.nullParam("long", ctx.request.body);
-        strapi.config.functions.nullParam("zoom", ctx.request.body);
-        strapi.config.functions.nullParam("tileset", ctx.request.body);
-        strapi.config.functions.nullParam("interval", ctx.request.body);
-        strapi.config.functions.nullParam("markercolor", ctx.request.body);
+        return await updateChannelFunc(ctx, channel);
+    },
 
-        if (ctx.request.files && Object.keys(ctx.request.files).length)
-            await addPictureFunc(channel, ctx.request.files[Object.keys(ctx.request.files)]);
-        else
-        {
-            if (channel.picture && ctx.request.body.deletepic == "true")
-                await strapi.config.functions.deleteMediafile(channel.picture.id);
-        }
+    async updateSubmissionChannel(ctx) {
+        if (!ctx.request.body.uniqueID) 
+            return ctx.badRequest('No channel specified'); 
+        
+        const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
+        
+        if (!channel.allowsubmissions)
+            return ctx.badRequest('This channel doesnt allow you to edit without logging in: ' + channel.uniqueID);
 
-        let newchannel = await strapi.query("api::channel.channel").update({ 
-            where: { id: channel.id },
-            data: ctx.request.body,
-            populate: {
-                parent: {
-                    select: ['id'],
-                },
-            }
-        });
-
-        if (ctx.request.body.order)
-            await insertChannelFunc(newchannel, newchannel.parent.id, ctx.request.body.order);
-
-        return newchannel;
+        return await updateChannelFunc(ctx, channel);
     },
 
     //TODO: Delete child channels?
     async deleteChannel(ctx) {
+        if (!ctx.request.body.uniqueID) 
+            return ctx.badRequest('No channel specified'); 
+
         const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
         
         let canEdit = false;
@@ -388,6 +407,18 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
     
         if (!(channel.owner.id == ctx.state.user.id) && !canEdit)
             return ctx.badRequest('No such channel or you are not the owner');
+
+        return await deleteChannelFunc(ctx, channel);
+    },
+
+    async deleteSubmissionChannel(ctx) {
+        if (!ctx.request.body.uniqueID) 
+            return ctx.badRequest('No channel specified'); 
+        
+        const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
+        
+        if (!channel.allowsubmissions)
+            return ctx.badRequest('This channel doesnt allow you to edit without logging in: ' + channel.uniqueID);
 
         return await deleteChannelFunc(ctx, channel);
     },

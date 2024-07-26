@@ -56,6 +56,22 @@ module.exports = {
     },
     { 
       method: 'POST',
+      path: '/updateSubmissionChannel', 
+      handler: 'channel.updateSubmissionChannel',
+      config: {
+        auth: false,
+      },
+    },
+    { 
+      method: 'POST',
+      path: '/deleteSubmissionChannel', 
+      handler: 'channel.deleteSubmissionChannel',
+      config: {
+        auth: false,
+      },
+    },
+    { 
+      method: 'POST',
       path: '/regenChannelID', 
       handler: 'channel.regenChannelID',
     },

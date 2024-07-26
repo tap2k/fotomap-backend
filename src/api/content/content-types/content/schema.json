@@ -33,7 +33,7 @@
       ]
     },
     "ext_url": {
-      "type": "string"
+      "type": "text"
     },
     "is360": {
       "type": "boolean",

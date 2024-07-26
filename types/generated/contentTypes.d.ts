@@ -873,7 +873,7 @@ export interface ApiContentContent extends Schema.CollectionType {
     >;
     order: Attribute.Integer;
     mediafile: Attribute.Media;
-    ext_url: Attribute.String;
+    ext_url: Attribute.Text;
     is360: Attribute.Boolean & Attribute.DefaultTo<false>;
     mapping: Attribute.Enumeration<
       ['normal', 'equirect180', 'equirect360', 'cubemap', 'eac', 'unknown']
