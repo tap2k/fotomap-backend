@@ -223,6 +223,36 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         return channel;
     },
 
+    async getSubmissionChannel(ctx)
+    {
+        const channel = await strapi.query('api::channel.channel').findOne({
+            where: { uniqueID: ctx.query.uniqueID },
+            select: ['id', 'uniqueID', 'name', 'description', 'allowsubmissions'],
+            populate: {
+                picture: {
+                    select: ['id', 'url', 'formats', 'size'],
+                },
+                contents: {
+                    select: ['ext_url', 'publishedAt'],
+                    orderBy: { order: 'asc' },
+                    populate: {
+                        mediafile: {
+                            select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
+                        },
+                        thumbnail: {
+                            select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
+                        },
+                    },
+                }
+            },
+        });
+
+        if (!channel.allowsubmissions)
+            return ctx.badRequest('This channel doesnt allow you to edit without logging in: ' + channel.uniqueID);
+        
+        return channel;
+    },
+
     async getMyChannels(ctx) {
         const channels = await strapi.db.query('api::channel.channel').findMany({
             //where: { $and: [{owner: ctx.state.user.id}, { parent: null }] },

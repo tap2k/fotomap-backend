@@ -8,6 +8,37 @@
 //const mime = require('mime'); 
 //const { createGzip } = require('zlib');
 
+async function deleteContentFunc(content) {
+    // TODO: check if content.order is undefined
+    if (content.order && content.order > 0) {
+        const contentItems = await strapi.db.query('api::content.content').findMany({
+            where: {
+                $and: [
+                    { channel: content.channel.id },
+                    { order: { $gte: content.order } }
+                ]
+            },
+            select: ['id', 'order'],
+            orderBy: { order: 'asc' },
+        });
+
+        for (const updateContent of contentItems) {
+            await strapi.query("api::content.content").update({
+                where: { id: updateContent.id },
+                data: { order: updateContent.order - 1 },
+            });
+        }
+    }
+
+    if (content.mediafile)
+        await strapi.config.functions.deleteMediafile(content.mediafile.id);
+
+    if (content.thumbnail)
+        await strapi.config.functions.deleteMediafile(content.thumbnail.id);
+
+    return await strapi.service('api::content.content').delete(content.id);
+}
+
 async function updateContentFunc(ctx, content) {
     strapi.config.functions.nullParam("lat", ctx.request.body);
     strapi.config.functions.nullParam("long", ctx.request.body);
@@ -472,34 +503,35 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         if (!canEdit) 
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + content.channel.uniqueID);
 
-        // TODO: check if content.order is undefined
-        if (content.order && content.order > 0) {
-            const contentItems = await strapi.db.query('api::content.content').findMany({
-                where: {
-                    $and: [
-                        { channel: content.channel.id },
-                        { order: { $gte: content.order } }
-                    ]
+        return await deleteContentFunc(content);
+    },
+
+    async deleteSubmission(ctx) {
+        const content = await strapi.db.query('api::content.content').findOne({
+            select: ['order'],
+            where: {
+                id: ctx.request.body.id,
+            },
+            populate: {
+                mediafile: {
+                    select: ['id'],
                 },
-                select: ['id', 'order'],
-                orderBy: { order: 'asc' },
-            });
+                thumbnail: {
+                    select: ['id'],
+                },
+                channel: {
+                    select: ['id', 'uniqueID', 'allowsubmissions']
+                },
+            },
+        });
 
-            for (const updateContent of contentItems) {
-                await strapi.query("api::content.content").update({
-                    where: { id: updateContent.id },
-                    data: { order: updateContent.order - 1 },
-                });
-            }
-        }
+        if (!content)
+            return ctx.badRequest('No such content: ' + ctx.request.body.id);
 
-        if (content.mediafile)
-            await strapi.config.functions.deleteMediafile(content.mediafile.id);
-        
-        if (content.thumbnail)
-            await strapi.config.functions.deleteMediafile(content.thumbnail.id);
+        if (!content.channel.allowsubmissions) 
+            return ctx.badRequest('This channel does not allow you to edit without logging in: ' + content.channel.uniqueID);
 
-        return await strapi.service('api::content.content').delete(content.id);
+        return await deleteContentFunc(content);
     },
 
     async addCaption(ctx) {

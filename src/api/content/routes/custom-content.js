@@ -53,6 +53,14 @@ module.exports = {
       },
       {
         method: "POST",
+        path: "/deleteSubmission",
+        handler: "content.deleteSubmission",
+        config: {
+          auth: false,
+        },
+      },
+      {
+        method: "POST",
         path: "/uploadJSONToChannel",
         handler: "content.uploadJSONToChannel",
       },
