@@ -919,6 +919,8 @@ export interface ApiContentContent extends Schema.CollectionType {
       'manyToMany',
       'api::tag.tag'
     >;
+    textalignment: Attribute.Enumeration<['top', 'center', 'bottom']> &
+      Attribute.DefaultTo<'center'>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;

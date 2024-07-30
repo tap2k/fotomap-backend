@@ -107,6 +107,15 @@
       "relation": "manyToMany",
       "target": "api::tag.tag",
       "mappedBy": "contents"
+    },
+    "textalignment": {
+      "type": "enumeration",
+      "enum": [
+        "top",
+        "center",
+        "bottom"
+      ],
+      "default": "center"
     }
   }
 }

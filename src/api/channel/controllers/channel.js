@@ -328,7 +328,6 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
     {
         const channel = await strapi.query('api::channel.channel').findOne({
             where: { uniqueID: ctx.query.uniqueID },
-            //select: ['id', 'uniqueID', 'name', 'description', 'allowsubmissions', 'picturefile', 'audiofile', 'showtitle', 'public'],
             populate: {
                 picture: {
                     select: ['id', 'url', 'formats', 'size'],
@@ -337,7 +336,6 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                     select: ['id', 'url', 'size'],
                 },
                 contents: {
-                    select: ['ext_url', 'publishedAt'],
                     orderBy: { order: 'asc' },
                     populate: {
                         mediafile: {
