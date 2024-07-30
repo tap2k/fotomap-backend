@@ -4,16 +4,112 @@
  *  channel controller
  */
 
-async function addPictureFunc(channel, file)
-{
-    if (file) {
-        if (channel.picture)
-            await strapi.config.functions.deleteMediafile(channel.picture.id);
+async function processFiles(ctx, channel) {
+    if (ctx.request.files && Object.keys(ctx.request.files).length) {
+      const files = ctx.request.files;
+      let imageAdded = false;
+      let audioAdded = false;
+  
+      for (const key of Object.keys(files)) {
+        const file = files[key];
+        
+        if (!imageAdded && file.type.startsWith('image/')) {
+          if (channel.picture) await strapi.config.functions.deleteMediafile(channel.picture.id);
+          await strapi.config.functions.addFile(channel.id, 'api::channel.channel', file, "picture");
+          imageAdded = true;
+        } else if (!audioAdded && file.type.startsWith('audio/')) {
+          if (channel.audio) await strapi.config.functions.deleteMediafile(channel.audio.id);
+          await strapi.config.functions.addFile(channel.id, 'api::channel.channel', file, "audio");
+          audioAdded = true;
+        }
+  
+        if (imageAdded && audioAdded) break;
+      }
+    }
+  }
 
-        return await strapi.config.functions.addFile(channel.id, 'api::channel.channel', file, "picture");   
+async function createChannelFunc(ctx, owner) {
+    let channelid = ctx.request.body.uniqueID;
+
+    if (channelid)
+    {
+        const channel = await strapi.query('api::channel.channel').findOne({
+            where: { uniqueID: ctx.request.body.uniqueID },
+          });
+        if (channel)
+            return ctx.badRequest("channel ID already exists: " + channel.uniqueID);
     }
     else
-        return null;
+    {
+        while (!channelid)
+        {
+            channelid = (Math.random()+1).toString(36).slice(5);
+            const currchannel = await strapi.query('api::channel.channel').findOne({
+                where: { uniqueID: channelid }
+            });
+            if (currchannel)
+                channelid = null;
+        }
+    }
+
+    let editors = [];
+    let order = -1;
+
+    // TODO: should check if has key
+    if (ctx.request.body.order)
+        order = ctx.request.body.order;
+
+    if (ctx.request.body.parentID)
+    {
+        const parentchannel = await strapi.query('api::channel.channel').findOne({
+            select: ['id', 'uniqueID'],
+            where: { id: ctx.request.body.parentID },
+            populate: {
+                owner: {
+                    select: ['id'],
+                    },
+                editors: {
+                    select: ['id'],
+                },
+            },
+            });
+        if (parentchannel)
+            owner = parentchannel.owner.id;
+
+    }
+
+    if (!ctx.request.body.public)
+        ctx.request.body.public = false;
+
+    if (!ctx.request.body.allowsubmissions)
+        ctx.request.body.allowsubmissions = false;
+
+    ctx.request.body.uniqueID = channelid;
+    ctx.request.body.parent = ctx.request.body.parentID;
+    ctx.request.body.owner = owner;
+    ctx.request.body.editors = editors;
+    
+    try {
+        const channel = await strapi.db.query('api::channel.channel').create({
+            data: ctx.request.body
+        });
+
+        if (ctx.request.files && Object.keys(ctx.request.files).length)
+            await processFiles(ctx, channel);
+        
+        if (order && ctx.request.body.parent)
+            await insertChannelFunc(channel, ctx.request.body.parent, order);
+        else
+        {
+            if (ctx.request.body.parent)
+                await insertChannelFunc(channel, ctx.request.body.parent, -1); 
+            else
+                await insertChannelFunc(channel, null, -1); 
+        }
+        return channel;
+    } catch (err) {
+        return ctx.badRequest(err);
+    }    
 }
 
 async function insertChannelFunc(channel, parent, order) {
@@ -135,6 +231,9 @@ async function deleteChannelFunc(ctx, channel)
     if (channel.picture)
         await strapi.config.functions.deleteMediafile(channel.picture.id);
 
+    if (channel.audio)
+        await strapi.config.functions.deleteMediafile(channel.audio.id);
+
     return await strapi.service('api::channel.channel').delete(channel.id);
 }
 
@@ -153,11 +252,13 @@ async function updateChannelFunc(ctx, channel) {
     strapi.config.functions.nullParam("markercolor", ctx.request.body);
 
     if (ctx.request.files && Object.keys(ctx.request.files).length)
-        await addPictureFunc(channel, ctx.request.files[Object.keys(ctx.request.files)]);
+        await processFiles(ctx, channel);
     else
     {
         if (channel.picture && ctx.request.body.deletepic == "true")
             await strapi.config.functions.deleteMediafile(channel.picture.id);
+        if (channel.audio && ctx.request.body.deleteaudio == "true")
+            await strapi.config.functions.deleteMediafile(channel.audio.id);
     }
 
     let newchannel = await strapi.query("api::channel.channel").update({ 
@@ -227,10 +328,13 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
     {
         const channel = await strapi.query('api::channel.channel').findOne({
             where: { uniqueID: ctx.query.uniqueID },
-            select: ['id', 'uniqueID', 'name', 'description', 'allowsubmissions'],
+            //select: ['id', 'uniqueID', 'name', 'description', 'allowsubmissions', 'picturefile', 'audiofile', 'showtitle', 'public'],
             populate: {
                 picture: {
                     select: ['id', 'url', 'formats', 'size'],
+                },
+                audio: {
+                    select: ['id', 'url', 'size'],
                 },
                 contents: {
                     select: ['ext_url', 'publishedAt'],
@@ -247,10 +351,13 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             },
         });
 
+        if (!channel)
+            return null;
+
         if (!channel.allowsubmissions)
             return ctx.badRequest('This channel doesnt allow you to edit without logging in: ' + channel.uniqueID);
-        
-        return channel;
+        else
+            return channel;
     },
 
     async getMyChannels(ctx) {
@@ -305,97 +412,14 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
     },
 
     async createChannel(ctx) {
-        
-        let channelid = ctx.request.body.uniqueID;
+        return createChannelFunc(ctx, ctx.state.user?.id);
+    },
 
-        if (channelid)
-        {
-            const channel = await strapi.query('api::channel.channel').findOne({
-                where: { uniqueID: ctx.request.body.uniqueID },
-              });
-            if (channel)
-                return ctx.badRequest("channel ID already exists: " + channel.uniqueID);
-        }
-        else
-        {
-            while (!channelid)
-            {
-                channelid = (Math.random()+1).toString(36).slice(5);
-                const currchannel = await strapi.query('api::channel.channel').findOne({
-                    where: { uniqueID: channelid }
-                });
-                if (currchannel)
-                    channelid = null;
-            }
-        }
 
-        let owner = ctx.state.user?.id;
+    async createSubmissionChannel(ctx) {
+        ctx.request.body.allowsubmissions = true;
         // HACK for Maustro
-        if (!owner)
-        {
-            ctx.request.body.allowsubmissions = true;
-            owner = 1;
-        }
-
-        let editors = [];
-        let order = -1;
-
-        // TODO: should check if has key
-        if (ctx.request.body.order)
-            order = ctx.request.body.order;
-
-        if (ctx.request.body.parentID)
-        {
-            const parentchannel = await strapi.query('api::channel.channel').findOne({
-                select: ['id', 'uniqueID'],
-                where: { id: ctx.request.body.parentID },
-                populate: {
-                    owner: {
-                        select: ['id'],
-                        },
-                    editors: {
-                        select: ['id'],
-                    },
-                },
-                });
-            if (parentchannel)
-                owner = parentchannel.owner.id;
-
-        }
-
-        if (!ctx.request.body.public)
-            ctx.request.body.public = false;
-
-        if (!ctx.request.body.allowsubmissions)
-            ctx.request.body.allowsubmissions = false;
-
-        ctx.request.body.uniqueID = channelid;
-        ctx.request.body.parent = ctx.request.body.parentID;
-        ctx.request.body.owner = owner;
-        ctx.request.body.editors = editors;
-        
-        try {
-            const channel = await strapi.db.query('api::channel.channel').create({
-                data: ctx.request.body,
-                select: ['id', 'uniqueID']
-            });
-
-            if (ctx.request.files && Object.keys(ctx.request.files).length)
-                await addPictureFunc(channel, ctx.request.files[Object.keys(ctx.request.files)]);
-            
-            if (order && ctx.request.body.parent)
-                await insertChannelFunc(channel, ctx.request.body.parent, order);
-            else
-            {
-                if (ctx.request.body.parent)
-                    await insertChannelFunc(channel, ctx.request.body.parent, -1); 
-                else
-                    await insertChannelFunc(channel, null, -1); 
-            }
-            return channel;
-        } catch (err) {
-            return ctx.badRequest(err);
-        }    
+        return createChannelFunc(ctx, 1);
     },
 
     async updateChannel(ctx) {

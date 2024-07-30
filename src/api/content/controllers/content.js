@@ -65,6 +65,9 @@ async function updateContentFunc(ctx, content) {
             thumbnail: {
                 select: ['id'],
             },
+            mediafile: {
+                select: ['id'],
+            },
         }
     });
 
@@ -124,7 +127,7 @@ async function createContentFunc(file, channelID, title, description, ext_url, o
         },
         populate: {
             channel: {
-                select: ['id'],
+                select: ['id', 'public', 'allowsubmissions'],
             },
         }
     });
@@ -159,6 +162,11 @@ async function uploadContentFunc(ctx, channel)
             where: { channel: channel.id },
             select: ['id', 'order'],
             orderBy: { order: 'asc' },
+            populate: {
+                channel: {
+                    select: ['id', 'public', 'allowsubmissions'],
+                },
+            }
         });
         let order = null;
         if (contentItems?.length)

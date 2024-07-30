@@ -768,7 +768,7 @@ export interface ApiChannelChannel extends Schema.CollectionType {
   attributes: {
     uniqueID: Attribute.UID & Attribute.Required;
     name: Attribute.String;
-    public: Attribute.Boolean & Attribute.DefaultTo<false>;
+    public: Attribute.Boolean & Attribute.DefaultTo<true>;
     owner: Attribute.Relation<
       'api::channel.channel',
       'oneToOne',
@@ -837,6 +837,8 @@ export interface ApiChannelChannel extends Schema.CollectionType {
       'oneToMany',
       'api::tag.tag'
     >;
+    audio: Attribute.Media;
+    showtitle: Attribute.Boolean & Attribute.DefaultTo<true>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<

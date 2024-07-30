@@ -39,10 +39,7 @@ module.exports = {
     { 
       method: 'POST',
       path: '/createChannel', 
-      handler: 'channel.createChannel',
-      config: {
-        auth: false,
-      },
+      handler: 'channel.createChannel'
     },
     {
       method: "POST",
@@ -53,6 +50,14 @@ module.exports = {
       method: 'POST',
       path: '/deleteChannel', 
       handler: 'channel.deleteChannel',
+    },
+    { 
+      method: 'POST',
+      path: '/createSubmissionChannel', 
+      handler: 'channel.createSubmissionChannel',
+      config: {
+        auth: false,
+      },
     },
     { 
       method: 'GET',

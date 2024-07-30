@@ -374,7 +374,7 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
         if (ctx.request.files && Object.keys(ctx.request.files).length)
         {
             if (tag.thumbnail?.id)
-                await strapi.config.functions.deleteMediafile(newtag.thumbnail.id);
+                await strapi.config.functions.deleteMediafile(tag.thumbnail.id);
             await strapi.config.functions.addFile(tag.id, 'api::tag.tag', ctx.request.files[Object.keys(ctx.request.files)], "thumbnail");
         }
         else

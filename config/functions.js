@@ -43,6 +43,7 @@ module.exports = {
 
         return await strapi.query('api::channel.channel').findOne({
             where: { uniqueID: channelID },
+            //select: ['id', 'uniqueID', 'name', 'description', 'allowsubmissions', 'picturefile', 'audiofile', 'showtitle', 'public'],
             populate: {
                 parent: {
                     select: ['id', 'name', 'uniqueID'],
@@ -66,6 +67,9 @@ module.exports = {
                 },
                 picture: {
                   select: ['id', 'url', 'formats', 'size'],
+                },
+                audio: {
+                  select: ['id', 'url', 'size'],
                 },
                 overlays: {
                     select: ['id', 'tl_lat', 'tl_long', 'tr_lat', 'tr_long', 'br_lat', 'br_long', 'bl_lat', 'bl_long'],
