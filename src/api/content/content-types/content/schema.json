@@ -115,7 +115,7 @@
         "center",
         "bottom"
       ],
-      "default": "center"
+      "default": "top"
     }
   }
 }

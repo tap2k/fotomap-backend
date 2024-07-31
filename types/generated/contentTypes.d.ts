@@ -921,7 +921,7 @@ export interface ApiContentContent extends Schema.CollectionType {
       'api::tag.tag'
     >;
     textalignment: Attribute.Enumeration<['top', 'center', 'bottom']> &
-      Attribute.DefaultTo<'center'>;
+      Attribute.DefaultTo<'top'>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
