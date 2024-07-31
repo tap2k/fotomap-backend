@@ -139,6 +139,9 @@
     "showtitle": {
       "type": "boolean",
       "default": true
+    },
+    "email": {
+      "type": "email"
     }
   }
 }

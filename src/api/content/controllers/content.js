@@ -179,7 +179,7 @@ async function uploadContentFunc(ctx, channel)
             try {
                 const mime = require('mime');
                 const mimetype = mime.getType(files[key].name);
-                if (mimetype.toLowerCase() == "text/csv")
+                if (mimetype?.toLowerCase() == "text/csv")
                 {
                     const csvToJson = require('convert-csv-to-json');
                     const jsondata = csvToJson.supportQuotedField(true).fieldDelimiter(',').getJsonFromCsv(files[key].path);

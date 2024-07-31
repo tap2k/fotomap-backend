@@ -839,6 +839,7 @@ export interface ApiChannelChannel extends Schema.CollectionType {
     >;
     audio: Attribute.Media;
     showtitle: Attribute.Boolean & Attribute.DefaultTo<true>;
+    email: Attribute.Email;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<

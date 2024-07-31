@@ -103,8 +103,6 @@ async function createChannelFunc(ctx, owner) {
         {
             if (ctx.request.body.parent)
                 await insertChannelFunc(channel, ctx.request.body.parent, -1); 
-            else
-                await insertChannelFunc(channel, null, -1); 
         }
         return channel;
     } catch (err) {
@@ -253,13 +251,11 @@ async function updateChannelFunc(ctx, channel) {
 
     if (ctx.request.files && Object.keys(ctx.request.files).length)
         await processFiles(ctx, channel);
-    else
-    {
-        if (channel.picture && ctx.request.body.deletepic == "true")
-            await strapi.config.functions.deleteMediafile(channel.picture.id);
-        if (channel.audio && ctx.request.body.deleteaudio == "true")
-            await strapi.config.functions.deleteMediafile(channel.audio.id);
-    }
+
+    if (channel.picture && ctx.request.body.deletepic)
+        await strapi.config.functions.deleteMediafile(channel.picture.id);
+    if (channel.audio && ctx.request.body.deleteaudio)
+        await strapi.config.functions.deleteMediafile(channel.audio.id);
 
     let newchannel = await strapi.query("api::channel.channel").update({ 
         where: { id: channel.id },
