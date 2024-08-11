@@ -33,8 +33,8 @@ async function deleteContentFunc(content) {
     if (content.mediafile)
         await strapi.config.functions.deleteMediafile(content.mediafile.id);
 
-    if (content.thumbnail)
-        await strapi.config.functions.deleteMediafile(content.thumbnail.id);
+    if (content.audiofile)
+        await strapi.config.functions.deleteMediafile(content.audiofile.id);
 
     return await strapi.service('api::content.content').delete(content.id);
 }
@@ -62,22 +62,24 @@ async function updateContentFunc(ctx, content) {
                     owner: { select: ['id'] },
                 }
             },
-            thumbnail: {
+            mediafile: {
                 select: ['id'],
             },
-            mediafile: {
+            audiofile: {
                 select: ['id'],
             },
         }
     });
 
     if (ctx.request.files && Object.keys(ctx.request.files).length) {
-        if (newcontent.thumbnail?.id)
-            await strapi.config.functions.deleteMediafile(newcontent.thumbnail.id);
-        await strapi.config.functions.addFile(content.id, 'api::content.content', ctx.request.files[Object.keys(ctx.request.files)], "thumbnail");
-    } else {
-        if (newcontent.thumbnail && ctx.request.body.deletepic == "true")
-            await strapi.config.functions.deleteMediafile(newcontent.thumbnail.id);
+        if (newcontent.audiofile?.id)
+            await strapi.config.functions.deleteMediafile(newcontent.audiofile.id);
+        await strapi.config.functions.addFile(content.id, 'api::content.content', ctx.request.files[Object.keys(ctx.request.files)], "audiofile");
+    } 
+    else 
+    {
+        if (newcontent.audiofile && ctx.request.body.deleteaudio == "true")
+            await strapi.config.functions.deleteMediafile(newcontent.audiofile.id);
     }
 
     if (ctx.request.body.order)
@@ -107,7 +109,7 @@ async function uploadJSONFunc(channelid, contents, published)
     return newcontents;
 }
 
-async function createContentFunc(file, channelID, title, description, ext_url, order, lat, long, published, thumbnailFile) {
+async function createContentFunc(file, channelID, title, description, ext_url, order, lat, long, published, audioFile) {
     if (!channelID)
         return null;
 
@@ -143,8 +145,8 @@ async function createContentFunc(file, channelID, title, description, ext_url, o
     if (file)
         await strapi.config.functions.addFile(content.id, 'api::content.content', file, "mediafile");
 
-    if (thumbnailFile)
-        await strapi.config.functions.addFile(content.id, 'api::content.content', thumbnailFile, "thumbnail");
+    if (audioFile)
+        await strapi.config.functions.addFile(content.id, 'api::content.content', audioFile, "audiofile");
 
     return content;
 }
@@ -174,7 +176,7 @@ async function uploadContentFunc(ctx, channel)
         if (!order)
             order = -1;
 
-        const thumbnailFile = files["thumbnail"]
+        const audioFile = files["audiofile"];
         for (const key of Object.keys(files)) {
             try {
                 const mime = require('mime');
@@ -188,9 +190,9 @@ async function uploadContentFunc(ctx, channel)
                 }
                 else
                 {
-                    if (key == "thumbnail")
+                    if (key == "audiofile")
                         continue;
-                    const content = await createContentFunc(files[key], channel.id,  ctx.request.body.title, ctx.request.body.description, ctx.request.body.ext_url, order, ctx.request.body.lat, ctx.request.body.long, ctx.request.body.published, thumbnailFile);
+                    const content = await createContentFunc(files[key], channel.id,  ctx.request.body.title, ctx.request.body.description, ctx.request.body.ext_url, order, ctx.request.body.lat, ctx.request.body.long, ctx.request.body.published, audioFile);
                     if (!content) return ctx.badRequest('Could not create content');
                     contents.push(content);
                     order = order + 1;
@@ -265,8 +267,8 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
                 mediafile: {
                     select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
                 },
-                thumbnail: {
-                    select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
+                audiofile: {
+                    select: ['id', 'name', 'url', 'size', 'caption'],
                 },
                 channel: {
                     select: ['id', 'uniqueID'],
@@ -299,7 +301,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
                 mediafile: {
                     select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
                 },
-                thumbnail: {
+                audiofile: {
                     select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
                 },
                 channel: {
@@ -337,12 +339,12 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
                     mediafile: {
                         select: ['id'],
                     },
-                    thumbnail: {
+                    audiofile: {
                         select: ['id'],
                     },
                 }
             });
-            // TODO: what about thumbnail?
+            // TODO: what about audiofile?
             if (contentItem.mediafile)
             {
                 await strapi.config.functions.deleteMediafile(contentItem.mediafile.id);
@@ -351,8 +353,8 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
                 where: { id: ctx.request.body.contentID},
                 data: { ext_url: null }});*/
             }
-            //if (contentItem.thumbnail)
-            //    await strapi.config.functions.deleteMediafile(contentItem.thumbnail.id);
+            //if (contentItem.audiofile)
+            //    await strapi.config.functions.deleteMediafile(contentItem.audiofile.id);
             if (ctx.request.files && Object.keys(ctx.request.files).length)
                 await strapi.config.functions.addFile(ctx.request.body.contentID, 'api::content.content', ctx.request.files[Object.keys(ctx.request.files)], "mediafile");
             
@@ -413,7 +415,6 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
 
     },
 
-
     async updateSubmission(ctx) {
         if (!ctx.request.body.contentID)
             return ctx.badRequest('No content specified');
@@ -423,7 +424,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
             select: ['id', 'publishedAt'],
             populate: {
                 mediafile: { select: ['id'] },
-                thumbnail: { select: ['id'] },
+                audiofile: { select: ['id'] },
                 channel: {
                     select: ['id', 'uniqueID', 'allowsubmissions'],
                     populate: {
@@ -452,7 +453,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
             select: ['id', 'publishedAt'],
             populate: {
                 mediafile: { select: ['id'] },
-                thumbnail: { select: ['id'] },
+                audiofile: { select: ['id'] },
                 channel: {
                     select: ['id', 'uniqueID'],
                     populate: {
@@ -491,7 +492,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
                 mediafile: {
                     select: ['id'],
                 },
-                thumbnail: {
+                audiofile: {
                     select: ['id'],
                 },
                 channel: {
@@ -524,7 +525,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
                 mediafile: {
                     select: ['id'],
                 },
-                thumbnail: {
+                audiofile: {
                     select: ['id'],
                 },
                 channel: {
@@ -574,8 +575,8 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
 
         return "ok";
     },
-
 }));
+
 
 //const { channel } = require('diagnostics_channel');
 

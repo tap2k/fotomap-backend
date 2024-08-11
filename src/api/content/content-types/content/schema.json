@@ -116,6 +116,13 @@
         "bottom"
       ],
       "default": "top"
+    },
+    "audiofile": {
+      "allowedTypes": [
+        "audios"
+      ],
+      "type": "media",
+      "multiple": false
     }
   }
 }

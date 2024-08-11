@@ -128,7 +128,7 @@
       "target": "api::tag.tag",
       "mappedBy": "channel"
     },
-    "audio": {
+    "audiofile": {
       "type": "media",
       "multiple": false,
       "required": false,

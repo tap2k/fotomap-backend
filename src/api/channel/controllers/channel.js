@@ -18,8 +18,8 @@ async function processFiles(ctx, channel) {
           await strapi.config.functions.addFile(channel.id, 'api::channel.channel', file, "picture");
           imageAdded = true;
         } else if (!audioAdded && file.type.startsWith('audio/')) {
-          if (channel.audio) await strapi.config.functions.deleteMediafile(channel.audio.id);
-          await strapi.config.functions.addFile(channel.id, 'api::channel.channel', file, "audio");
+          if (channel.audiofile) await strapi.config.functions.deleteMediafile(channel.audiofile.id);
+          await strapi.config.functions.addFile(channel.id, 'api::channel.channel', file, "audiofile");
           audioAdded = true;
         }
   
@@ -229,8 +229,8 @@ async function deleteChannelFunc(ctx, channel)
     if (channel.picture)
         await strapi.config.functions.deleteMediafile(channel.picture.id);
 
-    if (channel.audio)
-        await strapi.config.functions.deleteMediafile(channel.audio.id);
+    if (channel.audiofile)
+        await strapi.config.functions.deleteMediafile(channel.audiofile.id);
 
     return await strapi.service('api::channel.channel').delete(channel.id);
 }
@@ -254,8 +254,8 @@ async function updateChannelFunc(ctx, channel) {
 
     if (channel.picture && ctx.request.body.deletepic)
         await strapi.config.functions.deleteMediafile(channel.picture.id);
-    if (channel.audio && ctx.request.body.deleteaudio)
-        await strapi.config.functions.deleteMediafile(channel.audio.id);
+    if (channel.audiofile && ctx.request.body.deleteaudio)
+        await strapi.config.functions.deleteMediafile(channel.audiofile.id);
 
     let newchannel = await strapi.query("api::channel.channel").update({ 
         where: { id: channel.id },
@@ -328,7 +328,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                 picture: {
                     select: ['id', 'url', 'formats', 'size'],
                 },
-                audio: {
+                audiofile: {
                     select: ['id', 'url', 'size'],
                 },
                 contents: {
@@ -556,5 +556,42 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             },
         });        
     },
+
+
+    async convertChannel(ctx) {
+
+        const myContents = await strapi.db.query('api::content.content').findMany({
+            where: { channel: ctx.query.channelID },
+            select: ['id'],
+            populate: {
+                mediafile: {
+                    select: ['id'],
+                },
+                thumbnail: {
+                    select: ['id'],
+                },
+                audiofile: {
+                    select: ['id'],
+                },
+            },
+        });
+
+        /*for (const content of myContents)
+        {
+            if (content.thumbnail?.id)
+            {
+                await strapi.query("api::content.content").update({
+                    where: { id: content.id },
+                    data: { 
+                        mediafile: content.thumbnail.id,
+                        audiofile: content.mediafile?.id ? content.mediafile.id : null
+                    },
+                });
+            }
+        }*/   
+
+        return "ok";
+    },
+
 }));
 
