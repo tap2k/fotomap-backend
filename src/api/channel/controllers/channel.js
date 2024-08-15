@@ -557,38 +557,46 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         });        
     },
 
+    async convertChannels(ctx) {
 
-    async convertChannel(ctx) {
-
-        const myContents = await strapi.db.query('api::content.content').findMany({
-            where: { channel: ctx.query.channelID },
-            select: ['id'],
-            populate: {
-                mediafile: {
-                    select: ['id'],
-                },
-                thumbnail: {
-                    select: ['id'],
-                },
-                audiofile: {
-                    select: ['id'],
-                },
-            },
+       // Fetch all channels
+       const allChannels = await strapi.db.query('api::channel.channel').findMany({
+            select: ['id', 'uniqueID'],
         });
 
-        /*for (const content of myContents)
-        {
-            if (content.thumbnail?.id)
-            {
-                await strapi.query("api::content.content").update({
-                    where: { id: content.id },
-                    data: { 
-                        mediafile: content.thumbnail.id,
-                        audiofile: content.mediafile?.id ? content.mediafile.id : null
+    // Iterate over each channel
+        for (const channel of allChannels) {
+
+            const myContents = await strapi.db.query('api::content.content').findMany({
+                where: { channel: channel.id },
+                select: ['id'],
+                populate: {
+                    mediafile: {
+                        select: ['id'],
                     },
-                });
+                    thumbnail: {
+                        select: ['id'],
+                    },
+                    audiofile: {
+                        select: ['id'],
+                    },
+                },
+            });
+
+            for (const content of myContents)
+            {
+                if (content.thumbnail?.id)
+                {
+                    await strapi.query("api::content.content").update({
+                        where: { id: content.id },
+                        data: { 
+                            mediafile: content.thumbnail.id,
+                            audiofile: content.mediafile?.id ? content.mediafile.id : null
+                        },
+                    });
+                }
             }
-        }*/   
+        }
 
         return "ok";
     },

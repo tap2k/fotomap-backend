@@ -100,8 +100,8 @@ module.exports = {
     },
     {
       method: "GET",
-      path: "/convertChannel",
-      handler: "channel.convertChannel",
+      path: "/convertChannels",
+      handler: "channel.convertChannels",
       config: {
         auth: false,
       },

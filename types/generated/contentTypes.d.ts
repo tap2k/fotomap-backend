@@ -837,7 +837,7 @@ export interface ApiChannelChannel extends Schema.CollectionType {
       'oneToMany',
       'api::tag.tag'
     >;
-    audio: Attribute.Media;
+    audiofile: Attribute.Media;
     showtitle: Attribute.Boolean & Attribute.DefaultTo<true>;
     email: Attribute.Email;
     createdAt: Attribute.DateTime;
@@ -922,6 +922,7 @@ export interface ApiContentContent extends Schema.CollectionType {
     >;
     textalignment: Attribute.Enumeration<['top', 'center', 'bottom']> &
       Attribute.DefaultTo<'top'>;
+    audiofile: Attribute.Media;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
