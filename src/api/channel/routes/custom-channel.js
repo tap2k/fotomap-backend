@@ -98,14 +98,14 @@ module.exports = {
       path: '/removeEditor', 
       handler: 'channel.removeEditor',
     },
-    {
+    /*{
       method: "GET",
       path: "/convertChannels",
       handler: "channel.convertChannels",
       config: {
         auth: false,
       },
-    },
+    },*/
   ],
 }
   
