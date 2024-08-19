@@ -156,8 +156,11 @@ async function deleteChannelFunc(ctx, channel)
         populate: {
             mediafile: {
                 select: ['id'],
-                },
             },
+            audiofile: {
+                select: ['id'],
+            },
+        },
     });
 
     //ctx.query.uniqueID = ctx.request.body.uniqueID;
@@ -167,6 +170,8 @@ async function deleteChannelFunc(ctx, channel)
     {
         if (content.mediafile)
             await strapi.config.functions.deleteMediafile(content.mediafile.id);
+        if (content.audiofile)
+            await strapi.config.functions.deleteMediafile(content.audiofile.id);
         await strapi.service('api::content.content').delete(content.id);
     }
 
@@ -337,9 +342,9 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                         mediafile: {
                             select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
                         },
-                        thumbnail: {
-                            select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
-                        },
+                        audiofile: {
+                            select: ['id', 'name', 'url', 'size', 'caption'],
+                        }
                     },
                 }
             },

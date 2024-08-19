@@ -118,11 +118,21 @@
       "default": "top"
     },
     "audiofile": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
       "allowedTypes": [
         "audios"
-      ],
-      "type": "media",
-      "multiple": false
+      ]
+    },
+    "email": {
+      "type": "email"
+    },
+    "submitter": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
     }
   }
 }
