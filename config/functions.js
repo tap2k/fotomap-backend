@@ -127,9 +127,6 @@ module.exports = {
                       mediafile: {
                           select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
                       },
-                      thumbnail: {
-                          select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
-                      },
                       audiofile: {
                         select: ['id', 'name', 'url', 'size', 'caption'],
                       },
