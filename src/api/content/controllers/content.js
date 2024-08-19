@@ -8,6 +8,30 @@
 //const mime = require('mime'); 
 //const { createGzip } = require('zlib');
 
+async function geocode(location) {
+
+    const NodeGeocoder = require('node-geocoder');
+
+    const geocoderOptions = {
+      provider: 'openstreetmap',
+      fetch: function customFetch(url, fetchOptions) {
+        // Use the global fetch, but don't call customFetch recursively
+        return global.fetch(url, {
+          ...fetchOptions,
+          headers: {
+            ...fetchOptions.headers,
+            'user-agent': 'MVC-backend/1.0 (tapan@represent.org)', 
+          }
+        });
+      }
+    };
+    
+    const geocoder = NodeGeocoder(geocoderOptions);
+
+    const results = await geocoder.geocode(location);
+    return results;
+}
+
 async function deleteContentFunc(content) {
     // TODO: check if content.order is undefined
     if (content.order && content.order > 0) {
@@ -42,6 +66,14 @@ async function deleteContentFunc(content) {
 async function updateContentFunc(ctx, content) {
     strapi.config.functions.nullParam("lat", ctx.request.body);
     strapi.config.functions.nullParam("long", ctx.request.body);
+
+    if ((!ctx.request.body.lat || !ctx.request.body.long) && ctx.request.body.location) {
+        const locations = await geocode(ctx.request.body.location);
+        if (locations.length > 0) {
+            ctx.request.body.lat = locations[0].latitude;
+            ctx.request.body.long = locations[0].longitude;
+        }
+    }
 
     if (ctx.request.body.published != undefined) {
         if (ctx.request.body.published == "true") {

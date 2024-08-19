@@ -19,6 +19,7 @@
     "fluent-ffmpeg": "^2.1.2",
     "jwt-decode": "^3.1.2",
     "mime": "^3.0.0",
+    "node-geocoder": "^4.4.0",
     "pg": "^8.11.3",
     "yarn": "^1.22.21"
   },
