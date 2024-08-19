@@ -142,9 +142,6 @@
     },
     "email": {
       "type": "email"
-    },
-    "location": {
-      "type": "string"
     }
   }
 }

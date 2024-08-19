@@ -128,7 +128,7 @@
     "email": {
       "type": "email"
     },
-    "submitter": {
+    "name": {
       "type": "string"
     },
     "location": {

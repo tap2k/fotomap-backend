@@ -206,7 +206,7 @@ async function uploadContentFunc(ctx, channel)
     }
     else
     {
-        const content = await createContentFunc(null, channel.id, ctx.request.body.title, ctx.request.body.description, ctx.request.body.ext_url, ctx.request.body.order, ctx.request.body.lat, ctx.request.body.long);
+        const content = await createContentFunc(null, channel.id, ctx.request.body.title, ctx.request.body.description, ctx.request.body.ext_url, ctx.request.body.order, ctx.request.body.lat, ctx.request.body.long, ctx.request.body.published);
         if (!content) 
             return ctx.badRequest("Could not create content");
         else
