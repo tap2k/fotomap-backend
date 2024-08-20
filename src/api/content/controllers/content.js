@@ -414,7 +414,9 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
                 await strapi.query("api::content.content").update({
                     where: { id: ctx.request.body.contentID},
                     data: { ext_url: ctx.request.body.ext_url },
-                });    
+                });   
+            
+            return "ok";
         }
         else
         {
