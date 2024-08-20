@@ -16,6 +16,7 @@
     "@strapi/provider-upload-aws-s3": "4.14.4",
     "@strapi/strapi": "4.14.4",
     "convert-csv-to-json": "^2.0.0",
+    "exifreader": "^4.23.3",
     "fluent-ffmpeg": "^2.1.2",
     "jwt-decode": "^3.1.2",
     "mime": "^3.0.0",

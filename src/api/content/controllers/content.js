@@ -4,14 +4,13 @@
  *  content controller
  */
 
-//const fs = require('fs');
-//const mime = require('mime'); 
+const fs = require('fs');
+const mime = require('mime'); 
 //const { createGzip } = require('zlib');
+const ExifReader = require('exifreader');
+const NodeGeocoder = require('node-geocoder');
 
 async function geocode(location) {
-
-    const NodeGeocoder = require('node-geocoder');
-
     const geocoderOptions = {
       provider: 'openstreetmap',
       fetch: function customFetch(url, fetchOptions) {
@@ -188,6 +187,17 @@ async function uploadContentFunc(ctx, channel)
     strapi.config.functions.nullParam("lat", ctx.request.body);
     strapi.config.functions.nullParam("long", ctx.request.body);
 
+    if (!ctx.request.body.lat || !ctx.request.body.long) {
+        if (ctx.request.body.location)
+        {
+            const locations = await geocode(ctx.request.body.location);
+            if (locations.length > 0) {
+                ctx.request.body.lat = locations[0].latitude;
+                ctx.request.body.long = locations[0].longitude;
+            }
+        }
+    }
+
     if (ctx.request.files && Object.keys(ctx.request.files).length) 
     {
         var files = ctx.request.files;
@@ -211,7 +221,6 @@ async function uploadContentFunc(ctx, channel)
         const audioFile = files["audiofile"];
         for (const key of Object.keys(files)) {
             try {
-                const mime = require('mime');
                 const mimetype = mime.getType(files[key].name);
                 if (mimetype?.toLowerCase() == "text/csv")
                 {
@@ -224,6 +233,16 @@ async function uploadContentFunc(ctx, channel)
                 {
                     if (key == "audiofile")
                         continue;
+
+                    if (!ctx.request.body.lat && mimetype?.startsWith('image/')) {
+                        const imageBuffer = fs.readFileSync(files[key].path);
+                        const tags = await ExifReader.load(imageBuffer, {expanded: true}); 
+                        if (tags.gps && tags.gps.Latitude && tags.gps.Longitude) {
+                            ctx.request.body.lat = tags.gps.Latitude;
+                            ctx.request.body.long = tags.gps.Longitude;
+                        }
+                    }
+                
                     const content = await createContentFunc(files[key], channel.id,  ctx.request.body.title, ctx.request.body.description, ctx.request.body.ext_url, order, ctx.request.body.lat, ctx.request.body.long, ctx.request.body.published, audioFile);
                     if (!content) return ctx.badRequest('Could not create content');
                     contents.push(content);
