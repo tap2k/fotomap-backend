@@ -913,7 +913,6 @@ export interface ApiContentContent extends Schema.CollectionType {
     > &
       Attribute.DefaultTo<'none'>;
     title: Attribute.String;
-    thumbnail: Attribute.Media;
     description: Attribute.RichText;
     tags: Attribute.Relation<
       'api::content.content',
