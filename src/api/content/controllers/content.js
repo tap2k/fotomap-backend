@@ -91,7 +91,7 @@ async function updateContentFunc(ctx, content) {
     strapi.config.functions.nullParam("lat", ctx.request.body);
     strapi.config.functions.nullParam("long", ctx.request.body);
 
-    if ((!ctx.request.body.lat || !ctx.request.body.long) && ctx.request.body.location) {
+    if ((!ctx.request.body.lat || !ctx.request.body.long) && ctx.request.body.location && ctx.request.body.location != content.location) {
         const locations = await geocode(ctx.request.body.location);
         if (locations.length > 0) {
             ctx.request.body.lat = locations[0].latitude;
@@ -514,7 +514,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         
         const content = await strapi.db.query('api::content.content').findOne({
             where: { id: ctx.request.body.contentID },
-            select: ['id', 'publishedAt'],
+            select: ['id', 'publishedAt', 'location'],
             populate: {
                 mediafile: { select: ['id'] },
                 audiofile: { select: ['id'] },
@@ -543,7 +543,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         
         const content = await strapi.db.query('api::content.content').findOne({
             where: { id: ctx.request.body.contentID },
-            select: ['id', 'publishedAt'],
+            select: ['id', 'publishedAt', 'location'],
             populate: {
                 mediafile: { select: ['id'] },
                 audiofile: { select: ['id'] },
