@@ -10,6 +10,31 @@ const mime = require('mime');
 const ExifReader = require('exifreader');
 const NodeGeocoder = require('node-geocoder');
 
+async function getPlaylistVideoUrls(playlistUrl) {
+    try {
+        const response = await fetch(playlistUrl);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const html = await response.text();
+        
+        // Extract video URLs using a regular expression
+        const videoUrlRegex = /watch\?v=([^"&]+)/g;
+        const matches = html.matchAll(videoUrlRegex);
+        
+        const videoUrls = [...new Set([...matches].map(match => `https://www.youtube.com/watch?v=${match[1]}`))];
+        
+        if (videoUrls.length === 0) {
+            console.warn('No video URLs found in playlist');
+        }
+        
+        return videoUrls;
+    } catch (error) {
+        console.error('Error fetching playlist data:', error);
+        throw error;
+    }
+}
+
 async function geocode(location) {
     const geocoderOptions = {
       provider: 'openstreetmap',
@@ -147,6 +172,21 @@ async function createContentFunc(file, channelID, title, description, ext_url, o
     let publishedAt = null;
     if (published != undefined && published == "true")
         publishedAt = new Date();
+
+    // Still add files?
+    if (ext_url && ext_url.includes('youtube.com/playlist')) {
+        try {
+            const videoUrls = await getPlaylistVideoUrls(ext_url);
+            for (const videoUrl of videoUrls) {
+                await createContentFunc(file, channelID, title, description, videoUrl, order, lat, long, published, audioFile);
+            }
+            return "ok";
+        } catch (error) {
+            console.error('Error processing playlist:', error);
+            // Decide whether to throw the error or continue with the original ext_url
+        }
+    }
+
 
     const content = await strapi.db.query('api::content.content').create({
         data: {
