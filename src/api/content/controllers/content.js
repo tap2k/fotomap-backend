@@ -47,18 +47,13 @@ async function geocode(location) {
 
     const geocoder = NodeGeocoder(options);
 
-    try {
-        const results = await geocoder.geocode(location);
-        
-        if (results && results.length > 0) {
-            return results; // Return the first result
-        } else {
-            console.warn('No geocoding results found for:', location);
-            return null;
-        }
-    } catch (error) {
-        console.error('Geocoding error:', error.message);
-        throw error;
+    const results = await geocoder.geocode(location);
+    
+    if (results && results.length > 0) {
+        return results; // Return the first result
+    } else {
+        console.warn('No geocoding results found for:', location);
+        return [];
     }
 }
 
