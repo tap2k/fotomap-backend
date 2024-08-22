@@ -436,19 +436,23 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
                     },
                 }
             });
-            // TODO: what about audiofile?
+
+            /* Maustro
             if (contentItem.mediafile)
             {
                 await strapi.config.functions.deleteMediafile(contentItem.mediafile.id);
-                /* Maustro
+                await strapi.config.functions.deleteMediafile(contentItem.audiofile.id);
                 await strapi.query("api::content.content").update({
                 where: { id: ctx.request.body.contentID},
-                data: { ext_url: null }});*/
-            }
-            //if (contentItem.audiofile)
-            //    await strapi.config.functions.deleteMediafile(contentItem.audiofile.id);
+                data: { ext_url: null }});
+            }*/
+            
             if (ctx.request.files && Object.keys(ctx.request.files).length)
+            {
+                await strapi.config.functions.deleteMediafile(contentItem.mediafile.id);
                 await strapi.config.functions.addFile(ctx.request.body.contentID, 'api::content.content', ctx.request.files[Object.keys(ctx.request.files)], "mediafile");
+                // await strapi.config.functions.deleteMediafile(contentItem.audiofile.id);
+            }
             
             // Maustro
             if (ctx.request.body.ext_url)
