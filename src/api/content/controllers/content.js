@@ -5,18 +5,16 @@
  */
 
 const fs = require('fs');
-const mime = require('mime'); 
+const mime = require('mime');
+const axios = require('axios');
 //const { createGzip } = require('zlib');
 const ExifReader = require('exifreader');
 const NodeGeocoder = require('node-geocoder');
 
 async function getPlaylistVideoUrls(playlistUrl) {
     try {
-        const response = await fetch(playlistUrl);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const html = await response.text();
+        const response = await axios.get(playlistUrl);
+        const html = response.data;
         
         // Extract video URLs using a regular expression
         const videoUrlRegex = /watch\?v=([^"&]+)/g;
@@ -36,24 +34,32 @@ async function getPlaylistVideoUrls(playlistUrl) {
 }
 
 async function geocode(location) {
-    const geocoderOptions = {
-      provider: 'openstreetmap',
-      fetch: function customFetch(url, fetchOptions) {
-        // Use the global fetch, but don't call customFetch recursively
-        return global.fetch(url, {
-          ...fetchOptions,
-          headers: {
-            ...fetchOptions.headers,
-            'user-agent': 'MVC-backend/1.0 (tapan@represent.org)', 
-          }
-        });
-      }
+    const options = {
+        provider: 'openstreetmap',
+        httpAdapter: 'https',
+        formatter: null,
+        apiKey: null, // Not required for OpenStreetMap
+        userAgentHeader: 'User-Agent', // This is the key to set the correct header name
+        headers: {
+            'User-Agent': 'MVC-backend/1.0 (tapan@represent.org)'
+        }
     };
-    
-    const geocoder = NodeGeocoder(geocoderOptions);
 
-    const results = await geocoder.geocode(location);
-    return results;
+    const geocoder = NodeGeocoder(options);
+
+    try {
+        const results = await geocoder.geocode(location);
+        
+        if (results && results.length > 0) {
+            return results; // Return the first result
+        } else {
+            console.warn('No geocoding results found for:', location);
+            return null;
+        }
+    } catch (error) {
+        console.error('Geocoding error:', error.message);
+        throw error;
+    }
 }
 
 async function deleteContentFunc(content) {
