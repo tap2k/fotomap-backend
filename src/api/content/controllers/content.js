@@ -454,7 +454,6 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
                 // await strapi.config.functions.deleteMediafile(contentItem.audiofile.id);
             }
             
-            // Maustro
             if (ctx.request.body.ext_url)
                 await strapi.query("api::content.content").update({
                     where: { id: ctx.request.body.contentID},
@@ -468,7 +467,6 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
             const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
             return await uploadContentFunc(ctx, channel);
         }
-
     },
 
     async uploadJSONToChannel(ctx) {
