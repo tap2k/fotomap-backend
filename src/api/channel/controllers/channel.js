@@ -17,10 +17,12 @@ async function processFiles(ctx, channel) {
           if (channel.picture) await strapi.config.functions.deleteMediafile(channel.picture.id);
           await strapi.config.functions.addFile(channel.id, 'api::channel.channel', file, "picture");
           imageAdded = true;
+          ctx.request.body.deletepic = false;
         } else if (!audioAdded && file.type.startsWith('audio/')) {
           if (channel.audiofile) await strapi.config.functions.deleteMediafile(channel.audiofile.id);
           await strapi.config.functions.addFile(channel.id, 'api::channel.channel', file, "audiofile");
           audioAdded = true;
+          ctx.request.body.deleteaudio = false;
         }
   
         if (imageAdded && audioAdded) break;
@@ -257,9 +259,9 @@ async function updateChannelFunc(ctx, channel) {
     if (ctx.request.files && Object.keys(ctx.request.files).length)
         await processFiles(ctx, channel);
 
-    if (channel.picture && ctx.request.body.deletepic)
+    if (channel.picture?.id && ctx.request.body.deletepic)
         await strapi.config.functions.deleteMediafile(channel.picture.id);
-    if (channel.audiofile && ctx.request.body.deleteaudio)
+    if (channel.audiofile?.id && ctx.request.body.deleteaudio)
         await strapi.config.functions.deleteMediafile(channel.audiofile.id);
 
     let newchannel = await strapi.query("api::channel.channel").update({ 

@@ -125,6 +125,12 @@
     },
     "location": {
       "type": "string"
+    },
+    "start_time": {
+      "type": "integer"
+    },
+    "duration": {
+      "type": "integer"
     }
   }
 }

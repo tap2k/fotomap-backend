@@ -925,6 +925,8 @@ export interface ApiContentContent extends Schema.CollectionType {
     email: Attribute.Email;
     name: Attribute.String;
     location: Attribute.String;
+    start_time: Attribute.Integer;
+    duration: Attribute.Integer;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
