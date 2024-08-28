@@ -159,14 +159,15 @@ async function uploadJSONFunc(channelid, contents, published)
     let newcontents = [];
     contents.forEach(async (element)=> {
     //await Promise.all(contents.map(async (element) => {
-        const contentItem = await createContentFunc(null, channelid, element.title, element.description, element.ext_url, element.order, element.lat, element.long, published);
+        const contentItem = await createContentFunc(null, channelid, element.title, element.name, element.location, element.description, element.ext_url, element.order, element.lat, element.long, published);
         newcontents.push(contentItem);
     //}));
     });
     return newcontents;
 }
 
-async function createContentFunc(file, channelID, title, description, ext_url, order, lat, long, published, audioFile) {
+// TODO: Fix this signature
+async function createContentFunc(file, channelID, title, name, location, description, ext_url, order, lat, long, published, audioFile) {
     if (!channelID)
         return null;
 
@@ -188,11 +189,23 @@ async function createContentFunc(file, channelID, title, description, ext_url, o
         }
     }
 
+    if (!lat || !long) {
+        if (location)
+        {
+            const locations = await geocode(location);
+            if (locations.length > 0) {
+                lat = locations[0].latitude;
+                long = locations[0].longitude;
+            }
+        }
+    }
 
     const content = await strapi.db.query('api::content.content').create({
         data: {
             channel: channelID,
             title: title,
+            name: name,
+            location: location,
             description: description,
             ext_url: ext_url,
             lat: lat,
@@ -227,17 +240,6 @@ async function uploadContentFunc(ctx, channel)
 {
     strapi.config.functions.nullParam("lat", ctx.request.body);
     strapi.config.functions.nullParam("long", ctx.request.body);
-
-    if (!ctx.request.body.lat || !ctx.request.body.long) {
-        if (ctx.request.body.location)
-        {
-            const locations = await geocode(ctx.request.body.location);
-            if (locations.length > 0) {
-                ctx.request.body.lat = locations[0].latitude;
-                ctx.request.body.long = locations[0].longitude;
-            }
-        }
-    }
 
     if (ctx.request.files && Object.keys(ctx.request.files).length) 
     {
@@ -284,7 +286,7 @@ async function uploadContentFunc(ctx, channel)
                         }
                     }
                 
-                    const content = await createContentFunc(files[key], channel.id,  ctx.request.body.title, ctx.request.body.description, ctx.request.body.ext_url, order, ctx.request.body.lat, ctx.request.body.long, ctx.request.body.published, audioFile);
+                    const content = await createContentFunc(files[key], channel.id,  ctx.request.body.title, ctx.request.body.name, ctx.request.body.location, ctx.request.body.description, ctx.request.body.ext_url, order, ctx.request.body.lat, ctx.request.body.long, ctx.request.body.published, audioFile);
                     if (!content) return ctx.badRequest('Could not create content');
                     contents.push(content);
                     order = order + 1;
@@ -298,7 +300,7 @@ async function uploadContentFunc(ctx, channel)
     }
     else
     {
-        const content = await createContentFunc(null, channel.id, ctx.request.body.title, ctx.request.body.description, ctx.request.body.ext_url, ctx.request.body.order, ctx.request.body.lat, ctx.request.body.long, ctx.request.body.published);
+        const content = await createContentFunc(null, channel.id, ctx.request.body.title, ctx.request.body.name, ctx.request.body.location, ctx.request.body.description, ctx.request.body.ext_url, ctx.request.body.order, ctx.request.body.lat, ctx.request.body.long, ctx.request.body.published);
         if (!content) 
             return ctx.badRequest("Could not create content");
         else

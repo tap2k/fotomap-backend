@@ -142,6 +142,9 @@
     },
     "email": {
       "type": "email"
+    },
+    "background_color": {
+      "type": "string"
     }
   }
 }

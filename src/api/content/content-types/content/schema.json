@@ -127,10 +127,10 @@
       "type": "string"
     },
     "start_time": {
-      "type": "integer"
+      "type": "float"
     },
     "duration": {
-      "type": "integer"
+      "type": "float"
     }
   }
 }

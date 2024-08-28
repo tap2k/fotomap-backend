@@ -85,6 +85,14 @@ module.exports = {
     },
     { 
       method: 'POST',
+      path: '/saveSubmissionChannel', 
+      handler: 'channel.saveSubmissionChannel',
+      config: {
+        auth: false,
+      },
+    },
+    { 
+      method: 'POST',
       path: '/regenChannelID', 
       handler: 'channel.regenChannelID',
     },
