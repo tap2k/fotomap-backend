@@ -498,15 +498,19 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         // TODO: Dont need content?
         //if (!ctx.request.body.ext_url && !ctx.request.files)
         //    return ctx.badRequest('No content specified');
-        
-        const channel = await strapi.db.query('api::channel.channel').findOne({
-                select: ['id', 'allowsubmissions'],
-                where: { 
-                    uniqueID: ctx.request.body.uniqueID,
-                }
-            });
+        let channel = null;
 
-        if (!channel?.allowsubmissions)
+        if (ctx.request.body.privateID)
+            channel = await strapi.config.functions.getChannel(null, null, ctx.request.body.privateID);
+        else
+            channel = await strapi.db.query('api::channel.channel').findOne({
+                    select: ['id', 'allowsubmissions'],
+                    where: { 
+                        uniqueID: ctx.request.body.uniqueID,
+                    }
+                });
+
+        if (!channel?.allowsubmissions && !ctx.request.body.privateID)
             return ctx.badRequest('This channel does not allow submissions ' + ctx.request.body.uniqueID);
         
         return await uploadContentFunc(ctx, channel);
@@ -516,9 +520,16 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
     async updateSubmission(ctx) {
         if (!ctx.request.body.contentID)
             return ctx.badRequest('No content specified');
+        if (!ctx.request.body.privateID) 
+            return ctx.badRequest('No channel specified'); 
+
+        const channel = await strapi.config.functions.getChannel(null, null, ctx.request.body.privateID);
+        
+        if (!channel)
+            return ctx.badRequest('This channel doesnt exist or doesnt allow you to edit without logging in');
         
         const content = await strapi.db.query('api::content.content').findOne({
-            where: { id: ctx.request.body.contentID },
+            where: { id: ctx.request.body.contentID, channel: channel.id },
             select: ['id', 'publishedAt', 'location'],
             populate: {
                 mediafile: { select: ['id'] },
@@ -614,10 +625,21 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
     },
 
     async deleteSubmission(ctx) {
+        if (!ctx.request.body.contentID)
+            return ctx.badRequest('No content specified');
+        if (!ctx.request.body.privateID) 
+            return ctx.badRequest('No channel specified'); 
+
+        const channel = await strapi.config.functions.getChannel(null, null, ctx.request.body.privateID);
+        
+        if (!channel)
+            return ctx.badRequest('This channel doesnt exist or doesnt allow you to edit without logging in');
+        
         const content = await strapi.db.query('api::content.content').findOne({
             select: ['order'],
             where: {
                 id: ctx.request.body.id,
+                channel: channel.id
             },
             populate: {
                 mediafile: {
@@ -634,9 +656,6 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
 
         if (!content)
             return ctx.badRequest('No such content: ' + ctx.request.body.id);
-
-        if (!content.channel.allowsubmissions) 
-            return ctx.badRequest('This channel does not allow you to edit without logging in: ' + content.channel.uniqueID);
 
         return await deleteContentFunc(content);
     },

@@ -60,7 +60,7 @@ module.exports = {
       },
     },
     { 
-      method: 'GET',
+      method: 'POST',
       path: '/getSubmissionChannel', 
       handler: 'channel.getSubmissionChannel',
       config: {

@@ -4,55 +4,6 @@
  *  channel controller
  */
 
-const crypto = require('crypto');
-const dotenv = require('dotenv');
-
-const HASH_LENGTH = 8;
-dotenv.config();
-
-// Function to create the private ID
-function createPrivateID(publicID) {
-  const privateSeed = process.env.PRIVATE_SEED;
-  if (!privateSeed) {
-    console.error('PRIVATE_SEED not set in environment variables');
-    return null;
-  }
-  if (!publicID) return "";
-  const hash = crypto.createHash('sha1');
-  hash.update(publicID + privateSeed);
-  const hashHex = hash.digest('hex').substring(0, HASH_LENGTH);
-  return `${publicID}:${hashHex}`;
-}
-
-// Function to retrieve and verify the public ID from the private ID
-function getPublicID(privateID) {
-  const [publicID, hashHex] = privateID.split(':');
-  
-  const privateSeed = process.env.PRIVATE_SEED;
-  if (!privateSeed) {
-    console.error('PRIVATE_SEED not set in environment variables');
-    return null;
-  }
-
-  // Recreate the hash to verify
-  const hash = crypto.createHash('sha1');
-  hash.update(publicID + privateSeed);
-  const verificationHashHex = hash.digest('hex').substring(0, HASH_LENGTH);
-
-  // Check if the hashes match
-  if (hashHex !== verificationHashHex) {
-    //console.error('Invalid private ID or tampered data');
-    return null;
-  }
-
-  return publicID;
-}
-
-// Function to generate a secret seed
-function generateSecretSeed() {
-  return crypto.randomBytes(HASH_LENGTH).toString('hex');
-}
-
 async function processFiles(ctx, channel) {
     if (ctx.request.files && Object.keys(ctx.request.files).length) {
       const files = ctx.request.files;
@@ -378,34 +329,15 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
     async getSubmissionChannel(ctx)
     {
-        const channel = await strapi.query('api::channel.channel').findOne({
-            where: { uniqueID: ctx.query.uniqueID },
-            populate: {
-                picture: {
-                    select: ['id', 'url', 'formats', 'size'],
-                },
-                audiofile: {
-                    select: ['id', 'url', 'size'],
-                },
-                contents: {
-                    orderBy: { order: 'asc' },
-                    populate: {
-                        mediafile: {
-                            select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
-                        },
-                        audiofile: {
-                            select: ['id', 'name', 'url', 'size', 'caption'],
-                        }
-                    },
-                }
-            },
-        });
+        if (!ctx.request.body.privateID) 
+            return ctx.badRequest('No channel specified'); 
+        
+        const channel = await strapi.config.functions.getChannel(null, null, ctx.request.body.privateID);
+        
+        if (!channel)
+            return ctx.badRequest('This channel doesnt exist or doesnt allow you to edit without logging in');
 
-        // TODO: Fix this
-        if (!channel?.allowsubmissions)
-            return ctx.badRequest('This channel doesnt exist or doesnt allow you to edit without logging in: ' + channel.uniqueID);
-        else
-            return channel;
+        return channel;
     },
 
     async getMyChannels(ctx) {
@@ -465,7 +397,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
     async createSubmissionChannel(ctx) {
         const channel = await createChannelFunc(ctx, 1);
-        channel.privateID = createPrivateID(channel.uniqueID);
+        channel.privateID = strapi.config.functions.createPrivateID(channel.uniqueID);
         return channel;
     },
 
@@ -490,25 +422,24 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
     },
 
     async updateSubmissionChannel(ctx) {
-        if (!ctx.request.body.uniqueID) 
+        if (!ctx.request.body.privateID) 
             return ctx.badRequest('No channel specified'); 
         
-        const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
+        const channel = await strapi.config.functions.getChannel(null, null, ctx.request.body.privateID);
         
-        if (!channel?.allowsubmissions)
-            return ctx.badRequest('This channel doesnt exist or doesnt allow you to edit without logging in: ' + channel.uniqueID);
+        if (!channel)
+            return ctx.badRequest('This channel doesnt exist or doesnt allow you to edit without logging in');
 
         return await updateChannelFunc(ctx, channel);
     },
 
     async saveSubmissionChannel(ctx) {
-        if (!ctx.request.body.uniqueID) 
+        if (!ctx.request.body.privateID) 
             return ctx.badRequest('No channel specified'); 
 
-        const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
-        
-        if (!channel?.allowsubmissions)
-            return ctx.badRequest('This channel doesnt exist or doesnt allow you to edit without logging in: ' + channel.uniqueID);
+        const channel = await strapi.config.functions.getChannel(null, null, ctx.request.body.privateID)
+        if (!channel)
+            return ctx.badRequest('This channel doesnt exist or doesnt allow you to edit without logging in');;
     
         try {
             for (const item of ctx.request.body.contents) {
@@ -556,13 +487,13 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
     },
 
     async deleteSubmissionChannel(ctx) {
-        if (!ctx.request.body.uniqueID) 
+        if (!ctx.request.body.privateID) 
             return ctx.badRequest('No channel specified'); 
         
-        const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
+        const channel = await strapi.config.functions.getChannel(null, null, ctx.request.body.privateID);
         
-        if (!channel?.allowsubmissions)
-            return ctx.badRequest('This channel doesnt exist or doesnt allow you to edit without logging in: ' + channel.uniqueID);
+        if (!channel)
+            return ctx.badRequest('This channel doesnt exist or doesnt allow you to edit without logging in');
 
         return await deleteChannelFunc(ctx, channel);
     },
