@@ -352,6 +352,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             },
         });
 
+        // TODO: Fix this
         if (!channel?.allowsubmissions)
             return ctx.badRequest('This channel doesnt exist or doesnt allow you to edit without logging in: ' + channel.uniqueID);
         else
@@ -415,8 +416,8 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
 
     async createSubmissionChannel(ctx) {
+        // TODO: HACK for Maustro
         ctx.request.body.allowsubmissions = true;
-        // HACK for Maustro
         return createChannelFunc(ctx, 1);
     },
 
