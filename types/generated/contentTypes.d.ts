@@ -768,7 +768,7 @@ export interface ApiChannelChannel extends Schema.CollectionType {
   attributes: {
     uniqueID: Attribute.UID & Attribute.Required;
     name: Attribute.String;
-    public: Attribute.Boolean & Attribute.DefaultTo<true>;
+    public: Attribute.Boolean & Attribute.DefaultTo<false>;
     owner: Attribute.Relation<
       'api::channel.channel',
       'oneToOne',
