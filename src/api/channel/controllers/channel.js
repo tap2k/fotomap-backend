@@ -259,14 +259,10 @@ async function updateChannelFunc(ctx, channel) {
     if (ctx.request.files && Object.keys(ctx.request.files).length)
         await processFiles(ctx, channel);
 
-    console.log("delete audio = " + ctx.request.body.deleteaudio);
     if (channel.picture?.id && ctx.request.body.deletepic && ctx.request.body.deletepic != "false")
         await strapi.config.functions.deleteMediafile(channel.picture.id);
     if (channel.audiofile?.id && ctx.request.body.deleteaudio && ctx.request.body.deleteaudio != "false")
-    {
-        console.log("deleting");
         await strapi.config.functions.deleteMediafile(channel.audiofile.id);
-    }
 
     let newchannel = await strapi.query("api::channel.channel").update({ 
         where: { id: channel.id },
