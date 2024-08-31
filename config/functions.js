@@ -86,23 +86,20 @@ module.exports = {
   },
   
   async canEdit(channelID, userID, privateID) {
-    if (privateID && !channelID)
+    if (privateID)
     {
-      const colonIndex = str.indexOf(':');
-      if (colonIndex < 0)
+      channelID = strapi.config.functions.getPublicID(privateID);
+      if (!channelID)
         return null;
-      channelID = privateID.slice(0, colonIndex);
     }
     if (!channelID)
       return null;
     const channel = await strapi.config.functions.getBasicChannel(channelID);
     if (!channel)
       return null;
-    if (channelID == "probe")
+    if (channelID == "probe" || privateID)
       return channel;
     if (userID && ((channel.owner?.id == userID) || channel.editors?.some(item => item.id == userID)))
-      return channel;
-    if (privateID && strapi.config.functions.getPublicID(privateID))
       return channel;
     if (channel.parent?.uniqueID)
       return await strapi.config.functions.canEdit(channel.parent.uniqueID, userID);
@@ -110,135 +107,127 @@ module.exports = {
   },
 
   async getChannel(channelID, userID, privateID)
-  {
-      if (privateID && !channelID)
-      {
-        const colonIndex = str.indexOf(':');
-        if (colonIndex < 0)
-          return null;
-        channelID = privateID.slice(0, colonIndex);
-      }
-      
-      const basicChannel = strapi.config.functions.canEdit(channelID, userID, privateID);
-      
-      let whereclause = { publishedAt: { $ne: null } };
-      if (!basicChannel)
-        whereclause = {};
+  {      
+    const basicChannel = await strapi.config.functions.canEdit(channelID, userID, privateID);
+  
+    let whereclause = { publishedAt: { $ne: null } };
+    if (!basicChannel)
+      whereclause = {};
 
-      return await strapi.query('api::channel.channel').findOne({
-          where: { uniqueID: channelID },
-          //select: ['id', 'uniqueID', 'name', 'description', 'allowsubmissions', 'showtitle', 'public'],
-          populate: {
-              parent: {
-                  select: ['id', 'name', 'uniqueID'],
-                  populate: {
-                      owner: {
-                          select: ['id'],
-                      },
-                      editors: {
-                          select: ['id', 'username', 'email'],
-                      },
-                  }
-              },
-              owner: {
-                  select: ['id'],
-              },
-              editors: {
-                  select: ['id', 'username', 'email'],
-              },
-              tileset: {
-                  select: ['id', 'name', 'urlformatstring', 'attribution'],
-              },
-              picture: {
-                select: ['id', 'url', 'formats', 'size'],
-              },
-              audiofile: {
-                select: ['id', 'url', 'size'],
-              },
-              overlays: {
-                  select: ['id', 'tl_lat', 'tl_long', 'tr_lat', 'tr_long', 'br_lat', 'br_long', 'bl_lat', 'bl_long'],
-                  populate: {
-                      image: {
-                          select: ['id', 'url', 'formats', 'size'],
-                      }
-                  }
-              },
-              tags: {
-                  select: ['id', 'tag', 'markercolor'],
-                  populate: {
-                    thumbnail: {
+    return await strapi.query('api::channel.channel').findOne({
+        where: { uniqueID: basicChannel.uniqueID },
+        //select: ['id', 'uniqueID', 'name', 'description', 'allowsubmissions', 'showtitle', 'public'],
+        populate: {
+            parent: {
+                select: ['id', 'name', 'uniqueID'],
+                populate: {
+                    owner: {
+                        select: ['id'],
+                    },
+                    editors: {
+                        select: ['id', 'username', 'email'],
+                    },
+                }
+            },
+            owner: {
+                select: ['id'],
+            },
+            editors: {
+                select: ['id', 'username', 'email'],
+            },
+            tileset: {
+                select: ['id', 'name', 'urlformatstring', 'attribution'],
+            },
+            picture: {
+              select: ['id', 'url', 'formats', 'size'],
+            },
+            audiofile: {
+              select: ['id', 'url', 'size'],
+            },
+            overlays: {
+                select: ['id', 'tl_lat', 'tl_long', 'tr_lat', 'tr_long', 'br_lat', 'br_long', 'bl_lat', 'bl_long'],
+                populate: {
+                    image: {
                         select: ['id', 'url', 'formats', 'size'],
-                    },
+                    }
+                }
+            },
+            tags: {
+                select: ['id', 'tag', 'markercolor'],
+                populate: {
+                  thumbnail: {
+                      select: ['id', 'url', 'formats', 'size'],
+                  },
+                }
+            },
+            children: {
+              orderBy: { order: 'asc' },
+              select: ['id', 'uniqueID', 'lat', 'long', 'order'],
+              populate: {
+                picture: {
+                  select: ['id', 'url', 'formats', 'size'],
+                },
+                owner: {
+                  select: ['id'],
+                },
+                parent: {
+                  select: ['id', 'name', 'uniqueID'],
+                },
+              },
+            },
+            assets: {
+              orderBy: { order: 'asc' },
+              select: ['id', 'name'],
+              populate: {
+                  pcbundle: {
+                      select: ['id', 'name', 'url', 'size'],
+                  },
+                  androidbundle: {
+                      select: ['id', 'name', 'url', 'size'],
+                  },
+                  webglbundle: {
+                      select: ['id', 'name', 'url', 'size'],
+                  },
+                  macbundle: {
+                      select: ['id', 'name', 'url', 'size'],
                   }
               },
-              children: {
-                orderBy: { order: 'asc' },
-                select: ['id', 'uniqueID', 'lat', 'long', 'order'],
-                populate: {
-                  picture: {
-                    select: ['id', 'url', 'formats', 'size'],
+            },
+            contents: {
+              where: whereclause,
+              orderBy: { order: 'asc' },
+              populate: {
+                  mediafile: {
+                      select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
                   },
-                  owner: {
-                    select: ['id'],
+                  audiofile: {
+                    select: ['id', 'name', 'url', 'size', 'caption'],
                   },
-                  parent: {
-                    select: ['id', 'name', 'uniqueID'],
+                  channel: {
+                      select: ['id', 'uniqueID', 'markercolor', 'lat', 'long'],
+                      populate: {
+                          owner: { select: ['id'] },
+                          tags: {
+                            select: ['id', 'tag', 'markercolor'],
+                            populate: {
+                                thumbnail: { select: ['url', 'formats'] },
+                            }
+                          },
+                          tileset: {
+                            select: ['id', 'name', 'urlformatstring', 'attribution'],
+                          },
+                      }
                   },
-                },
+                  tags: {
+                      select: ['id', 'tag', 'markercolor'],
+                      populate: {
+                          thumbnail: { select: ['url', 'formats'] },
+                      }
+                  },
               },
-              assets: {
-                orderBy: { order: 'asc' },
-                select: ['id', 'name'],
-                populate: {
-                    pcbundle: {
-                        select: ['id', 'name', 'url', 'size'],
-                    },
-                    androidbundle: {
-                        select: ['id', 'name', 'url', 'size'],
-                    },
-                    webglbundle: {
-                        select: ['id', 'name', 'url', 'size'],
-                    },
-                    macbundle: {
-                        select: ['id', 'name', 'url', 'size'],
-                    }
-                },
-              },
-              contents: {
-                where: whereclause,
-                orderBy: { order: 'asc' },
-                populate: {
-                    mediafile: {
-                        select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
-                    },
-                    audiofile: {
-                      select: ['id', 'name', 'url', 'size', 'caption'],
-                    },
-                    channel: {
-                        select: ['id', 'uniqueID', 'markercolor', 'lat', 'long'],
-                        populate: {
-                            owner: { select: ['id'] },
-                            tags: {
-                              select: ['id', 'tag', 'markercolor'],
-                              populate: {
-                                  thumbnail: { select: ['url', 'formats'] },
-                              }
-                            },
-                            tileset: {
-                              select: ['id', 'name', 'urlformatstring', 'attribution'],
-                            },
-                        }
-                    },
-                    tags: {
-                        select: ['id', 'tag', 'markercolor'],
-                        populate: {
-                            thumbnail: { select: ['url', 'formats'] },
-                        }
-                    },
-                },
-              }
-          },
-        });
+            }
+        },
+      });
   },
 
   async addFile(id, ref, file, key)

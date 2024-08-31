@@ -329,10 +329,10 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
     async getSubmissionChannel(ctx)
     {
-        if (!ctx.request.body.privateID) 
+        if (!ctx.query.privateID) 
             return ctx.badRequest('No channel specified'); 
         
-        const channel = await strapi.config.functions.getChannel(null, null, ctx.request.body.privateID);
+        const channel = await strapi.config.functions.getChannel(null, null, ctx.query.privateID);
         
         if (!channel)
             return ctx.badRequest('This channel doesnt exist or doesnt allow you to edit without logging in');
