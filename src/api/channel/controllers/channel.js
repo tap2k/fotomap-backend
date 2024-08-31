@@ -411,13 +411,11 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         if (!ctx.request.body.uniqueID) 
             return ctx.badRequest('No channel specified'); 
         
-        const canEdit = await strapi.config.functions.canEdit(ctx.request.body.uniqueID, ctx.state.user.id);
+        const channel = await strapi.config.functions.canEdit(ctx.request.body.uniqueID, ctx.state.user.id);
 
         if (!canEdit) 
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + ctx.request.body.uniqueID);
         
-        const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
-
         return await updateChannelFunc(ctx, channel);
     },
 
@@ -425,7 +423,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         if (!ctx.request.body.privateID) 
             return ctx.badRequest('No channel specified'); 
         
-        const channel = await strapi.config.functions.getChannel(null, null, ctx.request.body.privateID);
+        const channel = await strapi.config.functions.canEdit(null, null, ctx.request.body.privateID);
         
         if (!channel)
             return ctx.badRequest('This channel doesnt exist or doesnt allow you to edit without logging in');
@@ -437,7 +435,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         if (!ctx.request.body.privateID) 
             return ctx.badRequest('No channel specified'); 
 
-        const channel = await strapi.config.functions.getChannel(null, null, ctx.request.body.privateID)
+        const channel = await strapi.config.functions.canEdit(null, null, ctx.request.body.privateID)
         if (!channel)
             return ctx.badRequest('This channel doesnt exist or doesnt allow you to edit without logging in');;
     
@@ -474,13 +472,18 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         if (!ctx.request.body.uniqueID) 
             return ctx.badRequest('No channel specified'); 
 
-        const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
+        const channel = await strapi.config.functions.getBasicChannel(ctx.request.body.uniqueID);
         
         let canEdit = false;
-        if (channel.parent)
-            canEdit = await strapi.config.functions.canEdit(channel.parent.uniqueID, ctx.state.user.id);
+        if (channel.owner.id == ctx.state.user.id)
+            canEdit = true;
+        else
+        {
+            if (channel.parent)
+                canEdit = await strapi.config.functions.canEdit(channel.parent.uniqueID, ctx.state.user.id);
+        }
     
-        if (!(channel.owner.id == ctx.state.user.id) && !canEdit)
+        if (!canEdit)
             return ctx.badRequest('No such channel or you are not the owner');
 
         return await deleteChannelFunc(ctx, channel);
@@ -490,7 +493,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         if (!ctx.request.body.privateID) 
             return ctx.badRequest('No channel specified'); 
         
-        const channel = await strapi.config.functions.getChannel(null, null, ctx.request.body.privateID);
+        const channel = await strapi.config.functions.canEdit(null, null, ctx.request.body.privateID);
         
         if (!channel)
             return ctx.badRequest('This channel doesnt exist or doesnt allow you to edit without logging in');
@@ -499,7 +502,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
     },
 
     async regenChannelID(ctx) {
-        const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
+        const channel = await strapi.config.functions.getBasicChannel(ctx.request.body.uniqueID);
     
         if (!(channel.owner.id == ctx.state.user.id))
             return ctx.badRequest('You are not the owner of this channel');
@@ -534,14 +537,11 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         if (!user)
             return ctx.badRequest('No such user');
 
-        const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
-        /*if (channel.editors.some(editor => editor.id == ctx.state.user.id))
-            return "ok";*/
+        const channel = await strapi.config.functions.getBasicChannel(ctx.request.body.uniqueID);
     
         if (!channel)
             return ctx.badRequest('No such channel');
-    
-        // TODO: allow this?
+        
         if (channel.owner.id != ctx.state.user.id)
             return ctx.badRequest('You dont own this channel');
         
@@ -564,17 +564,13 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         if (!user)
             return ctx.badRequest('No such user');
         
-        const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
+        const channel = await strapi.config.functions.getBasicChannel(ctx.request.body.uniqueID);
     
         if (!channel)
             return ctx.badRequest('No such channel');
     
-        // TODO: allow this?
         if (channel.owner.id != ctx.state.user.id)
             return ctx.badRequest('You dont own this channel');
-        
-        if (!channel.editors.some(editor => editor.id == user.id))
-            return ctx.badRequest('Not an editor');
         
         return await strapi.db.query('api::channel.channel').update({
             where: { id: channel.id },
@@ -586,14 +582,11 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
     async convertChannels(ctx) {
 
-       // Fetch all channels
        const allChannels = await strapi.db.query('api::channel.channel').findMany({
             select: ['id', 'uniqueID'],
         });
 
-    // Iterate over each channel
         for (const channel of allChannels) {
-
             const myContents = await strapi.db.query('api::content.content').findMany({
                 where: { channel: channel.id },
                 select: ['id'],
@@ -624,9 +617,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                 }
             }
         }
-
         return "ok";
     },
-
 }));
 

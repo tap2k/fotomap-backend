@@ -41,11 +41,9 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
         if (!ctx.request.files.bundle) 
             return ctx.badRequest('No asset bundle specified');
         
-        const canEdit = await strapi.config.functions.canEdit(ctx.request.body.uniqueID, ctx.state.user.id);
-        if (!canEdit) 
+        const channel = await strapi.config.functions.canEdit(ctx.request.body.uniqueID, ctx.state.user.id);
+        if (!channel) 
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + ctx.request.body.uniqueID);
-
-        const channel = await strapi.config.functions.getChannel(ctx.request.body.uniqueID);
 
         const platform = ctx.request.body.platform;
             
@@ -187,7 +185,8 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
         if (!asset)
             return ctx.badRequest('No such asset');
         
-        if (!strapi.config.functions.canEdit(asset.channel.uniqueID, ctx.state.user.id))
+        const channel = await strapi.config.functions.canEdit(asset.channel.uniqueID, ctx.state.user.id);
+        if (!channel)
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + asset.channel?.uniqueID);
 
         await strapi.config.functions.deleteBundles(asset);

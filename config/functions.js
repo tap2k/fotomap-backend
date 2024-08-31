@@ -52,50 +52,78 @@ module.exports = {
     return crypto.randomBytes(HASH_LENGTH).toString('hex');
   },
 
-  async addFile(id, ref, file, key)
+  async getBasicChannel(channelID)
   {
-      if (!file)
-          return null;
-  
-      if (file) {
-          let path = file.path;
-          let filename = file.name;
-          if (!filename.includes('.'))
-            filename += ".bin";
-  
-          const fs = require('fs');
-          const mime = require('mime');
-          const mimetype = mime.getType(filename);
-          const stats = fs.statSync(path);
-  
-          return await strapi.plugins.upload.services.upload.upload({
-              data: {
-                  refId: id,
-                  ref: ref,
-                  field: key,
-              },
-              files: {
-                  path: path,
-                  name: filename,
-                  type: mimetype,
-                  size: stats.size
+    return await strapi.query('api::channel.channel').findOne({
+      where: { uniqueID: channelID },
+      select: ['id', 'uniqueID', 'name', 'allowsubmissions', 'public'],
+      populate: {
+          parent: {
+              select: ['id', 'uniqueID', 'name'],
+              populate: {
+                  owner: {
+                      select: ['id'],
+                  },
+                  editors: {
+                      select: ['id', 'username', 'email'],
+                  },
               }
-          });
-      }
+          },
+          owner: {
+              select: ['id'],
+          },
+          editors: {
+              select: ['id', 'username', 'email'],
+          },
+          picture: {
+            select: ['id', 'url', 'formats', 'size'],
+          },
+          audiofile: {
+            select: ['id', 'url', 'size'],
+          },
+      },
+    });
+  },
+  
+  async canEdit(channelID, userID, privateID) {
+    if (privateID && !channelID)
+    {
+      const colonIndex = str.indexOf(':');
+      if (colonIndex < 0)
+        return null;
+      channelID = privateID.slice(0, colonIndex);
+    }
+    if (!channelID)
+      return null;
+    const channel = await strapi.config.functions.getBasicChannel(channelID);
+    if (!channel)
+      return null;
+    if (channelID == "probe")
+      return channel;
+    if (userID && ((channel.owner?.id == userID) || channel.editors?.some(item => item.id == userID)))
+      return channel;
+    if (privateID && strapi.config.functions.getPublicID(privateID))
+      return channel;
+    if (channel.parent?.uniqueID)
+      return await strapi.config.functions.canEdit(channel.parent.uniqueID, userID);
+    return null;
   },
 
   async getChannel(channelID, userID, privateID)
   {
-      let whereclause = {};
-
-      if (userID && !await strapi.config.functions.canEdit(channelID, userID))
-        whereclause = { publishedAt: { $ne: null } };
-      else if (privateID)
+      if (privateID && !channelID)
       {
-        channelID = strapi.config.functions.getPublicID(privateID)
-        if (!channelID)
+        const colonIndex = str.indexOf(':');
+        if (colonIndex < 0)
           return null;
+        channelID = privateID.slice(0, colonIndex);
       }
+      
+      const basicChannel = strapi.config.functions.canEdit(channelID, userID, privateID);
+      
+      let whereclause = { publishedAt: { $ne: null } };
+      if (!basicChannel)
+        whereclause = {};
 
       return await strapi.query('api::channel.channel').findOne({
           where: { uniqueID: channelID },
@@ -213,19 +241,36 @@ module.exports = {
         });
   },
 
-  async canEdit(channelID, userID) {
-    if (channelID == "probe")
-      return true;
-    if (!userID || !channelID)
-      return false;
-    const channel = await strapi.config.functions.getChannel(channelID);
-    if (!channel)
-      return false;
-    if ((channel.owner?.id == userID) || channel.editors?.some(item => item.id == userID))
-      return true;
-    if (channel.parent?.uniqueID)
-      return await strapi.config.functions.canEdit(channel.parent.uniqueID, userID);
-    return false;
+  async addFile(id, ref, file, key)
+  {
+      if (!file)
+          return null;
+  
+      if (file) {
+          let path = file.path;
+          let filename = file.name;
+          if (!filename.includes('.'))
+            filename += ".bin";
+  
+          const fs = require('fs');
+          const mime = require('mime');
+          const mimetype = mime.getType(filename);
+          const stats = fs.statSync(path);
+  
+          return await strapi.plugins.upload.services.upload.upload({
+              data: {
+                  refId: id,
+                  ref: ref,
+                  field: key,
+              },
+              files: {
+                  path: path,
+                  name: filename,
+                  type: mimetype,
+                  size: stats.size
+              }
+          });
+      }
   },
 
   async deleteMediafile(id) {
