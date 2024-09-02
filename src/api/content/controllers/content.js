@@ -12,13 +12,28 @@ const ExifReader = require('exifreader');
 const NodeGeocoder = require('node-geocoder');
 const { Client } = require("youtubei");
 
+function extractPlaylistId(url) {
+    const regex = /[?&]list=([^#\&\?]+)/;
+    const match = url.match(regex);
+    return match ? match[1] : null;
+  }
+
 async function getPlaylistVideoUrls(playlistUrl) {
+    const playlistID = extractPlaylistId(playlistUrl);
+    if (!playlistID)
+        return;
     const youtube = new Client();
-    const playlist = await youtube.getPlaylist("PLd7-bHaQwntjZdEFfcKMFTHKECVRdZ7F9");
-    console.log(playlist);
-    return [];
-    //await playlist.videos.next(0);
-    //console.log(playlist.videos.items);
+    const playlist = await youtube.getPlaylist(playlistID);
+    console.log(playlist.videos.items);
+    const playlistItems = playlist.videos.items.map(item => {
+        return {
+            id: item.id,
+            title: item.title,
+            description: item.description,
+            url: `https://www.youtube.com/watch?v=${item.id}`
+        };
+    });
+    return playlistItems;
 }
 
 /*async function getPlaylistVideoUrls(playlistUrl) {
@@ -185,20 +200,6 @@ async function createContentFunc(file, channelID, title, name, location, descrip
     if (published != undefined && published == "true")
         publishedAt = new Date();
 
-    // Still add files?
-    if (ext_url && ext_url.includes('youtube.com/playlist')) {
-        try {
-            const videoUrls = await getPlaylistVideoUrls(ext_url);
-            for (const videoUrl of videoUrls) {
-                await createContentFunc(file, channelID, title, description, videoUrl, order, lat, long, published, audioFile);
-            }
-            return "ok";
-        } catch (error) {
-            console.error('Error processing playlist:', error);
-            // Decide whether to throw the error or continue with the original ext_url
-        }
-    }
-
     if (!lat || !long) {
         if (location)
         {
@@ -207,6 +208,20 @@ async function createContentFunc(file, channelID, title, name, location, descrip
                 lat = locations[0].latitude;
                 long = locations[0].longitude;
             }
+        }
+    }
+
+    // Still add files?
+    if (ext_url && ext_url.includes('youtube.com/playlist')) {
+        try {
+            const items = await getPlaylistVideoUrls(ext_url);
+            for (const item of items) {
+                await createContentFunc(null, channelID, item["title"], name, location, item["description"], item["url"], order, lat, long, published, audioFile);
+            }
+            return "ok";
+        } catch (error) {
+            console.error('Error processing playlist:', error);
+            // Decide whether to throw the error or continue with the original ext_url
         }
     }
 
