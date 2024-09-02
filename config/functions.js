@@ -97,7 +97,8 @@ module.exports = {
     const channel = await strapi.config.functions.getBasicChannel(channelID);
     if (!channel)
       return null;
-    if (channelID == "probe" || privateID)
+    // TODO: hack for superuser
+    if (channelID == "probe" || privateID || (userID == 1))
       return channel;
     if (userID && ((channel.owner?.id == userID) || channel.editors?.some(item => item.id == userID)))
       return channel;

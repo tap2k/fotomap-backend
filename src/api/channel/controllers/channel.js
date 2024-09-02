@@ -28,7 +28,23 @@ async function processFiles(ctx, channel) {
         if (imageAdded && audioAdded) break;
       }
     }
-  }
+}
+
+async function consolidateChannels(ctx) {
+    // TODO: Do this on register
+    let mynewchannels = await strapi.db.query('api::channel.channel').findMany({
+        where: { $and: [{ email: ctx.state.user.email }, { owner: 1 }] }
+    });
+
+    const updateOperations = mynewchannels.map(channel => ({
+        where: { id: channel.id },
+        data: { owner: ctx.state.user.id }
+    }));
+
+    await Promise.all(updateOperations.map(operation => 
+        strapi.db.query('api::channel.channel').update(operation)
+    ));
+}
 
 async function createChannelFunc(ctx, owner) {
     let channelid = ctx.request.body.uniqueID;
@@ -370,6 +386,9 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
     },
 
     async getMyChannels(ctx) {
+
+        await consolidateChannels(ctx);
+
         const channels = await strapi.db.query('api::channel.channel').findMany({
             //where: { $and: [{owner: ctx.state.user.id}, { parent: null }] },
             where: { $or: [{ owner: ctx.state.user.id }, { editors: ctx.state.user.id }] },
