@@ -108,14 +108,21 @@ module.exports = {
 
   async getChannel(channelID, userID, privateID)
   {      
-    const basicChannel = await strapi.config.functions.canEdit(channelID, userID, privateID);
-  
     let whereclause = { publishedAt: { $ne: null } };
-    if (!basicChannel)
-      whereclause = {};
+    let basicChannel = null;
 
-    return await strapi.query('api::channel.channel').findOne({
-        where: { uniqueID: basicChannel.uniqueID },
+    if (userID || privateID)
+    {
+      basicChannel = await strapi.config.functions.canEdit(channelID, userID, privateID);
+      if (basicChannel)
+      {
+        whereclause = {};
+        channelID = basicChannel.uniqueID
+      }
+    }
+
+    const channel = await strapi.query('api::channel.channel').findOne({
+        where: { uniqueID:  channelID },
         //select: ['id', 'uniqueID', 'name', 'description', 'allowsubmissions', 'showtitle', 'public'],
         populate: {
             parent: {
@@ -228,6 +235,11 @@ module.exports = {
             }
         },
       });
+
+      if (basicChannel)
+        channel.canedit = true;
+
+      return channel;
   },
 
   async addFile(id, ref, file, key)

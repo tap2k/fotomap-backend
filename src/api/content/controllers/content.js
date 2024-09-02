@@ -6,12 +6,22 @@
 
 const fs = require('fs');
 const mime = require('mime');
-const axios = require('axios');
+//const axios = require('axios');
 //const { createGzip } = require('zlib');
 const ExifReader = require('exifreader');
 const NodeGeocoder = require('node-geocoder');
+const { Client } = require("youtubei");
 
 async function getPlaylistVideoUrls(playlistUrl) {
+    const youtube = new Client();
+    const playlist = await youtube.getPlaylist("PLd7-bHaQwntjZdEFfcKMFTHKECVRdZ7F9");
+    console.log(playlist);
+    return [];
+    //await playlist.videos.next(0);
+    //console.log(playlist.videos.items);
+}
+
+/*async function getPlaylistVideoUrls(playlistUrl) {
     try {
         const response = await axios.get(playlistUrl);
         const html = response.data;
@@ -31,7 +41,7 @@ async function getPlaylistVideoUrls(playlistUrl) {
         console.error('Error fetching playlist data:', error);
         throw error;
     }
-}
+}*/
 
 async function geocode(location) {
     const options = {
@@ -470,7 +480,6 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
     async uploadSubmission(ctx) {
 
         let channel = null;
-
         if (ctx.request.body.privateID)
             channel = await strapi.config.functions.getChannel(null, null, ctx.request.body.privateID);
         else

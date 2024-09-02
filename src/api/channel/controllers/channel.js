@@ -311,6 +311,35 @@ async function getChildChannelsFunc(channelID) {
     return channels;
 }
 
+async function saveChannelFunc(ctx, channel) {
+    try {
+        for (const item of ctx.request.body.contents) {
+            let content = await strapi.db.query('api::content.content').findOne({
+                where: { 
+                    id: item.id,
+                    channel: channel.id  // Ensure the content belongs to the specified channel
+                },
+            });
+
+            if (content) {
+                await strapi.db.query('api::content.content').update({
+                    where: { id: content.id },
+                    data: {
+                        start_time: item.start_time,
+                        duration: item.duration
+                    },
+                });
+            } else {
+                console.log(`Content with id ${item.id} not found in channel ${channel.id}`);
+            }
+        }
+
+        return "ok";
+    } catch (error) {
+        return ctx.badRequest(error);
+    }
+}
+
 const { createCoreController } = require('@strapi/strapi').factories;
 
 //module.exports = createCoreController('api::channel.channel');
@@ -413,7 +442,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         
         const channel = await strapi.config.functions.canEdit(ctx.request.body.uniqueID, ctx.state.user.id);
 
-        if (!canEdit) 
+        if (!channel) 
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + ctx.request.body.uniqueID);
         
         return await updateChannelFunc(ctx, channel);
@@ -431,6 +460,17 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         return await updateChannelFunc(ctx, channel);
     },
 
+    async saveChannel(ctx) {
+        if (!ctx.request.body.uniqueID) 
+            return ctx.badRequest('No channel specified'); 
+
+        const channel = await strapi.config.functions.canEdit(ctx.request.body.uniqueID, ctx.state.user.id)
+        if (!channel)
+            return ctx.badRequest('This channel doesnt exist or doesnt allow you to edit without logging in');;
+    
+        return saveChannelFunc(ctx, channel);
+    },
+
     async saveSubmissionChannel(ctx) {
         if (!ctx.request.body.privateID) 
             return ctx.badRequest('No channel specified'); 
@@ -439,32 +479,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         if (!channel)
             return ctx.badRequest('This channel doesnt exist or doesnt allow you to edit without logging in');;
     
-        try {
-            for (const item of ctx.request.body.contents) {
-                let content = await strapi.db.query('api::content.content').findOne({
-                    where: { 
-                        id: item.id,
-                        channel: channel.id  // Ensure the content belongs to the specified channel
-                    },
-                });
-    
-                if (content) {
-                    await strapi.db.query('api::content.content').update({
-                        where: { id: content.id },
-                        data: {
-                            start_time: item.start_time,
-                            duration: item.duration
-                        },
-                    });
-                } else {
-                    console.log(`Content with id ${item.id} not found in channel ${channel.id}`);
-                }
-            }
-    
-            return "ok";
-        } catch (error) {
-            return ctx.badRequest(error);
-        }
+        return saveChannelFunc(ctx, channel);
     },
 
     //TODO: Delete child channels?

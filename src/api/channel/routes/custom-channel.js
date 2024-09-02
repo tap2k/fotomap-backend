@@ -53,6 +53,11 @@ module.exports = {
     },
     { 
       method: 'POST',
+      path: '/saveChannel', 
+      handler: 'channel.saveChannel',
+    },
+    { 
+      method: 'POST',
       path: '/createSubmissionChannel', 
       handler: 'channel.createSubmissionChannel',
       config: {
