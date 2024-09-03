@@ -240,8 +240,6 @@ module.exports = {
       if (basicChannel)
       {
         channel.canedit = true;
-        console.log("USERID = " + userID);
-        console.log("OWNER = " + channel.owner.id);
         if (userID == channel.owner.id)
           channel.owned = true;
       }
