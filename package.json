@@ -19,6 +19,7 @@
     "convert-csv-to-json": "^2.0.0",
     "exifreader": "^4.23.3",
     "fluent-ffmpeg": "^2.1.2",
+    "google-photos-album-image-url-fetch": "^3.2.0",
     "jwt-decode": "^3.1.2",
     "mime": "^3.0.0",
     "node-geocoder": "^4.4.0",

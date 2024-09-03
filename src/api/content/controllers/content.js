@@ -11,6 +11,13 @@ const mime = require('mime');
 const ExifReader = require('exifreader');
 const NodeGeocoder = require('node-geocoder');
 const { Client } = require("youtubei");
+const GooglePhotosAlbum = require('google-photos-album-image-url-fetch');
+
+async function getGooglePhotos(photosUrl) {
+    const photolist = await GooglePhotosAlbum.fetchImageUrls(photosUrl);
+    const photos = photolist.map(item => item.url);
+    return photos;
+}
 
 function extractPlaylistId(url) {
     const regex = /[?&]list=([^#\&\?]+)/;
@@ -24,7 +31,6 @@ async function getPlaylistVideoUrls(playlistUrl) {
         return;
     const youtube = new Client();
     const playlist = await youtube.getPlaylist(playlistID);
-    console.log(playlist.videos.items);
     const playlistItems = playlist.videos.items.map(item => {
         return {
             id: item.id,
@@ -221,7 +227,20 @@ async function createContentFunc(file, channelID, title, name, location, descrip
             return "ok";
         } catch (error) {
             console.error('Error processing playlist:', error);
-            // Decide whether to throw the error or continue with the original ext_url
+            return null;
+        }
+    }
+
+    if (ext_url && ext_url.includes('photos.google.com/share')) {
+        try {
+            const items = await getGooglePhotos(ext_url);
+            for (const item of items) {
+                await createContentFunc(null, channelID, null, name, location, null, item, order, lat, long, published, audioFile);
+            }
+            return "ok";
+        } catch (error) {
+            console.error('Error processing photos:', error);
+            return null;
         }
     }
 
