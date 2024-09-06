@@ -185,20 +185,30 @@ async function updateContentFunc(ctx, content) {
     return newcontent;
 }
 
-async function uploadJSONFunc(channelid, contents, published)
+async function uploadJSONFunc(channelid, contents, published, contributor)
 {
     let newcontents = [];
     contents.forEach(async (element)=> {
-    //await Promise.all(contents.map(async (element) => {
-        const contentItem = await createContentFunc(null, channelid, element.title, element.name, element.location, element.description, element.ext_url, element.order, element.lat, element.long, published);
+        const contentItem = await createContentFunc({
+            channelID: channelid,
+            title: element.title,
+            name: element.name,
+            location: element.location,
+            description: element.description,
+            ext_url: element.ext_url,
+            order: element.order,
+            lat: element.lat,
+            long: element.long,
+            published,
+            audioFile: null,
+            contributor
+        });
         newcontents.push(contentItem);
-    //}));
     });
     return newcontents;
 }
 
-// TODO: Fix this signature
-async function createContentFunc(file, channelID, title, name, location, description, ext_url, order, lat, long, published, audioFile) {
+async function createContentFunc({ channelID, file, title, name, location, description, ext_url, order, lat, long, published, textalignment, audioFile, contributor }) {
     if (!channelID)
         return null;
 
@@ -217,12 +227,25 @@ async function createContentFunc(file, channelID, title, name, location, descrip
         }
     }
 
-    // Still add files?
     if (ext_url && ext_url.includes('youtube.com/playlist')) {
         try {
             const items = await getPlaylistVideoUrls(ext_url);
             for (const item of items) {
-                await createContentFunc(null, channelID, item["title"], name, location, item["description"], item["url"], order, lat, long, published, audioFile);
+                await createContentFunc({
+                    channelID,
+                    title: item["title"],
+                    name,
+                    location,
+                    description: item["description"],
+                    ext_url: item["url"],
+                    order,
+                    lat,
+                    long,
+                    published,
+                    textalignment,
+                    audioFile,
+                    contributor
+                });
             }
             return "ok";
         } catch (error) {
@@ -235,7 +258,21 @@ async function createContentFunc(file, channelID, title, name, location, descrip
         try {
             const items = await getGooglePhotos(ext_url);
             for (const item of items) {
-                await createContentFunc(null, channelID, null, name, location, null, item, order, lat, long, published, audioFile);
+                await createContentFunc({
+                    channelID,
+                    title: null,
+                    name,
+                    location,
+                    description: null,
+                    ext_url: item,
+                    order,
+                    lat,
+                    long,
+                    published,
+                    textalignment,
+                    audioFile,
+                    contributor
+                });
             }
             return "ok";
         } catch (error) {
@@ -247,14 +284,16 @@ async function createContentFunc(file, channelID, title, name, location, descrip
     const content = await strapi.db.query('api::content.content').create({
         data: {
             channel: channelID,
-            title: title,
-            name: name,
-            location: location,
-            description: description,
-            ext_url: ext_url,
-            lat: lat,
-            long: long,
-            publishedAt: publishedAt
+            title,
+            name,
+            location,
+            description,
+            ext_url,
+            lat,
+            long,
+            publishedAt,
+            textalignment,
+            contributor
         },
         populate: {
             channel: {
@@ -313,7 +352,7 @@ async function uploadContentFunc(ctx, channel)
                 {
                     const csvToJson = require('convert-csv-to-json');
                     const jsondata = csvToJson.supportQuotedField(true).fieldDelimiter(',').getJsonFromCsv(files[key].path);
-                    const newcontents = uploadJSONFunc(channel.id, jsondata, ctx.request.body.published);
+                    const newcontents = uploadJSONFunc(channel.id, jsondata, ctx.request.body.published, ctx.state.user?.id);
                     contents = contents.concat(newcontents);
                 }
                 else
@@ -330,7 +369,22 @@ async function uploadContentFunc(ctx, channel)
                         }
                     }
                 
-                    const content = await createContentFunc(files[key], channel.id,  ctx.request.body.title, ctx.request.body.name, ctx.request.body.location, ctx.request.body.description, ctx.request.body.ext_url, order, ctx.request.body.lat, ctx.request.body.long, ctx.request.body.published, audioFile);
+                    const content = await createContentFunc({
+                        file: files[key],
+                        channelID: channel.id,
+                        title: ctx.request.body.title,
+                        name: ctx.request.body.name,
+                        location: ctx.request.body.location,
+                        description: ctx.request.body.description,
+                        ext_url: ctx.request.body.ext_url,
+                        order: order,
+                        lat: ctx.request.body.lat,
+                        long: ctx.request.body.long,
+                        published: ctx.request.body.published,
+                        textalignment: ctx.request.body.textalignment,
+                        audioFile: audioFile,
+                        contributor: ctx.state.user?.id
+                    });
                     if (!content) return ctx.badRequest('Could not create content');
                     contents.push(content);
                     order = order + 1;
@@ -344,7 +398,21 @@ async function uploadContentFunc(ctx, channel)
     }
     else
     {
-        const content = await createContentFunc(null, channel.id, ctx.request.body.title, ctx.request.body.name, ctx.request.body.location, ctx.request.body.description, ctx.request.body.ext_url, ctx.request.body.order, ctx.request.body.lat, ctx.request.body.long, ctx.request.body.published);
+        const content = await createContentFunc({
+            channelID: channel.id,
+            title: ctx.request.body.title,
+            name: ctx.request.body.name,
+            location: ctx.request.body.location,
+            description: ctx.request.body.description,
+            ext_url: ctx.request.body.ext_url,
+            order: ctx.request.body.order,
+            lat: ctx.request.body.lat,
+            long: ctx.request.body.long,
+            textalignment: ctx.request.body.textalignment,
+            published: ctx.request.body.published,
+            audioFile: null,
+            contributor: ctx.state.user?.id
+        });    
         if (!content) 
             return ctx.badRequest("Could not create content");
         else
@@ -706,7 +774,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + ctx.request.body.uniqueID);
 
         const channelid = ctx.request.body.id || channel.id;
-        await uploadJSONFunc(channelid, ctx.request.body.contents, ctx.request.body.published);
+        await uploadJSONFunc(channelid, ctx.request.body.contents, ctx.request.body.published, ctx.state.user.id);
 
         return "ok";
     

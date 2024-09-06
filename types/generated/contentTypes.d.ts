@@ -659,6 +659,11 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       'manyToOne',
       'plugin::users-permissions.role'
     >;
+    contents: Attribute.Relation<
+      'plugin::users-permissions.user',
+      'oneToMany',
+      'api::content.content'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -928,6 +933,12 @@ export interface ApiContentContent extends Schema.CollectionType {
     location: Attribute.String;
     start_time: Attribute.Float;
     duration: Attribute.Float;
+    contributor: Attribute.Relation<
+      'api::content.content',
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    background_color: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;

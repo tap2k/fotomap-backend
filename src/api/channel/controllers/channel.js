@@ -387,6 +387,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
 
     async getMyChannels(ctx) {
 
+        // TODO: Do this every time?
         await consolidateChannels(ctx);
 
         const channels = await strapi.db.query('api::channel.channel').findMany({
