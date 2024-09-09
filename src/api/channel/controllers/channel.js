@@ -508,6 +508,9 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             return ctx.badRequest('No channel specified'); 
 
         const channel = await strapi.config.functions.getBasicChannel(ctx.request.body.uniqueID);
+
+        if (!channel)
+            return ctx.badRequest('No such channel or you are not the owner');
         
         let canEdit = false;
         if (channel.owner.id == ctx.state.user.id)
