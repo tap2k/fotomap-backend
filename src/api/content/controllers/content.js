@@ -159,15 +159,28 @@ async function updateContentFunc(ctx, content) {
         }
     });
 
-    if (ctx.request.files && Object.keys(ctx.request.files).length) {
+    if (ctx.request.files['audiofile'])
+    {
         if (newcontent.audiofile?.id)
             await strapi.config.functions.deleteMediafile(newcontent.audiofile.id);
-        await strapi.config.functions.addFile(content.id, 'api::content.content', ctx.request.files[Object.keys(ctx.request.files)], "audiofile");
-    } 
-    else 
+        await strapi.config.functions.addFile(content.id, 'api::content.content', ctx.request.files['audiofile'], "audiofile");
+    }
+    else
     {
         if (newcontent.audiofile && ctx.request.body.deleteaudio == "true")
             await strapi.config.functions.deleteMediafile(newcontent.audiofile.id);
+    }
+
+    if (ctx.request.files['mediafile'])
+    {
+        if (newcontent.mediafile?.id)
+            await strapi.config.functions.deleteMediafile(newcontent.mediafile.id);
+        await strapi.config.functions.addFile(content.id, 'api::content.content', ctx.request.files['mediafile'], "mediafile");
+    }
+    else
+    {
+        if (newcontent.mediafile && ctx.request.body.deletemedia == "true")
+            await strapi.config.functions.deleteMediafile(newcontent.mediafile.id);
     }
 
     if (ctx.request.body.order)
