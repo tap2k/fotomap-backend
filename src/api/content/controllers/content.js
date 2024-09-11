@@ -151,10 +151,10 @@ async function updateContentFunc(ctx, content) {
                 }
             },
             mediafile: {
-                select: ['id'],
+                select: ['id', 'mime'],
             },
             audiofile: {
-                select: ['id'],
+                select: ['id', 'mime'],
             },
         }
     });
@@ -174,7 +174,20 @@ async function updateContentFunc(ctx, content) {
     if (ctx.request.files['mediafile'])
     {
         if (newcontent.mediafile?.id)
-            await strapi.config.functions.deleteMediafile(newcontent.mediafile.id);
+        {
+            // TAP: move the audio file over
+            if (newcontent.mediafile.mime.startsWith("audio"))
+            {
+                await strapi.query("api::content.content").update({
+                    where: { id: newcontent.id },
+                    data: { 
+                        audiofile: newcontent.mediafile.id
+                    },
+                });
+            }
+            else
+                await strapi.config.functions.deleteMediafile(newcontent.mediafile.id);
+        }
         await strapi.config.functions.addFile(content.id, 'api::content.content', ctx.request.files['mediafile'], "mediafile");
     }
     else
