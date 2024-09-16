@@ -426,11 +426,26 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
                     select: ['id', 'username', 'email'],
                 },
                 picture: {
-                    select: ['id', 'url', 'formats'],
+                    select: ['id', 'name', 'url', 'caption', 'formats'],
+                },
+                audiofile: {
+                    select: ['id', 'name', 'url', 'caption'],
                 },
                 tileset: {
                     select: ['id', 'name', 'urlformatstring', 'attribution'],
                 },
+                contents: {
+                    where: { publishedAt: { $ne: null } },
+                    orderBy: { order: 'asc' },
+                    populate: {
+                        mediafile: {
+                            select: ['id', 'name', 'url', 'size', 'caption', 'formats'],
+                        },
+                        audiofile: {
+                          select: ['id', 'name', 'url', 'size', 'caption'],
+                        },
+                    }
+                }
             },
           });
         return channels;
