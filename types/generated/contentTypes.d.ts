@@ -846,6 +846,7 @@ export interface ApiChannelChannel extends Schema.CollectionType {
     showtitle: Attribute.Boolean & Attribute.DefaultTo<true>;
     email: Attribute.Email;
     background_color: Attribute.String;
+    foreground_color: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -939,6 +940,7 @@ export interface ApiContentContent extends Schema.CollectionType {
       'plugin::users-permissions.user'
     >;
     background_color: Attribute.String;
+    foreground_color: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;

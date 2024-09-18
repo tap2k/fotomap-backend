@@ -234,7 +234,7 @@ async function uploadJSONFunc(channelid, contents, published, contributor)
     return newcontents;
 }
 
-async function createContentFunc({ channelID, file, title, name, location, description, ext_url, order, lat, long, published, textalignment, background_color, audioFile, contributor }) {
+async function createContentFunc({ channelID, file, title, name, location, description, ext_url, order, lat, long, published, textalignment, background_color, foreground_color, audioFile, contributor }) {
     if (!channelID)
         return null;
 
@@ -270,6 +270,7 @@ async function createContentFunc({ channelID, file, title, name, location, descr
                     published,
                     textalignment,
                     background_color,
+                    foreground_color,
                     audioFile,
                     contributor
                 });
@@ -298,6 +299,7 @@ async function createContentFunc({ channelID, file, title, name, location, descr
                     published,
                     textalignment,
                     background_color,
+                    foreground_color,
                     audioFile,
                     contributor
                 });
@@ -322,6 +324,7 @@ async function createContentFunc({ channelID, file, title, name, location, descr
             publishedAt,
             textalignment,
             background_color,
+            foreground_color,
             contributor
         },
         populate: {
@@ -412,6 +415,7 @@ async function uploadContentFunc(ctx, channel)
                         published: ctx.request.body.published,
                         textalignment: ctx.request.body.textalignment,
                         background_color: ctx.request.body.background_color,
+                        foreground_color: ctx.request.body.foreground_color,
                         audioFile: audioFile,
                         contributor: ctx.state.user?.id
                     });
@@ -440,6 +444,7 @@ async function uploadContentFunc(ctx, channel)
             long: ctx.request.body.long,
             textalignment: ctx.request.body.textalignment,
             background_color: ctx.request.body.background_color,
+            foreground_color: ctx.request.body.foreground_color,
             published: ctx.request.body.published,
             audioFile: null,
             contributor: ctx.state.user?.id

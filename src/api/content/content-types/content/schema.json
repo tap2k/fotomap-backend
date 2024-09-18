@@ -140,6 +140,9 @@
     },
     "background_color": {
       "type": "string"
+    },
+    "foreground_color": {
+      "type": "string"
     }
   }
 }
