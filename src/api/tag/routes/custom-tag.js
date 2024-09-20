@@ -1,13 +1,13 @@
 module.exports = {
     routes: [
-      {
+      /*{
         method: "GET",
         path: "/getTags",
         handler: "tag.getTags",
         config: {
           auth: false,
         },
-      },
+      },*/
       {
         method: "POST",
         path: "/addTag",

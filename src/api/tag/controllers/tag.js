@@ -60,14 +60,14 @@ const { createCoreController } = require('@strapi/strapi').factories;
 
 module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
 
-    async getTags(ctx) {
+    /*async getTags(ctx) {
         const channel = await strapi.config.functions.getBasicChannel(ctx.query.uniqueID);
 
         if (!channel)
             return ctx.badRequest('No such channel: ' + ctx.query.uniqueID);
         
         return await getTagsFunc(channel);
-    },
+    },*/
 
     async updateTag(ctx) {
 
