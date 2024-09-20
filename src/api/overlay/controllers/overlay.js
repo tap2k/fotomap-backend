@@ -53,7 +53,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         
         const channel = strapi.config.functions.canEdit(overlay.channel.uniqueID, ctx.state.user.id)
         if (!channel)
-            return ctx.badRequest('No such channel or you are not allowed to edit: ' + overlay.channel?.uniqueID);
+            return ctx.badRequest('No such channel or you are not allowed to edit');
 
         if (overlay.image)
             await strapi.config.functions.deleteMediafile(overlay.image.id);
@@ -126,7 +126,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         
         const channel = await strapi.config.functions.canEdit(overlay.channel.uniqueID, ctx.state.user.id)
         if (!channel)
-            return ctx.badRequest('No such channel or you are not allowed to edit: ' + overlay.channel.uniqueID);
+            return ctx.badRequest('No such channel or you are not allowed to edit');
             
         strapi.config.functions.nullParam("tl_lat", ctx.request.body);
         strapi.config.functions.nullParam("tl_long", ctx.request.body);

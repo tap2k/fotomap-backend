@@ -4,47 +4,57 @@
 const crypto = require('crypto');
 const dotenv = require('dotenv');
 
-const HASH_LENGTH = 8;
+const HASH_LENGTH = 32
 dotenv.config();
 
 module.exports = {
   
-  // Function to create the private ID
-  createPrivateID(publicID) {
+  createPrivateID(channelID) {
     const privateSeed = process.env.PRIVATE_SEED;
     if (!privateSeed) {
       console.error('PRIVATE_SEED not set in environment variables');
       return null;
     }
-    if (!publicID) return "";
-    const hash = crypto.createHash('sha1');
-    hash.update(publicID + privateSeed);
-    const hashHex = hash.digest('hex').substring(0, HASH_LENGTH);
-    return `${publicID}:${hashHex}`;
+    if (!channelID || channelID.length === 0) {
+      console.error('Invalid channel ID');
+      return null;
+    }
+  
+    // Generate a repeating key from the private seed
+    const key = Buffer.from(privateSeed.repeat(Math.ceil(channelID.length / privateSeed.length))).slice(0, channelID.length);
+  
+    // XOR the channelID with the key
+    const privateBuffer = Buffer.alloc(channelID.length);
+    for (let i = 0; i < channelID.length; i++) {
+      privateBuffer[i] = channelID.charCodeAt(i) ^ key[i];
+    }
+  
+    return privateBuffer.toString('hex');
   },
   
-  // Function to retrieve and verify the public ID from the private ID
   getPublicID(privateID) {
-    const [publicID, hashHex] = privateID.split(':');
-    
     const privateSeed = process.env.PRIVATE_SEED;
     if (!privateSeed) {
       console.error('PRIVATE_SEED not set in environment variables');
       return null;
     }
-  
-    // Recreate the hash to verify
-    const hash = crypto.createHash('sha1');
-    hash.update(publicID + privateSeed);
-    const verificationHashHex = hash.digest('hex').substring(0, HASH_LENGTH);
-  
-    // Check if the hashes match
-    if (hashHex !== verificationHashHex) {
-      //console.error('Invalid private ID or tampered data');
+    if (!privateID || privateID.length === 0 || privateID.length % 2 !== 0) {
+      console.error('Invalid private ID');
       return null;
     }
   
-    return publicID;
+    const privateBuffer = Buffer.from(privateID, 'hex');
+    
+    // Generate the same repeating key
+    const key = Buffer.from(privateSeed.repeat(Math.ceil(privateBuffer.length / privateSeed.length))).slice(0, privateBuffer.length);
+  
+    // XOR the privateBuffer with the key to get back the channelID
+    let channelID = '';
+    for (let i = 0; i < privateBuffer.length; i++) {
+      channelID += String.fromCharCode(privateBuffer[i] ^ key[i]);
+    }
+  
+    return channelID;
   },
   
   // Function to generate a secret seed
@@ -88,7 +98,6 @@ module.exports = {
   async canEdit(channelID, userID, privateID) {
     if (privateID)
       channelID = strapi.config.functions.getPublicID(privateID);
-    console.log("userID = " + userID);
     if (!channelID)
       return null;
     const channel = await strapi.config.functions.getBasicChannel(channelID);

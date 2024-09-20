@@ -58,11 +58,18 @@ module.exports = {
     },
     { 
       method: 'POST',
-      path: '/createSubmissionChannel', 
-      handler: 'channel.createSubmissionChannel',
-      config: {
-        auth: false,
-      },
+      path: '/regenChannelID', 
+      handler: 'channel.regenChannelID',
+    },
+    { 
+      method: 'POST',
+      path: '/addEditor', 
+      handler: 'channel.addEditor',
+    },
+    { 
+      method: 'POST',
+      path: '/removeEditor', 
+      handler: 'channel.removeEditor',
     },
     { 
       method: 'GET',
@@ -82,35 +89,28 @@ module.exports = {
     },
     { 
       method: 'POST',
-      path: '/deleteSubmissionChannel', 
-      handler: 'channel.deleteSubmissionChannel',
-      config: {
-        auth: false,
-      },
-    },
-    { 
-      method: 'POST',
       path: '/saveSubmissionChannel', 
       handler: 'channel.saveSubmissionChannel',
       config: {
         auth: false,
       },
     },
-    { 
+    /*{ TODO: See this
       method: 'POST',
-      path: '/regenChannelID', 
-      handler: 'channel.regenChannelID',
+      path: '/createSubmissionChannel', 
+      handler: 'channel.createSubmissionChannel',
+      config: {
+        auth: false,
+      },
     },
     { 
       method: 'POST',
-      path: '/addEditor', 
-      handler: 'channel.addEditor',
-    },
-    { 
-      method: 'POST',
-      path: '/removeEditor', 
-      handler: 'channel.removeEditor',
-    },
+      path: '/deleteSubmissionChannel', 
+      handler: 'channel.deleteSubmissionChannel',
+      config: {
+        auth: false,
+      },
+    },*/
     /*{
       method: "GET",
       path: "/convertChannels",

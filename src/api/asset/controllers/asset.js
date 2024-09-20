@@ -187,7 +187,7 @@ module.exports = createCoreController('api::asset.asset', ({ strapi }) =>  ({
         
         const channel = await strapi.config.functions.canEdit(asset.channel.uniqueID, ctx.state.user.id);
         if (!channel)
-            return ctx.badRequest('No such channel or you are not allowed to edit: ' + asset.channel?.uniqueID);
+            return ctx.badRequest('No such channel or you are not allowed to edit');
 
         await strapi.config.functions.deleteBundles(asset);
         await strapi.service('api::asset.asset').delete(asset.id);
