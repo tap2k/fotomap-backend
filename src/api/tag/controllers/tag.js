@@ -396,15 +396,15 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
 
         let tags = await getTagsFunc(channel);
         for (const tag of tags) {
-            let channels = await strapi.db.query('api::channel.channel').findMany({
+            /*let channels = await strapi.db.query('api::channel.channel').findMany({
                 select: ['id'],
                 where: { tags: tag.id },     
-            });
+            });*/
             let contents = await strapi.db.query('api::content.content').findMany({
                 select: ['id'],
                 where: { tags: tag.id },     
             });
-            if (!channels.length && !contents.length)
+            if (!contents.length)
             {
                 if (tag.thumbnail)
                     await strapi.config.functions.deleteMediafile(tag.thumbnail.id);
