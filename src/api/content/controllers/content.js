@@ -630,6 +630,7 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
 
         if (!channel?.allowsubmissions && !ctx.request.body.privateID)
             return ctx.badRequest('This channel does not allow submissions ' + ctx.request.body.uniqueID);
+
         
         return await uploadContentFunc(ctx, channel);
     },

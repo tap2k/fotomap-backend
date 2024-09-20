@@ -346,7 +346,7 @@ async function saveChannelFunc(ctx, channel) {
                     },
                 });
             } else {
-                console.log(`Content with id ${item.id} not found in channel ${channel.id}`);
+                console.error(`Content with id ${item.id} not found in channel ${channel.id}`);
             }
         }
 
@@ -393,7 +393,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         const channels = await strapi.db.query('api::channel.channel').findMany({
             //where: { $and: [{owner: ctx.state.user.id}, { parent: null }] },
             where: { $or: [{ owner: ctx.state.user.id }, { editors: ctx.state.user.id }] },
-            orderBy: { name: 'asc' },
+            orderBy: { id: 'asc' },
             populate: {
                 owner: {
                     select: ['id', 'username', 'email'],
@@ -456,19 +456,16 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
     },
 
     async createChannel(ctx) {
-        return createChannelFunc(ctx, ctx.state.user?.id);
+        const channel = await createChannelFunc(ctx, ctx.state.user?.id);
+        // TODO: insecure?
+        channel.privateID = strapi.config.functions.createPrivateID(channel.uniqueID);
+        return channel;
     },
 
     async createSubmissionChannel(ctx) {
         const channel = await createChannelFunc(ctx, 1);
         channel.privateID = strapi.config.functions.createPrivateID(channel.uniqueID);
         return channel;
-    },
-
-    async createSubmissionChannelOld(ctx) {
-        // TODO: HACK for Maustro
-        ctx.request.body.allowsubmissions = true;
-        return await createChannelFunc(ctx, 1);
     },
 
     async updateChannel(ctx) {

@@ -54,7 +54,7 @@ module.exports = {
 
   async getBasicChannel(channelID)
   {
-    return await strapi.query('api::channel.channel').findOne({
+    return await strapi.db.query('api::channel.channel').findOne({
       where: { uniqueID: channelID },
       select: ['id', 'uniqueID', 'name', 'allowsubmissions', 'public'],
       populate: {
@@ -87,18 +87,15 @@ module.exports = {
   
   async canEdit(channelID, userID, privateID) {
     if (privateID)
-    {
       channelID = strapi.config.functions.getPublicID(privateID);
-      if (!channelID)
-        return null;
-    }
+    console.log("userID = " + userID);
     if (!channelID)
       return null;
     const channel = await strapi.config.functions.getBasicChannel(channelID);
     if (!channel)
       return null;
     // TODO: hack for superuser
-    if (channelID == "probe" || privateID || (userID == 1))
+    if (privateID || (userID == 1))
       return channel;
     if (userID && ((channel.owner?.id == userID) || channel.editors?.some(item => item.id == userID)))
       return channel;
