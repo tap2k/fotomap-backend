@@ -2,8 +2,11 @@
 -- psql -h hostname -U username -d database_name
 
 -- Set the old and new bucket URLs
-\set old_bucket_url '\'https://mvc-dev.nyc3.digitaloceanspaces.com\''
-\set new_bucket_url '\'https://mvcdev.s3.us-east-005.backblazeb2.com\''
+-- \set old_bucket_url '\'https://mvc-dev.nyc3.digitaloceanspaces.com\''
+-- \set old_bucket_url '\'https://mvc-dev.s3.us-east-005.backblazeb2.com\''
+-- \set new_bucket_url '\'https://mvcdev.s3.us-east-005.backblazeb2.com\''
+\set old_bucket_url '\'https://s3.us-east-005.backblazeb2.com/mvc-dev\''
+\set new_bucket_url '\'https://s3.us-east-005.backblazeb2.com/mvcdev\''
 
 -- Update main file URLs
 UPDATE files
