@@ -311,6 +311,17 @@ async function createContentFunc({ channelID, file, title, name, location, descr
         }
     }
 
+    const mimetype = mime.getType(file.name);
+
+    if ((!lat || !long) && mimetype?.startsWith('image/')) {
+        const imageBuffer = fs.readFileSync(file);
+        const tags = await ExifReader.load(imageBuffer, {expanded: true}); 
+        if (tags.gps && tags.gps.Latitude && tags.gps.Longitude) {
+            lat = tags.gps.Latitude;
+            long = tags.gps.Longitude;
+        }
+    }
+
     const content = await strapi.db.query('api::content.content').create({
         data: {
             channel: channelID,
@@ -391,15 +402,6 @@ async function uploadContentFunc(ctx, channel)
                 {
                     if (key == "audiofile")
                         continue;
-
-                    if (!ctx.request.body.lat && mimetype?.startsWith('image/')) {
-                        const imageBuffer = fs.readFileSync(files[key].path);
-                        const tags = await ExifReader.load(imageBuffer, {expanded: true}); 
-                        if (tags.gps && tags.gps.Latitude && tags.gps.Longitude) {
-                            ctx.request.body.lat = tags.gps.Latitude;
-                            ctx.request.body.long = tags.gps.Longitude;
-                        }
-                    }
                 
                     const content = await createContentFunc({
                         file: files[key],
