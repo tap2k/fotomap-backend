@@ -689,11 +689,15 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         });
       
         const data = await Promise.all(users.map(async (user) => {
-          const channels = await strapi.db.query('api::channel.channel').findMany({
-            where: { owner: user.id },
+        
+            const channels = await strapi.db.query('api::channel.channel').findMany({
+            where: { 
+                owner: user.id,
+                parent: null  
+            },
             populate: ['uniqueID', 'name']
-          });
-      
+            });
+
           let totalSize = 0;
           const channelSizes = await Promise.all(channels.map(async (channel) => {
             const channelSize = await strapi.config.functions.calculateChannelSize(channel.id);
