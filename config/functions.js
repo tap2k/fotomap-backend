@@ -9,6 +9,92 @@ dotenv.config();
 
 module.exports = {
   
+  async calculateChannelSize(channelID) {
+    // Retrieve the channel
+    const channel = await strapi.db.query('api::channel.channel').findOne({
+      where: { id: channelID },
+      populate: {
+        contents: {
+          populate: {
+            mediafile: {
+              select: ['size'],
+            }
+          }
+        },
+        assets: {
+          populate: {
+            pcbundle: { select: ['size'] },
+            macbundle: { select: ['size'] },
+            androidbundle: { select: ['size'] },
+            webglbundle: { select: ['size'] },
+          }
+        },
+        overlays: {
+          populate: {
+            mediafile: { select: ['size'] },
+          }
+        },
+        children: true,
+        picture: {
+          select: ['size'],
+        },
+        audiofile: {
+          select: ['size'],
+        },
+      }
+    });
+  
+    if (!channel) {
+      console.error(`Channel with ID ${channelID} not found`);
+      return 0;
+    }
+  
+    let channelSize = 0;
+  
+    // Calculate size from picture
+    if (channel.picture?.size) {
+      channelSize += channel.picture.size;
+    }
+  
+    // Calculate size from audiofile
+    if (channel.audiofile?.size) {
+      channelSize += channel.audiofile.size;
+    }
+  
+    // Calculate size from contents
+    channel.contents?.forEach(contentItem => {
+      if (contentItem.mediafile?.size) {
+        channelSize += contentItem.mediafile.size;
+      }
+    });
+  
+    // Calculate size from assets
+    channel.assets?.forEach(asset => {
+      if (asset.pcbundle?.size) channelSize += asset.pcbundle.size;
+      if (asset.macbundle?.size) channelSize += asset.macbundle.size;
+      if (asset.androidbundle?.size) channelSize += asset.androidbundle.size;
+      if (asset.webglbundle?.size) channelSize += asset.webglbundle.size;
+    });
+  
+    // Calculate size from overlays
+    channel.overlays?.forEach(overlay => {
+      if (overlay.mediafile?.size) {
+        channelSize += overlay.mediafile.size;
+      }
+    });
+  
+    // Recursively calculate size for children
+    if (channel.children && channel.children.length > 0) {
+      for (const childChannel of channel.children) {
+        channelSize += await this.calculateChannelSize(childChannel.id);
+      }
+    }
+  
+    //return channelSize
+    const sizeInMB = Number((channelSize / (1024)).toFixed(2));
+    return sizeInMB;
+  },
+
   createPrivateID(channelID) {
     const privateSeed = process.env.PRIVATE_SEED;
     if (!privateSeed) {

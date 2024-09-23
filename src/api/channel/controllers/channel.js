@@ -682,5 +682,46 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         }
         return "ok";
     },
+
+    async getAllSizes() {
+        const users = await strapi.db.query('plugin::users-permissions.user').findMany({
+          populate: ['username', 'email']
+        });
+      
+        const data = await Promise.all(users.map(async (user) => {
+          const channels = await strapi.db.query('api::channel.channel').findMany({
+            where: { owner: user.id },
+            populate: ['uniqueID', 'name']
+          });
+      
+          let totalSize = 0;
+          const channelSizes = await Promise.all(channels.map(async (channel) => {
+            const channelSize = await strapi.config.functions.calculateChannelSize(channel.id);
+            totalSize += channelSize;
+            return {
+              id: channel.id,
+              name: channel.name,
+              uniqueID: channel.uniqueID,
+              size: channelSize
+            };
+          }));
+      
+          // Sort channels by size in descending order
+          channelSizes.sort((a, b) => b.size - a.size);
+      
+          return {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            totalSize,
+            channels: channelSizes
+          };
+        }));
+      
+        // Sort the data by user total size
+        data.sort((a, b) => b.totalSize - a.totalSize);
+      
+        return data;
+      }   
 }));
 

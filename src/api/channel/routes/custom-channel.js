@@ -4,6 +4,14 @@ module.exports = {
   routes: [
     {
       method: "GET",
+      path: "/getAllSizes",
+      handler: "channel.getAllSizes",
+      config: {
+        auth: false,
+      },
+    },
+    {
+      method: "GET",
       path: "/getPublicChannels",
       handler: "channel.getPublicChannels",
       config: {
