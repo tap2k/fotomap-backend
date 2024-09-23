@@ -5,20 +5,18 @@
  */
 
 const fs = require('fs');
-const path = require('path');
+/*const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const mime = require('mime');
-//const axios = require('axios');
-const cheerio = require('cheerio');
-const http = require('http');
-const https = require('https');
+const axios = require('axios');
+const cheerio = require('cheerio');*/
 //const { createGzip } = require('zlib');
 const ExifReader = require('exifreader');
 const NodeGeocoder = require('node-geocoder');
 const { Client } = require("youtubei");
 const GooglePhotosAlbum = require('google-photos-album-image-url-fetch');
 
-async function getMimeTypeFromUrl(url) {
+/*async function getMimeTypeFromUrl(url) {
     try {
         const response = await axios.head(url);
         const contentType = response.headers['content-type'];
@@ -50,33 +48,22 @@ async function fetchFirstImageFromUrl(url) {
     }
 }
 
-function downloadImage(url, filePath) {
-    return new Promise((resolve, reject) => {
-        const protocol = url.startsWith('https') ? https : http;
+async function downloadImage(url, filePath) {
+    const writer = fs.createWriteStream(filePath);
 
-        protocol.get(url, (response) => {
-            if (response.statusCode !== 200) {
-                reject(new Error(`Failed to download image: ${response.statusCode}`));
-                return;
-            }
-
-            const writer = fs.createWriteStream(filePath);
-            response.pipe(writer);
-
-            writer.on('finish', () => {
-                writer.close();
-                resolve();
-            });
-
-            writer.on('error', (err) => {
-                writer.close();
-                reject(err);
-            });
-        }).on('error', (err) => {
-            reject(err);
-        });
+    const response = await axios({
+        url,
+        method: 'GET',
+        responseType: 'stream'
     });
-}
+
+    response.data.pipe(writer);
+
+    return new Promise((resolve, reject) => {
+        writer.on('finish', resolve);
+        writer.on('error', reject);
+    });
+}*/
 
 async function getGooglePhotos(photosUrl) {
     const photolist = await GooglePhotosAlbum.fetchImageUrls(photosUrl);
@@ -390,7 +377,7 @@ async function createContentFunc({ channelID, file, title, name, location, descr
         }
     }
 
-    if (!file && ext_url) {
+    /*if (!file && ext_url) {
         const mimeType = mime.getType(ext_url);
         
         if (mimeType) {
@@ -419,7 +406,7 @@ async function createContentFunc({ channelID, file, title, name, location, descr
                 }
             }
         }
-    }
+    }*/
 
     const content = await strapi.db.query('api::content.content').create({
         data: {
