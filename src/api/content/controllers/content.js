@@ -311,14 +311,17 @@ async function createContentFunc({ channelID, file, title, name, location, descr
         }
     }
 
-    const mimetype = mime.getType(file.name);
+    if (file)
+    {
+        const mimetype = mime.getType(file.name);
 
-    if ((!lat || !long) && mimetype?.startsWith('image/')) {
-        const imageBuffer = fs.readFileSync(file.path);
-        const tags = await ExifReader.load(imageBuffer, {expanded: true}); 
-        if (tags.gps && tags.gps.Latitude && tags.gps.Longitude) {
-            lat = tags.gps.Latitude;
-            long = tags.gps.Longitude;
+        if ((!lat || !long) && mimetype?.startsWith('image/')) {
+            const imageBuffer = fs.readFileSync(file.path);
+            const tags = await ExifReader.load(imageBuffer, {expanded: true}); 
+            if (tags.gps && tags.gps.Latitude && tags.gps.Longitude) {
+                lat = tags.gps.Latitude;
+                long = tags.gps.Longitude;
+            }
         }
     }
 
