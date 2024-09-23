@@ -48,6 +48,23 @@ async function fetchFirstImageFromUrl(url) {
     }
 }
 
+async function downloadImage(url, filePath) {
+    const writer = fs.createWriteStream(filePath);
+
+    const response = await axios({
+        url,
+        method: 'GET',
+        responseType: 'stream'
+    });
+
+    response.data.pipe(writer);
+
+    return new Promise((resolve, reject) => {
+        writer.on('finish', resolve);
+        writer.on('error', reject);
+    });
+}
+
 async function getGooglePhotos(photosUrl) {
     const photolist = await GooglePhotosAlbum.fetchImageUrls(photosUrl);
     const photos = photolist.map(item => item.url);
@@ -374,12 +391,10 @@ async function createContentFunc({ channelID, file, title, name, location, descr
                 const imageUrl = await fetchFirstImageFromUrl(ext_url);
                 if (imageUrl) {
                     try {
-                        const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
-                        const buffer = Buffer.from(imageResponse.data, 'binary');
                         const imageMimeType = mime.getType(imageUrl) || 'image/jpeg';
                         const fileExtension = mime.getExtension(imageMimeType);
                         const tempFilePath = path.join('/tmp', `${uuidv4()}.${fileExtension}`);
-                        fs.writeFileSync(tempFilePath, buffer);
+                        await downloadImage(imageUrl, tempFilePath);
                         file = {
                             name: `fetched_image.${fileExtension}`,
                             path: tempFilePath,
