@@ -5,13 +5,48 @@
  */
 
 const fs = require('fs');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
 const mime = require('mime');
-//const axios = require('axios');
+const axios = require('axios');
+const cheerio = require('cheerio');
 //const { createGzip } = require('zlib');
 const ExifReader = require('exifreader');
 const NodeGeocoder = require('node-geocoder');
 const { Client } = require("youtubei");
 const GooglePhotosAlbum = require('google-photos-album-image-url-fetch');
+
+async function getMimeTypeFromUrl(url) {
+    try {
+        const response = await axios.head(url);
+        const contentType = response.headers['content-type'];
+        return contentType ? contentType.split(';')[0].trim() : null;
+    } catch (error) {
+        console.error('Error getting MIME type:', error);
+        return null;
+    }
+}
+
+async function fetchFirstImageFromUrl(url) {
+    try {
+        const response = await axios.get(url);
+        const $ = cheerio.load(response.data);
+        const firstImageSrc = $('img').first().attr('src');
+        
+        if (firstImageSrc) {
+            if (firstImageSrc.startsWith('http')) {
+                return firstImageSrc;
+            } else {
+                const baseUrl = new URL(url).origin;
+                return new URL(firstImageSrc, baseUrl).href;
+            }
+        }
+        return null;
+    } catch (error) {
+        console.error('Error fetching image from URL:', error);
+        return null;
+    }
+}
 
 async function getGooglePhotos(photosUrl) {
     const photolist = await GooglePhotosAlbum.fetchImageUrls(photosUrl);
@@ -321,6 +356,39 @@ async function createContentFunc({ channelID, file, title, name, location, descr
             if (tags.gps && tags.gps.Latitude && tags.gps.Longitude) {
                 lat = tags.gps.Latitude;
                 long = tags.gps.Longitude;
+            }
+        }
+    }
+
+    if (!file && ext_url) {
+        const mimeType = mime.getType(ext_url);
+        
+        if (mimeType) {
+            const mediaType = mimeType.split('/')[0];
+            
+            if (['image', 'video', 'audio'].includes(mediaType)) {
+                // It's already a media file, no need to fetch
+                console.log(`URL is already a ${mediaType} file`);
+            } else if (mediaType === 'text' || mediaType === 'application') {
+                // It's likely a webpage, try to fetch the first image
+                const imageUrl = await fetchFirstImageFromUrl(ext_url);
+                if (imageUrl) {
+                    try {
+                        const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+                        const buffer = Buffer.from(imageResponse.data, 'binary');
+                        const imageMimeType = mime.getType(imageUrl) || 'image/jpeg';
+                        const fileExtension = mime.getExtension(imageMimeType);
+                        const tempFilePath = path.join('/tmp', `${uuidv4()}.${fileExtension}`);
+                        fs.writeFileSync(tempFilePath, buffer);
+                        file = {
+                            name: `fetched_image.${fileExtension}`,
+                            path: tempFilePath,
+                            type: imageMimeType
+                        };
+                    } catch (error) {
+                        console.error('Error downloading image:', error);
+                    }
+                }
             }
         }
     }
