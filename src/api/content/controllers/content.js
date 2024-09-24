@@ -6,10 +6,10 @@
 
 const fs = require('fs');
 const mime = require('mime');
-/*const path = require('path');
+const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
-const cheerio = require('cheerio');*/
+const cheerio = require('cheerio');
 //const { createGzip } = require('zlib');
 const ExifReader = require('exifreader');
 const NodeGeocoder = require('node-geocoder');
@@ -25,7 +25,7 @@ const GooglePhotosAlbum = require('google-photos-album-image-url-fetch');
         console.error('Error getting MIME type:', error);
         return null;
     }
-}
+}*/
 
 async function fetchFirstImageFromUrl(url) {
     try {
@@ -47,23 +47,6 @@ async function fetchFirstImageFromUrl(url) {
         return null;
     }
 }
-
-async function downloadImage(url, filePath) {
-    const writer = fs.createWriteStream(filePath);
-
-    const response = await axios({
-        url,
-        method: 'GET',
-        responseType: 'stream'
-    });
-
-    response.data.pipe(writer);
-
-    return new Promise((resolve, reject) => {
-        writer.on('finish', resolve);
-        writer.on('error', reject);
-    });
-}*/
 
 async function getGooglePhotos(photosUrl) {
     const photolist = await GooglePhotosAlbum.fetchImageUrls(photosUrl);
@@ -377,24 +360,22 @@ async function createContentFunc({ channelID, file, title, name, location, descr
         }
     }
 
-    /*if (!file && ext_url) {
+    if (!file && ext_url) {
         const mimeType = mime.getType(ext_url);
         
         if (mimeType) {
             const mediaType = mimeType.split('/')[0];
             
-            if (['image', 'video', 'audio'].includes(mediaType)) {
-                // It's already a media file, no need to fetch
-                console.log(`URL is already a ${mediaType} file`);
-            } else if (mediaType === 'text' || mediaType === 'application') {
-                // It's likely a webpage, try to fetch the first image
+            if (mediaType === 'text' || mediaType === 'application') {
                 const imageUrl = await fetchFirstImageFromUrl(ext_url);
                 if (imageUrl) {
                     try {
+                        const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+                        const buffer = Buffer.from(imageResponse.data, 'binary');
                         const imageMimeType = mime.getType(imageUrl) || 'image/jpeg';
                         const fileExtension = mime.getExtension(imageMimeType);
                         const tempFilePath = path.join('/tmp', `${uuidv4()}.${fileExtension}`);
-                        await downloadImage(imageUrl, tempFilePath);
+                        fs.writeFileSync(tempFilePath, buffer);
                         file = {
                             name: `fetched_image.${fileExtension}`,
                             path: tempFilePath,
@@ -406,7 +387,8 @@ async function createContentFunc({ channelID, file, title, name, location, descr
                 }
             }
         }
-    }*/
+            
+    }
 
     const content = await strapi.db.query('api::content.content').create({
         data: {
