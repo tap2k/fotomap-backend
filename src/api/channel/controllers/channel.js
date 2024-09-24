@@ -374,6 +374,11 @@ const { createCoreController } = require('@strapi/strapi').factories;
 
 module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  ({
 
+    async getPrivateID(ctx) {
+        const privateid = strapi.config.functions.createPrivateID(ctx.query.uniqueID);
+        return { privateid: privateid };
+    },
+
     async getChannel(ctx) {
         let channel = await strapi.config.functions.getChannel(ctx.query.uniqueID);
         return channel;

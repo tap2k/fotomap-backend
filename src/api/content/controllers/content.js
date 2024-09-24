@@ -5,9 +5,9 @@
  */
 
 const fs = require('fs');
+const mime = require('mime');
 /*const path = require('path');
 const { v4: uuidv4 } = require('uuid');
-const mime = require('mime');
 const axios = require('axios');
 const cheerio = require('cheerio');*/
 //const { createGzip } = require('zlib');
