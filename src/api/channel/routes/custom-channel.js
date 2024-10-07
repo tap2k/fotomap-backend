@@ -111,15 +111,15 @@ module.exports = {
         auth: false,
       },
     },
-    /*{ TODO: See this
+    { 
       method: 'POST',
       path: '/createSubmissionChannel', 
-      handler: 'channel.createSubmissionChannel',
+      handler: 'channel.createChannel',
       config: {
         auth: false,
       },
     },
-    { 
+    /*{ 
       method: 'POST',
       path: '/deleteSubmissionChannel', 
       handler: 'channel.deleteSubmissionChannel',

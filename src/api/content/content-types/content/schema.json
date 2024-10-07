@@ -117,9 +117,6 @@
         "audios"
       ]
     },
-    "email": {
-      "type": "email"
-    },
     "name": {
       "type": "string"
     },
@@ -142,6 +139,9 @@
       "type": "string"
     },
     "foreground_color": {
+      "type": "string"
+    },
+    "email": {
       "type": "string"
     }
   }

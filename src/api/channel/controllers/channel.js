@@ -59,6 +59,8 @@ async function consolidateChannels(ctx) {
 
 async function createChannelFunc(ctx, owner) {
     let channelid = ctx.request.body.uniqueID;
+    if (!owner)
+        owner = 1;
 
     if (channelid)
     {

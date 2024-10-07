@@ -140,13 +140,13 @@
       "type": "boolean",
       "default": true
     },
-    "email": {
-      "type": "email"
-    },
     "background_color": {
       "type": "string"
     },
     "foreground_color": {
+      "type": "string"
+    },
+    "email": {
       "type": "string"
     }
   }
