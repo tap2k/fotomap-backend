@@ -9,7 +9,7 @@ module.exports = {
       config: {
         auth: false,
       },
-    },,
+    },
     {
       method: "GET",
       path: "/getAllSizes",
