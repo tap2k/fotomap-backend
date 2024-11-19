@@ -20,7 +20,7 @@ module.exports = {
 
       const JWT_SECRET = process.env.JWT_SECRET;
       const decodedToken = jwt.verify(token, JWT_SECRET);
-      console.log('Verified Token:', decodedToken);
+      //console.log('Verified Token:', decodedToken);
 
       const { email, userId } = decodedToken; // Ensure userId is present in token
       if (!email) {

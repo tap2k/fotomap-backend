@@ -81,8 +81,8 @@ module.exports = (config, { strapi }) => {
       };
 
     } catch (error) {
-      console.error('Authentication error:', error.message);
-      console.log('Continuing as unauthenticated user');
+      //console.error('Authentication error:', error.message);
+      //console.log('Continuing as unauthenticated user');
     }
 
     await next();
