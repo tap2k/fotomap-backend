@@ -117,6 +117,7 @@ public/uploads/*
 !public/uploads/.gitkeep
 config/*
 !config/functions.js
+!config/middlewares.js
 .strapi/*
 
 ############################
