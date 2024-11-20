@@ -1,41 +1,6 @@
 module.exports = [
   'strapi::errors',
   {
-    name: 'strapi::security',
-    config: {
-      contentSecurityPolicy: {
-        useDefaults: true,
-        directives: {
-          'connect-src': ["'self'", 'http:', 'https:'],
-          upgradeInsecureRequests: null,
-        },
-      },
-    },
-  },
-  'strapi::cors',
-  'strapi::poweredBy',
-  'strapi::logger',
-  'strapi::query',
-  {
-    name: "strapi::body",
-    config: {
-      formLimit: "1gb", // modify form body
-      jsonLimit: "1gb", // modify JSON body
-      textLimit: "1gb", // modify text body
-      formidable: {
-        maxFileSize: 1000 * 1024 * 1024, // multipart data, modify here limit of uploaded file size
-      },
-    },
-  },
-  'strapi::session',
-  'strapi::favicon',
-  'strapi::public',
-  'global::authenticate'
-];
-
-module.exports = [
-  'strapi::errors',
-  {
     name: "strapi::security",
     config: {
       contentSecurityPolicy: {
@@ -79,7 +44,7 @@ module.exports = [
     config: {
       enabled: true,
       //origin: ['*'],
-      origin: ['https://mvcdev.represent.org', 'https://expressdev.represent.org', 'https://mvcprod.represent.org', 'https://mvc.represent.org', 'https://express.represent.org', 'https://bihar.represent.org', 'https://gujarat.represent.org', 'https://express.maustro.com', 'https://express.ux4.me', 'https://expressdev.ux4.me'], // Add your frontend URLs here
+      origin: ['https://mvcdev.represent.org', 'https://expressdev.represent.org', 'https://mvcprod.represent.org', 'https://mvc.represent.org', 'https://express.represent.org', 'https://bihar.represent.org', 'https://gujarat.represent.org', 'https://express.maustro.com', 'https://express.ux4.me', 'https://expressdev.ux4.me', 'http://127.0.0.1:3001'], // Add your frontend URLs here
       headers: ['*'],
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
     }
