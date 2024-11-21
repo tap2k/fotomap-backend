@@ -115,9 +115,10 @@ build
 .strapi-updater.json
 public/uploads/*
 !public/uploads/.gitkeep
-config/*
-!config/functions.js
-!config/middlewares.js
+config/bak/*
+#config/*
+#!config/functions.js
+#!config/middlewares.js
 .strapi/*
 
 ############################
