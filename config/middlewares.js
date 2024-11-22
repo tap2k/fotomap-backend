@@ -33,7 +33,7 @@ module.exports = [
             'supabase.co', 
             '*.supabase.co'
           ],
-          upgradeInsecureRequests: true,
+          upgradeInsecureRequests: null,
         },
       },
     },
