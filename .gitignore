@@ -2,6 +2,7 @@
 # OS X
 ############################
 
+/memorybank
 .DS_Store
 .AppleDouble
 .LSOverride
