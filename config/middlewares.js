@@ -44,7 +44,7 @@ module.exports = [
     config: {
       enabled: true,
       //origin: ['*'],
-      origin: ['https://mvcdev.represent.org', 'https://expressdev.represent.org', 'https://mvcprod.represent.org', 'https://mvc.represent.org', 'https://express.represent.org', 'https://bihar.represent.org', 'https://gujarat.represent.org', 'https://bihar.mahabot.in', 'https://gujarat.mahabot.in', 'https://express.maustro.com', 'https://expressdev.maustro.com', 'https://express.ux4.me', 'https://expressdev.ux4.me', 'https://virtualfarm.represent.org', 'https://blogs.cornell.edu', 'http://127.0.0.1:3000', 'http://localhost:3000', 'http://127.0.0.1:3001', 'http://localhost:3001', 'http://127.0.0.1:3002', 'http://localhost:3002', 'http://127.0.0.1:1337', 'http://localhost:1337', 'http://localhost', 'http://127.0.0.1'], // Add your frontend URLs here
+      origin: ['https://mvcdev.represent.org', 'https://expressdev.represent.org', 'https://mvcprod.represent.org', 'https://mvc.represent.org', 'https://remaking.represent.org', 'https://express.represent.org', 'https://bihar.represent.org', 'https://gujarat.represent.org', 'https://bihar.mahabot.in', 'https://gujarat.mahabot.in', 'https://express.maustro.com', 'https://expressdev.maustro.com', 'https://express.ux4.me', 'https://expressdev.ux4.me', 'https://virtualfarm.represent.org', 'https://blogs.cornell.edu', 'http://127.0.0.1:3000', 'http://localhost:3000', 'http://127.0.0.1:3001', 'http://localhost:3001', 'http://127.0.0.1:3002', 'http://localhost:3002', 'http://127.0.0.1:1337', 'http://localhost:1337', 'http://localhost', 'http://127.0.0.1'], // Add your frontend URLs here
       headers: ['*'],
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
     }
