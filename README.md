@@ -1,57 +1,76 @@
-# 🚀 Getting started with Strapi
+# MVC Backend (Strapi)
 
-Strapi comes with a full featured [Command Line Interface](https://docs.strapi.io/developer-docs/latest/developer-resources/cli/CLI.html) (CLI) which lets you scaffold and manage your project in seconds.
+Strapi 4 headless CMS backend for the Express multimedia platform. Manages channels, content, tags, tilesets, and user permissions.
 
-### `develop`
+## Prerequisites
 
-Start your Strapi application with autoReload enabled. [Learn more](https://docs.strapi.io/developer-docs/latest/developer-resources/cli/CLI.html#strapi-develop)
+- Node.js 18+
+- PostgreSQL
 
+## Setup
+
+1. Install dependencies:
+
+```bash
+npm install
 ```
+
+2. Create a PostgreSQL database:
+
+```sql
+CREATE DATABASE mvc;
+```
+
+3. Create a `.env` file in the project root:
+
+```env
+HOST=0.0.0.0
+PORT=1337
+PUBLIC_URL=http://127.0.0.1:1337
+
+# Database
+DATABASE_HOST=127.0.0.1
+DATABASE_PORT=5432
+DATABASE_NAME=mvc
+DATABASE_USERNAME=<your-pg-user>
+DATABASE_PASSWORD=<your-pg-password>
+DATABASE_SSL=false
+
+# Secrets (generate random strings for each)
+APP_KEYS=<base64-key-1>,<base64-key-2>
+ADMIN_JWT_SECRET=<random-base64>
+API_TOKEN_SALT=<random-base64>
+TRANSFER_TOKEN_SALT=<random-base64>
+JWT_SECRET=<random-string-at-least-32-chars>
+PRIVATE_SEED=<random-hex-string>
+```
+
+`PRIVATE_SEED` must match the value used in the Express frontend.
+
+4. Start the server:
+
+```bash
 npm run develop
-# or
-yarn develop
 ```
 
-### `start`
+Open [http://localhost:1337/admin](http://localhost:1337/admin) to create your admin account on first run.
 
-Start your Strapi application with autoReload disabled. [Learn more](https://docs.strapi.io/developer-docs/latest/developer-resources/cli/CLI.html#strapi-start)
+## Scripts
 
-```
-npm run start
-# or
-yarn start
-```
+| Command | Description |
+|---------|-------------|
+| `npm run develop` | Dev server with auto-reload |
+| `npm run build` | Build admin panel |
+| `npm run start` | Production server (no reload) |
 
-### `build`
+## Content Types
 
-Build your admin panel. [Learn more](https://docs.strapi.io/developer-docs/latest/developer-resources/cli/CLI.html#strapi-build)
-
-```
-npm run build
-# or
-yarn build
-```
-
-## ⚙️ Deployment
-
-Strapi gives you many possible deployment options for your project. Find the one that suits you on the [deployment section of the documentation](https://docs.strapi.io/developer-docs/latest/setup-deployment-guides/deployment.html).
-
-## 📚 Learn more
-
-- [Resource center](https://strapi.io/resource-center) - Strapi resource center.
-- [Strapi documentation](https://docs.strapi.io) - Official Strapi documentation.
-- [Strapi tutorials](https://strapi.io/tutorials) - List of tutorials made by the core team and the community.
-- [Strapi blog](https://docs.strapi.io) - Official Strapi blog containing articles made by the Strapi team and the community.
-- [Changelog](https://strapi.io/changelog) - Find out about the Strapi product updates, new features and general improvements.
-
-Feel free to check out the [Strapi GitHub repository](https://github.com/strapi/strapi). Your feedback and contributions are welcome!
-
-## ✨ Community
-
-- [Discord](https://discord.strapi.io) - Come chat with the Strapi community including the core team.
-- [Forum](https://forum.strapi.io/) - Place to discuss, ask questions and find answers, show your Strapi project and get feedback or just talk with other Community members.
-- [Awesome Strapi](https://github.com/strapi/awesome-strapi) - A curated list of awesome things related to Strapi.
-
----
-
-<sub>🤫 Psst! [Strapi is hiring](https://strapi.io/careers).</sub>
+| Type | Purpose |
+|------|---------|
+| Channel | Hierarchical containers ("reels") with parent-child relationships |
+| Content | Media items with metadata, geolocation, tags, ordering |
+| Tag | Channel-specific labels for content |
+| Tileset | Custom map tile configurations |
+| Overlay | Georeferenced image overlays for maps |
+| Asset | Multi-platform bundles (PC, Mac, Android, WebGL) |
+| Avatar | User avatars |
