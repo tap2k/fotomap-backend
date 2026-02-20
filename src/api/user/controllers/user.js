@@ -90,6 +90,8 @@ module.exports = {
   },
 
   async getUserPlan(ctx) {
+    if (!process.env.TIER_ENFORCEMENT) return ctx.send(null);
+
     const userId = ctx.state.user?.id;
     if (!userId) return ctx.unauthorized('Not authenticated');
 
