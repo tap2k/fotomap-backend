@@ -98,8 +98,15 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
             return ctx.badRequest('No tag found');
 
         const canEdit = await strapi.config.functions.canEdit(tag.channel.uniqueID, ctx.state.user.id);
-        if (!canEdit) 
+        if (!canEdit)
             return ctx.badRequest('No such channel or you are not allowed to edit');
+
+        // Tier enforcement: strip marker customization if not allowed
+        const tierCheck = await strapi.config.functions.checkTierLimit(tag.channel.owner?.id);
+        if (tierCheck && tierCheck.tierConfig.customMarkerColors === false)
+            delete ctx.request.body.markercolor;
+        if (tierCheck && tierCheck.tierConfig.customMarkerIcons === false)
+            ctx.request.files = null;
 
         const newtag = await strapi.query("api::tag.tag").update({
             where: { id: tag.id },
@@ -110,7 +117,7 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
                 },
             }
         });
-            
+
         if (ctx.request.files && Object.keys(ctx.request.files).length)
         {
             if (tag.thumbnail?.id)
@@ -652,8 +659,15 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
             return ctx.badRequest('No tag found');
 
         const canEdit = await strapi.config.functions.canEdit(null, null, ctx.request.body.privateID);
-        if (!canEdit) 
+        if (!canEdit)
             return ctx.badRequest('No such channel or you are not allowed to edit');
+
+        // Tier enforcement: strip marker customization if not allowed
+        const tierCheck = await strapi.config.functions.checkTierLimit(tag.channel.owner?.id);
+        if (tierCheck && tierCheck.tierConfig.customMarkerColors === false)
+            delete ctx.request.body.markercolor;
+        if (tierCheck && tierCheck.tierConfig.customMarkerIcons === false)
+            ctx.request.files = null;
 
         const newtag = await strapi.query("api::tag.tag").update({
             where: { id: tag.id },
@@ -664,7 +678,7 @@ module.exports = createCoreController('api::tag.tag', ({ strapi }) =>  ({
                 },
             }
         });
-            
+
         if (ctx.request.files && Object.keys(ctx.request.files).length)
         {
             if (tag.thumbnail?.id)

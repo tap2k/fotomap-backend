@@ -68,9 +68,14 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             return ctx.badRequest('No image specified');
 
         const channel = await strapi.config.functions.canEdit(ctx.request.body.uniqueID, ctx.state.user.id);
-        if (!channel) 
+        if (!channel)
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + ctx.request.body.uniqueID);
-            
+
+        // Tier enforcement: block overlay upload if not allowed
+        const tierCheck = await strapi.config.functions.checkTierLimit(channel.owner?.id);
+        if (tierCheck && tierCheck.tierConfig.overlays === false)
+            return ctx.badRequest('Overlays are not available on your current plan.');
+
         const file = ctx.request.files[Object.keys(ctx.request.files)];
     
         if (!file)

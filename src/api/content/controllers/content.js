@@ -636,8 +636,26 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
     async uploadContentToChannel(ctx) {
 
         const channel = await strapi.config.functions.canEdit(ctx.request.body.uniqueID, ctx.state.user.id);
-        if (!channel) 
+        if (!channel)
             return ctx.badRequest('No such channel or you are not allowed to edit: ' + ctx.request.body.uniqueID);
+
+        // Tier enforcement: file size + storage limits (checks channel owner's plan)
+        const tier = await strapi.config.functions.checkTierLimit(channel.owner?.id);
+        if (tier) {
+            if (ctx.request.files && tier.tierConfig.maxFileSizeMB !== null) {
+                for (const key of Object.keys(ctx.request.files)) {
+                    const fileSizeMB = ctx.request.files[key].size / (1024 * 1024);
+                    if (fileSizeMB > tier.tierConfig.maxFileSizeMB)
+                        return ctx.badRequest(`File too large. Your plan allows ${tier.tierConfig.maxFileSizeMB} MB per file.`);
+                }
+            }
+            if (tier.tierConfig.storageMB !== null) {
+                const usageMB = await strapi.config.functions.calculateUserTotalStorage(channel.owner.id);
+                const hardLimit = tier.tierConfig.storageMB * tier.tierConfig.hardPercent / 100;
+                if (usageMB >= hardLimit)
+                    return ctx.badRequest(`Storage limit reached. Your plan allows ${tier.tierConfig.storageMB} MB.`);
+            }
+        }
 
         if (ctx.request.body.contentID)
         {
@@ -763,14 +781,33 @@ module.exports = createCoreController('api::content.content', ({ strapi }) => ({
         else
             channel = await strapi.db.query('api::channel.channel').findOne({
                         select: ['id', 'allowsubmissions'],
-                        where: { 
+                        where: {
                             uniqueID: ctx.request.body.uniqueID,
-                        }
+                        },
+                        populate: { owner: { select: ['id'] } },
                     });
 
         if (!channel?.allowsubmissions && !ctx.request.body.privateID)
             return ctx.badRequest('This channel does not allow submissions ' + ctx.request.body.uniqueID);
-        
+
+        // Tier enforcement: file size + storage limits (checks channel owner's plan)
+        const tier = await strapi.config.functions.checkTierLimit(channel.owner?.id);
+        if (tier) {
+            if (ctx.request.files && tier.tierConfig.maxFileSizeMB !== null) {
+                for (const key of Object.keys(ctx.request.files)) {
+                    const fileSizeMB = ctx.request.files[key].size / (1024 * 1024);
+                    if (fileSizeMB > tier.tierConfig.maxFileSizeMB)
+                        return ctx.badRequest(`File too large. Your plan allows ${tier.tierConfig.maxFileSizeMB} MB per file.`);
+                }
+            }
+            if (tier.tierConfig.storageMB !== null) {
+                const usageMB = await strapi.config.functions.calculateUserTotalStorage(channel.owner.id);
+                const hardLimit = tier.tierConfig.storageMB * tier.tierConfig.hardPercent / 100;
+                if (usageMB >= hardLimit)
+                    return ctx.badRequest(`Storage limit reached. Your plan allows ${tier.tierConfig.storageMB} MB.`);
+            }
+        }
+
         return await uploadContentFunc(ctx, channel);
     },
 

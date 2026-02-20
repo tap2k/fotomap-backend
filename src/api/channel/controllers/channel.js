@@ -282,6 +282,12 @@ async function updateChannelFunc(ctx, channel) {
     strapi.config.functions.nullParam("lat", ctx.request.body);
     strapi.config.functions.nullParam("long", ctx.request.body);
     strapi.config.functions.nullParam("zoom", ctx.request.body);
+    // Tier enforcement: gate tileset picker for Free users
+    if (ctx.request.body.tileset) {
+        const tier = await strapi.config.functions.checkTierLimit(channel.owner?.id);
+        if (tier && !tier.tierConfig.tilesetPicker)
+            delete ctx.request.body.tileset;
+    }
     strapi.config.functions.nullParam("tileset", ctx.request.body);
     strapi.config.functions.nullParam("interval", ctx.request.body);
     strapi.config.functions.nullParam("markercolor", ctx.request.body);
@@ -462,6 +468,12 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
     },
 
     async createChannel(ctx) {
+        const tier = await strapi.config.functions.checkTierLimit(ctx.state.user?.id);
+        if (tier && tier.tierConfig.maxChannels !== null) {
+            const count = await strapi.config.functions.countUserChannels(ctx.state.user.id);
+            if (count >= tier.tierConfig.maxChannels)
+                return ctx.badRequest(`Channel limit reached. Your plan allows ${tier.tierConfig.maxChannels} channels.`);
+        }
         const channel = await createChannelFunc(ctx, ctx.state.user?.id);
         // TODO: insecure?
         channel.privateID = strapi.config.functions.createPrivateID(channel.uniqueID);
@@ -614,13 +626,17 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         
         if (channel.owner.id != ctx.state.user.id)
             return ctx.badRequest('You dont own this channel');
-        
+
+        const tier = await strapi.config.functions.checkTierLimit(ctx.state.user.id);
+        if (tier && !tier.tierConfig.collaboration)
+            return ctx.badRequest('Your plan does not include collaboration. Upgrade to add editors.');
+
         return await strapi.db.query('api::channel.channel').update({
             where: { id: channel.id },
             data: {
                 editors: { connect: [{id: user.id}] }
             },
-        });        
+        });
     },
 
     async removeEditor(ctx) {
@@ -733,6 +749,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         data.sort((a, b) => b.totalSize - a.totalSize);
       
         return data;
-      }   
+      },
+
 }));
 

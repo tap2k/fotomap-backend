@@ -70,6 +70,27 @@
       "relation": "oneToMany",
       "target": "api::content.content",
       "mappedBy": "contributor"
+    },
+    "plan": {
+      "type": "enumeration",
+      "enum": ["free", "starter", "pro", "enterprise"],
+      "default": "free"
+    },
+    "stripeCustomerId": {
+      "type": "string",
+      "private": true
+    },
+    "stripeSubscriptionId": {
+      "type": "string",
+      "private": true
+    },
+    "billingInterval": {
+      "type": "enumeration",
+      "enum": ["monthly", "annual"],
+      "default": "monthly"
+    },
+    "planOverrides": {
+      "type": "json"
     }
   }
 }

@@ -8,5 +8,10 @@ module.exports = {
         auth: false,
       },
     },
+    {
+      method: 'GET',
+      path: '/getUserPlan',
+      handler: 'user.getUserPlan',
+    },
   ],
 };

@@ -394,4 +394,58 @@ module.exports = {
       data[variable] = null;
   },
 
+  getUserTierConfig(user) {
+    const tiers = require('./tiers');
+    // Superuser (ID 1) always gets enterprise
+    const plan = (user.id == 1) ? 'enterprise' : (user.plan || 'free');
+    const config = { ...tiers[plan] };
+
+    // Apply Enterprise custom overrides
+    if (plan === 'enterprise' && user.planOverrides) {
+      if (user.planOverrides.storageMB != null) config.storageMB = user.planOverrides.storageMB;
+      if (user.planOverrides.maxChannels != null) config.maxChannels = user.planOverrides.maxChannels;
+      if (user.planOverrides.maxFileSizeMB != null) config.maxFileSizeMB = user.planOverrides.maxFileSizeMB;
+    }
+
+    return config;
+  },
+
+  async getUserWithPlan(userId) {
+    return await strapi.db.query('plugin::users-permissions.user').findOne({
+      where: { id: userId },
+      select: ['id', 'plan', 'billingInterval', 'planOverrides', 'stripeCustomerId', 'stripeSubscriptionId'],
+    });
+  },
+
+  async calculateUserTotalStorage(userId) {
+    // Find all top-level channels owned by this user (parent is null to avoid double-counting)
+    const channels = await strapi.db.query('api::channel.channel').findMany({
+      where: {
+        owner: { id: userId },
+        parent: null,
+      },
+      select: ['id'],
+    });
+
+    let totalMB = 0;
+    for (const channel of channels) {
+      totalMB += await this.calculateChannelSize(channel.id);
+    }
+    return totalMB;
+  },
+
+  async countUserChannels(userId) {
+    return await strapi.db.query('api::channel.channel').count({
+      where: { owner: { id: userId } },
+    });
+  },
+
+  async checkTierLimit(ownerUserId) {
+    if (!process.env.TIER_ENFORCEMENT) return null;
+    const user = await this.getUserWithPlan(ownerUserId);
+    if (!user) return null;
+    const tierConfig = this.getUserTierConfig(user);
+    return { user, tierConfig };
+  },
+
 };

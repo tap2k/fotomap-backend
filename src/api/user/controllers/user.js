@@ -88,4 +88,23 @@ module.exports = {
       return ctx.internalServerError('Unable to create user');
     }
   },
+
+  async getUserPlan(ctx) {
+    const userId = ctx.state.user?.id;
+    if (!userId) return ctx.unauthorized('Not authenticated');
+
+    const user = await strapi.config.functions.getUserWithPlan(userId);
+    if (!user) return ctx.notFound('User not found');
+
+    const tierConfig = strapi.config.functions.getUserTierConfig(user);
+    const storageMB = await strapi.config.functions.calculateUserTotalStorage(userId);
+    const channelCount = await strapi.config.functions.countUserChannels(userId);
+
+    return ctx.send({
+      plan: user.plan || 'free',
+      billingInterval: user.billingInterval || 'monthly',
+      tierConfig,
+      usage: { storageMB, channelCount },
+    });
+  },
 };
