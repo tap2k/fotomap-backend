@@ -491,7 +491,7 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
             return ctx.badRequest('No such channel or you are not the owner');
         
         let canEdit = false;
-        if (channel.owner.id == ctx.state.user.id)
+        if (channel.owner.id == ctx.state.user.id || ctx.state.user.id == 1)
             canEdit = true;
         else
         {
@@ -751,5 +751,75 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         return data;
       },
 
+    async getAdminData(ctx) {
+        if (ctx.state.user.id != 1)
+            return ctx.badRequest('Not authorized');
+
+        const channels = await strapi.db.query('api::channel.channel').findMany({
+            populate: {
+                owner: { select: ['id', 'username', 'email'] },
+                parent: { select: ['id', 'name'] },
+            },
+        });
+
+        const emptyChannels = [];
+        for (const channel of channels) {
+            const isEmpty = await isChannelTreeEmpty(channel.id);
+            if (isEmpty)
+                emptyChannels.push({
+                    id: channel.id,
+                    uniqueID: channel.uniqueID,
+                    name: channel.name,
+                    owner: channel.owner,
+                    parent: channel.parent,
+                });
+        }
+
+        const users = await strapi.db.query('plugin::users-permissions.user').findMany({
+            select: ['id', 'username', 'email'],
+        });
+
+        const ownerIds = new Set(channels.map(ch => ch.owner?.id).filter(Boolean));
+
+        const editorChannels = await strapi.db.query('api::channel.channel').findMany({
+            populate: { editors: { select: ['id'] } },
+        });
+        const editorIds = new Set(editorChannels.flatMap(ch => (ch.editors || []).map(e => e.id)));
+
+        const contributions = await strapi.db.query('api::content.content').findMany({
+            where: { contributor: { id: { $ne: null } } },
+            populate: { contributor: { select: ['id'] } },
+        });
+        const contributorIds = new Set(contributions.map(c => c.contributor?.id).filter(Boolean));
+
+        const emptyUsers = users.filter(u => !ownerIds.has(u.id) && !editorIds.has(u.id) && !contributorIds.has(u.id));
+
+        return { emptyChannels, emptyUsers };
+    },
+
 }));
+
+async function isChannelTreeEmpty(channelID) {
+    const channel = await strapi.db.query('api::channel.channel').findOne({
+        where: { id: channelID },
+        populate: {
+            contents: { select: ['id'] },
+            assets: { select: ['id'] },
+            overlays: { select: ['id'] },
+            children: { select: ['id'] },
+        },
+    });
+
+    if (!channel) return true;
+    if (channel.contents?.length > 0) return false;
+    if (channel.assets?.length > 0) return false;
+    if (channel.overlays?.length > 0) return false;
+
+    for (const child of (channel.children || [])) {
+        if (!(await isChannelTreeEmpty(child.id)))
+            return false;
+    }
+
+    return true;
+}
 

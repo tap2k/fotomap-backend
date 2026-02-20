@@ -127,6 +127,11 @@ module.exports = {
         auth: false,
       },
     },*/
+    {
+      method: "GET",
+      path: "/getAdminData",
+      handler: "channel.getAdminData",
+    },
     /*{
       method: "GET",
       path: "/convertChannels",
