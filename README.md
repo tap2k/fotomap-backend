@@ -67,7 +67,7 @@ Open [http://localhost:1337/admin](http://localhost:1337/admin) to create your a
 
 | Type | Purpose |
 |------|---------|
-| Channel | Hierarchical containers ("reels") with parent-child relationships |
+| Channel | Hierarchical containers with parent-child relationships |
 | Content | Media items with metadata, geolocation, tags, ordering |
 | Tag | Channel-specific labels for content |
 | Tileset | Custom map tile configurations |
