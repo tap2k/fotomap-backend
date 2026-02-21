@@ -140,3 +140,4 @@ Both connect to this backend via `NEXT_PUBLIC_STRAPI_HOST`.
 - Image breakpoints: icon (32px) through xlarge (1920px) in `config/plugins.js`
 - `PRIVATE_SEED` must match across frontend and backend
 - User ID 1 is treated as superuser in `canEdit()`
+- `src/index.js` bootstrap configures Google OAuth account picker (`prompt: select_account`) via Grant `custom_params`
