@@ -89,6 +89,33 @@ module.exports = {
     }
   },
 
+  async updateUserPlan(ctx) {
+    if (!process.env.TIER_ENFORCEMENT) return ctx.send({ ok: true });
+
+    const { userId, plan, stripeCustomerId, stripeSubscriptionId, billingInterval } = ctx.request.body;
+    if (!userId) return ctx.badRequest('Missing userId');
+
+    const data = {};
+    if (plan) {
+      const validPlans = ['free', 'starter', 'pro', 'enterprise'];
+      if (!validPlans.includes(plan)) return ctx.badRequest('Invalid plan');
+      data.plan = plan;
+    }
+    if (stripeCustomerId !== undefined) data.stripeCustomerId = stripeCustomerId;
+    if (stripeSubscriptionId !== undefined) data.stripeSubscriptionId = stripeSubscriptionId;
+    if (billingInterval) data.billingInterval = billingInterval;
+
+    if (Object.keys(data).length === 0) return ctx.badRequest('No fields to update');
+
+    try {
+      await strapi.entityService.update('plugin::users-permissions.user', userId, { data });
+      return ctx.send({ ok: true });
+    } catch (err) {
+      console.error('updateUserPlan error:', err);
+      return ctx.internalServerError('Failed to update plan');
+    }
+  },
+
   async getUserPlan(ctx) {
     if (!process.env.TIER_ENFORCEMENT) return ctx.send(null);
 
@@ -105,6 +132,7 @@ module.exports = {
     return ctx.send({
       plan: user.plan || 'free',
       billingInterval: user.billingInterval || 'monthly',
+      stripeCustomerId: user.stripeCustomerId || null,
       tierConfig,
       usage: { storageMB, channelCount },
     });

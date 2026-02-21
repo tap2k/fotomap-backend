@@ -13,5 +13,13 @@ module.exports = {
       path: '/getUserPlan',
       handler: 'user.getUserPlan',
     },
+    {
+      method: 'PUT',
+      path: '/updateUserPlan',
+      handler: 'user.updateUserPlan',
+      config: {
+        auth: false,
+      },
+    },
   ],
 };

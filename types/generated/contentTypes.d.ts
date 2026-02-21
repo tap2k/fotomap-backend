@@ -664,6 +664,13 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       'oneToMany',
       'api::content.content'
     >;
+    plan: Attribute.Enumeration<['free', 'starter', 'pro', 'enterprise']> &
+      Attribute.DefaultTo<'free'>;
+    stripeCustomerId: Attribute.String & Attribute.Private;
+    stripeSubscriptionId: Attribute.String & Attribute.Private;
+    billingInterval: Attribute.Enumeration<['monthly', 'annual']> &
+      Attribute.DefaultTo<'monthly'>;
+    planOverrides: Attribute.JSON;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
