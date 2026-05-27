@@ -92,6 +92,20 @@ module.exports = {
   async updateUserPlan(ctx) {
     if (!process.env.TIER_ENFORCEMENT) return ctx.send({ ok: true });
 
+    // This route is auth:false because the Stripe webhook (which calls it) has
+    // no user JWT. Authenticate it with a shared secret instead. When
+    // WEBHOOK_SECRET is set, the matching header is required; otherwise the
+    // check is skipped so existing deployments keep working until configured.
+    const expectedSecret = process.env.WEBHOOK_SECRET;
+    if (expectedSecret) {
+      const provided = ctx.request.headers['x-webhook-secret'] || '';
+      const a = Buffer.from(String(provided));
+      const b = Buffer.from(expectedSecret);
+      if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+        return ctx.unauthorized('Invalid webhook secret');
+      }
+    }
+
     const { userId, plan, stripeCustomerId, stripeSubscriptionId, billingInterval } = ctx.request.body;
     if (!userId) return ctx.badRequest('Missing userId');
 

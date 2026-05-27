@@ -706,7 +706,10 @@ module.exports = createCoreController('api::channel.channel', ({ strapi }) =>  (
         return "ok";
     },
 
-    async getAllSizes() {
+    async getAllSizes(ctx) {
+        if (!ctx.state.user || ctx.state.user.id != 1)
+            return ctx.badRequest('Not authorized');
+
         const users = await strapi.db.query('plugin::users-permissions.user').findMany({
           populate: ['username', 'email']
         });

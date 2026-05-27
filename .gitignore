@@ -68,7 +68,7 @@ $RECYCLE.BIN/
 
 .tmp
 *.log
-#*.sql
+*.sql
 *.sqlite
 *.sqlite3
 

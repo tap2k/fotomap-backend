@@ -14,9 +14,6 @@ module.exports = {
       method: "GET",
       path: "/getAllSizes",
       handler: "channel.getAllSizes",
-      config: {
-        auth: false,
-      },
     },
     {
       method: "GET",
