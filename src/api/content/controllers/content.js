@@ -107,7 +107,7 @@ async function geocode(location) {
         apiKey: null, // Not required for OpenStreetMap
         userAgentHeader: 'User-Agent', // This is the key to set the correct header name
         headers: {
-            'User-Agent': 'MVC-backend/1.0 (tapan@represent.org)'
+            'User-Agent': 'fotomap-backend/1.0 (fotomap@represent.org)'
         }
     };
 

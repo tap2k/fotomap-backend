@@ -1,6 +1,6 @@
-# MVC Backend (Strapi)
+# Fotomap Backend (Strapi)
 
-Strapi 4.14.4 headless CMS backend for the Express/Admin multimedia platform.
+Strapi 4.14.4 headless CMS backend for the Fotomap multimedia platform.
 
 ## Architecture
 

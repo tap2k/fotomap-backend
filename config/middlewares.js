@@ -1,3 +1,15 @@
+// Allowed CORS origins come from the CORS_ORIGINS env var (comma-separated).
+// Set it in .env with your real frontend/production domains. When unset, only
+// local development origins are allowed.
+const corsOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+const devOrigins = [
+  'http://localhost:3000', 'http://127.0.0.1:3000',
+  'http://localhost:1337', 'http://127.0.0.1:1337',
+];
+
 module.exports = [
   'strapi::errors',
   {
@@ -15,9 +27,7 @@ module.exports = [
             'nyc3.digitaloceanspaces.com',
             's3.us-east-005.backblazeb2.com',
             '*.s3.us-east-005.backblazeb2.com',
-            'mvcdevcdn.represent.org',
-            'mvcprodcdn.represent.org',
-            'supabase.co', 
+            'supabase.co',
             '*.supabase.co'
           ],
           'media-src': [
@@ -28,9 +38,7 @@ module.exports = [
             'nyc3.digitaloceanspaces.com',
             's3.us-east-005.backblazeb2.com',
             '*.s3.us-east-005.backblazeb2.com',
-            'mvcdevcdn.represent.org',
-            'mvcprodcdn.represent.org',
-            'supabase.co', 
+            'supabase.co',
             '*.supabase.co'
           ],
           upgradeInsecureRequests: null,
@@ -43,8 +51,7 @@ module.exports = [
     name: 'strapi::cors',
     config: {
       enabled: true,
-      //origin: ['*'],
-      origin: ['https://fotomap.org', 'https://dev.fotomap.org', 'https://mvcdev.represent.org', 'https://expressdev.represent.org', 'https://mvcprod.represent.org', 'https://mvc.represent.org', 'https://remaking.represent.org', 'https://express.represent.org', 'https://bihar.represent.org', 'https://gujarat.represent.org', 'https://bihar.mahabot.in', 'https://gujarat.mahabot.in', 'https://express.maustro.com', 'https://expressdev.maustro.com', 'https://express.ux4.me', 'https://expressdev.ux4.me', 'https://virtualfarm.represent.org', 'https://blogs.cornell.edu', 'http://127.0.0.1:3000', 'http://localhost:3000', 'http://127.0.0.1:3001', 'http://localhost:3001', 'http://127.0.0.1:3002', 'http://localhost:3002', 'http://127.0.0.1:1337', 'http://localhost:1337', 'http://localhost', 'http://127.0.0.1'], // Add your frontend URLs here
+      origin: [...corsOrigins, ...devOrigins],
       headers: ['*'],
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
     }

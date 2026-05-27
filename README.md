@@ -1,6 +1,6 @@
-# MVC Backend (Strapi)
+# Fotomap Backend (Strapi)
 
-Strapi 4 headless CMS backend for the Express multimedia platform. Manages channels, content, tags, tilesets, and user permissions.
+Strapi 4 headless CMS backend for [Fotomap](https://github.com/tap2k/fotomap), a multimedia content platform built around maps, slideshows, and grids. Manages channels, content, tags, tilesets, overlays, and user permissions.
 
 ## Prerequisites
 
@@ -18,7 +18,7 @@ npm install
 2. Create a PostgreSQL database:
 
 ```sql
-CREATE DATABASE mvc;
+CREATE DATABASE fotomap;
 ```
 
 3. Create a `.env` file in the project root:
@@ -31,7 +31,7 @@ PUBLIC_URL=http://127.0.0.1:1337
 # Database
 DATABASE_HOST=127.0.0.1
 DATABASE_PORT=5432
-DATABASE_NAME=mvc
+DATABASE_NAME=fotomap
 DATABASE_USERNAME=<your-pg-user>
 DATABASE_PASSWORD=<your-pg-password>
 DATABASE_SSL=false
@@ -43,9 +43,15 @@ API_TOKEN_SALT=<random-base64>
 TRANSFER_TOKEN_SALT=<random-base64>
 JWT_SECRET=<random-string-at-least-32-chars>
 PRIVATE_SEED=<random-hex-string>
+
+# Allowed CORS origins (comma-separated frontend/production URLs)
+CORS_ORIGINS=https://your-frontend.example.com
+
+# Shared secret for the Stripe webhook -> /updateUserPlan call (cloud billing only)
+WEBHOOK_SECRET=<random-string>
 ```
 
-`PRIVATE_SEED` must match the value used in the Express frontend.
+`PRIVATE_SEED` must match the value used in the Fotomap frontend.
 
 4. Start the server:
 
